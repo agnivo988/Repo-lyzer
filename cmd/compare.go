@@ -20,7 +20,7 @@ func RunCompare(r1, r2 string) error {
 
 
 var compareCmd = &cobra.Command{
-	Use:   "compare owner1/repo1 owner2/repo2",
+	Use:   "compare  owner1/repo1 owner2/repo2",
 	Short: "Compare two GitHub repositories",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
