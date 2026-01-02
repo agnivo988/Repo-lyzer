@@ -70,6 +70,7 @@ var analyzeCmd = &cobra.Command{
 		output.PrintLanguages(langs)
 		output.PrintCommitActivity(activity,14)
 		output.PrintHealth(score)
+		output.PrintGitHubAPIStatus(client)
 		output.PrintRecruiterSummary(summary)
 
 		return nil
