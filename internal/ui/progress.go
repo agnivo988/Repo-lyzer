@@ -87,14 +87,12 @@ func (pt *ProgressTracker) GetProgressBar(width int) string {
 	fillWidth := (completed * width) / total
 	emptyWidth := width - fillWidth
 
-	// Completed part of the bar
 	fill := ""
 	for i := 0; i < fillWidth; i++ {
 		fill += "█"
 	}
 
 	// SKELETON EFFECT: Create a shimmering/pulsing effect in the empty area
-	// We use the elapsed time to calculate a "shimmer" position
 	elapsedMs := time.Since(pt.startTime).Milliseconds()
 	shimmerPos := int((elapsedMs / 150) % int64(emptyWidth+1))
 
@@ -107,9 +105,6 @@ func (pt *ProgressTracker) GetProgressBar(width int) string {
 		}
 	}
 
-	percentage := (completed * 100) / total
-
-	// Note: percentage display simplified to handle string conversion correctly
 	return "[" + fill + empty + "] "
 }
 
