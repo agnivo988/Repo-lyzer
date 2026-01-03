@@ -122,6 +122,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.compareStep = 0
 			m.compareInput1 = ""
 			m.compareInput2 = ""
+			m.err = nil
 			m.menu.Done = false
 		} else if m.menu.SelectedOption == 2 && m.menu.Done { // Exit
 			return m, tea.Quit
@@ -189,16 +190,22 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.spinner, cmd = m.spinner.Update(msg)
 		cmds = append(cmds, cmd)
 
-		if result, ok := msg.(CompareResult); ok {
-			m.compareResult = &result
+		switch msg := msg.(type) {
+		case CompareResult:
+			m.compareResult = &msg
 			m.state = stateCompareResult
-			m.progress = nil
-		}
-		if err, ok := msg.(error); ok {
-			m.err = err
+			m.err = nil
+		case error:
+			m.err = msg
 			m.state = stateCompareInput
 			m.compareStep = 0
-			m.progress = nil
+		case tea.KeyMsg:
+			if msg.String() == "esc" {
+				m.state = stateMenu
+				m.compareInput1 = ""
+				m.compareInput2 = ""
+				m.err = nil
+			}
 		}
 
 	case stateCompareResult:
