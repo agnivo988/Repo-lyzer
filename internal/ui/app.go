@@ -46,6 +46,8 @@ type MainModel struct {
 	analysisType  string // quick, detailed, custom
 	appSettings    tea.LogOptionsSetter
 	compareResult *CompareResult // Holds comparison data
+	history       *History       // Analysis history
+	historyCursor int            // Current selection in history
 }
 
 func NewMainModel() MainModel {
@@ -130,7 +132,14 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.compareInput1 = ""
 			m.compareInput2 = ""
 			m.menu.Done = false
-		} else if m.menu.SelectedOption == 2 && m.menu.Done { // Exit
+		} else if m.menu.SelectedOption == 2 && m.menu.Done { // History
+			m.state = stateHistory
+			m.historyCursor = 0
+			// Load history
+			history, _ := LoadHistory()
+			m.history = history
+			m.menu.Done = false
+		} else if m.menu.SelectedOption == 3 && m.menu.Done { // Exit
 			return m, tea.Quit
 		}
 
@@ -262,6 +271,29 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.compareResult = nil
 				m.compareInput1 = ""
 				m.compareInput2 = ""
+			case "j":
+				// Export comparison to JSON
+				if m.compareResult != nil {
+					filename, err := ExportCompareJSON(*m.compareResult)
+					if err != nil {
+						m.err = err
+					} else {
+						m.err = nil
+						// Show success message briefly (will need status in model)
+						_ = filename // TODO: show status message
+					}
+				}
+			case "m":
+				// Export comparison to Markdown
+				if m.compareResult != nil {
+					filename, err := ExportCompareMarkdown(*m.compareResult)
+					if err != nil {
+						m.err = err
+					} else {
+						m.err = nil
+						_ = filename
+					}
+				}
 			}
 		}
 
@@ -273,11 +305,58 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.dashboard.SetData(result)
 			m.state = stateDashboard
 			m.progress = nil
+			// Save to history
+			if m.history == nil {
+				m.history, _ = LoadHistory()
+			}
+			m.history.AddEntry(result)
+			m.history.Save()
 		}
 		if err, ok := msg.(error); ok {
 			m.err = err
 			m.state = stateInput // Go back to input on error
 			m.progress = nil
+		}
+
+	case stateHistory:
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+			case "up", "k":
+				if m.historyCursor > 0 {
+					m.historyCursor--
+				}
+			case "down", "j":
+				if m.history != nil && m.historyCursor < len(m.history.Entries)-1 {
+					m.historyCursor++
+				}
+			case "enter":
+				// Re-analyze selected repo
+				if m.history != nil && len(m.history.Entries) > 0 {
+					repoName := m.history.Entries[m.historyCursor].RepoName
+					m.input = repoName
+					m.state = stateLoading
+					cmds = append(cmds, m.analyzeRepo(repoName))
+				}
+			case "d":
+				// Delete selected entry
+				if m.history != nil && len(m.history.Entries) > 0 {
+					m.history.Delete(m.historyCursor)
+					m.history.Save()
+					if m.historyCursor >= len(m.history.Entries) && m.historyCursor > 0 {
+						m.historyCursor--
+					}
+				}
+			case "c":
+				// Clear all history
+				if m.history != nil {
+					m.history.Clear()
+					m.history.Save()
+					m.historyCursor = 0
+				}
+			case "q", "esc":
+				m.state = stateMenu
+			}
 		}
 
 	case stateDashboard:
@@ -313,6 +392,8 @@ func (m MainModel) View() string {
 		return m.inputView()
 	case stateCompareInput:
 		return m.compareInputView()
+	case stateHistory:
+		return m.historyView()
 	case stateLoading:
 		loadMsg := fmt.Sprintf("📊 Analyzing %s", m.input)
 		if m.analysisType != "" {
@@ -523,7 +604,7 @@ func (m MainModel) compareResultView() string {
 	}
 	verdictBox := BoxStyle.Render("📌 Verdict\n" + verdict)
 
-	footer := SubtleStyle.Render("q/ESC: back to menu")
+	footer := SubtleStyle.Render("j: export JSON • m: export Markdown • q/ESC: back to menu")
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -623,4 +704,77 @@ func Run() error {
 	p := tea.NewProgram(NewMainModel(), tea.WithAltScreen())
 	_, err := p.Run()
 	return err
+}
+
+func (m MainModel) historyView() string {
+	header := TitleStyle.Render("📜 Analysis History")
+
+	if m.history == nil || len(m.history.Entries) == 0 {
+		content := lipgloss.JoinVertical(
+			lipgloss.Left,
+			header,
+			BoxStyle.Render("No history yet. Analyze a repository to get started!"),
+			SubtleStyle.Render("q/ESC: back to menu"),
+		)
+
+		if m.windowWidth == 0 {
+			return content
+		}
+
+		return lipgloss.Place(
+			m.windowWidth,
+			m.windowHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			content,
+		)
+	}
+
+	// Build history list
+	var lines []string
+	lines = append(lines, fmt.Sprintf("%-30s │ %-8s │ %-5s │ %-12s │ %s", "Repository", "Stars", "Health", "Maturity", "Analyzed"))
+	lines = append(lines, strings.Repeat("─", 85))
+
+	for i, entry := range m.history.Entries {
+		prefix := "  "
+		if i == m.historyCursor {
+			prefix = "▶ "
+		}
+		line := fmt.Sprintf("%s%-28s │ ⭐%-6d │ 💚%-3d │ %-12s │ %s",
+			prefix,
+			entry.RepoName,
+			entry.Stars,
+			entry.HealthScore,
+			entry.MaturityLevel,
+			entry.AnalyzedAt.Format("2006-01-02 15:04"),
+		)
+		if i == m.historyCursor {
+			lines = append(lines, SelectedStyle.Render(line))
+		} else {
+			lines = append(lines, line)
+		}
+	}
+
+	tableBox := BoxStyle.Render(strings.Join(lines, "\n"))
+
+	footer := SubtleStyle.Render("↑↓: navigate • Enter: re-analyze • d: delete • c: clear all • q/ESC: back")
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		tableBox,
+		footer,
+	)
+
+	if m.windowWidth == 0 {
+		return content
+	}
+
+	return lipgloss.Place(
+		m.windowWidth,
+		m.windowHeight,
+		lipgloss.Center,
+		lipgloss.Center,
+		content,
+	)
 }

@@ -20,6 +20,7 @@ func NewMenuModel() MenuModel {
 		choices: []string{
 			"Analyze a repository",
 			"Compare repositories",
+			"History",
 			"Exit",
 		},
 	}

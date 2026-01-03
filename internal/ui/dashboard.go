@@ -96,7 +96,22 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "j":
 			if m.showExport {
 				return m, func() tea.Msg {
-					return exportMsg{nil, "Exported to analysis.json"}
+					err := ExportJSON(m.data, "analysis.json")
+					if err != nil {
+						return exportMsg{err, ""}
+					}
+					return exportMsg{nil, "✓ Exported to analysis.json"}
+				}
+			}
+
+		case "m":
+			if m.showExport {
+				return m, func() tea.Msg {
+					err := ExportMarkdown(m.data, "analysis.md")
+					if err != nil {
+						return exportMsg{err, ""}
+					}
+					return exportMsg{nil, "✓ Exported to analysis.md"}
 				}
 			}
 
@@ -192,7 +207,7 @@ func (m DashboardModel) View() string {
 		content = lipgloss.JoinVertical(
 			lipgloss.Left,
 			content,
-			BoxStyle.Render("📥 Export:\n[J] JSON"),
+			BoxStyle.Render("📥 Export:\n[J] JSON  [M] Markdown"),
 		)
 	}
 
@@ -434,6 +449,7 @@ Views:
 Actions:
   e             Toggle export menu
   j             Export to JSON (when export menu open)
+  m             Export to Markdown (when export menu open)
   f             Open file tree
   r             Refresh data
   ?/h           Toggle this help
