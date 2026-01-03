@@ -14,3 +14,9 @@ type AnalysisResult struct {
 	MaturityScore int
 	MaturityLevel string
 }
+
+// CompareResult holds analysis data for two repositories
+type CompareResult struct {
+	Repo1 AnalysisResult
+	Repo2 AnalysisResult
+}
