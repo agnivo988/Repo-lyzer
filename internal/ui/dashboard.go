@@ -99,6 +99,9 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "e":
 				m.exportMenuVisible = !m.exportMenuVisible
 				m.exportCursor = 0
+			case "f":
+				// Switch to tree view - handled in app.go
+				return m, func() tea.Msg { return "switch_to_tree" }()
 			}
 		}
 	}
@@ -187,7 +190,7 @@ func (m DashboardModel) View() string {
 		content = lipgloss.JoinVertical(lipgloss.Left, content, SuccessStyle.Render(m.statusMsg))
 	}
 
-	footer := SubtleStyle.Render("e: export")
+	footer := SubtleStyle.Render("e: export • f: file tree")
 	if !m.exportMenuVisible {
 		footer += SubtleStyle.Render(" • q: back")
 	} else {

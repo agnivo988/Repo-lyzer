@@ -19,6 +19,7 @@ const (
 	stateInput
 	stateLoading
 	stateDashboard
+	stateTree
 	stateSettings
 	stateHelp
 	stateHistory
@@ -31,6 +32,7 @@ type MainModel struct {
 	input         string // Repository input
 	spinner       spinner.Model
 	dashboard     DashboardModel
+	tree          TreeModel
 	settings      SettingsModel
 	help          HelpModel
 	history       HistoryModel
@@ -54,6 +56,7 @@ func NewMainModel() MainModel {
 		menu:         NewMenuModel(),
 		spinner:      s,
 		dashboard:    NewDashboardModel(),
+		tree:         NewTreeModel(nil),
 		appSettings:  appSettings,
 	}
 }
@@ -84,6 +87,15 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Global shortcuts
 		if msg.String() == "q" && m.state == stateMenu {
 			return m, tea.Quit
+		}
+
+	case string:
+		if msg == "switch_to_tree" {
+			m.state = stateTree
+			// Update tree with current analysis data
+			if m.dashboard.data.Repo != nil {
+				m.tree = NewTreeModel(&m.dashboard.data)
+			}
 		}
 	}
 
@@ -157,6 +169,16 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.input = ""
 			m.err = nil
 			m.menu = NewMenuModel()
+		}
+
+	case stateTree:
+		newTree, newCmd := m.tree.Update(msg)
+		m.tree = newTree.(TreeModel)
+		cmds = append(cmds, newCmd)
+
+		if m.tree.Done {
+			m.state = stateDashboard
+			m.tree.Done = false
 		}
 
 	case stateSettings:
@@ -290,6 +312,8 @@ func (m MainModel) View() string {
 		return m.help.View()
 	case stateHistory:
 		return m.history.View()
+	case stateTree:
+		return m.tree.View()
 	}
 	return ""
 }
