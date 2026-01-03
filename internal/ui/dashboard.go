@@ -21,6 +21,7 @@ const (
 
 type DashboardModel struct {
 	data              AnalysisResult
+	bridge            *AnalyzerDataBridge
 	BackToMenu        bool
 	width             int
 	height            int
@@ -29,6 +30,8 @@ type DashboardModel struct {
 	exportCursor      int
 	exportOptions     []string
 	exportMenuVisible bool
+	selectedMetric    string
+	metricsScroll     int
 }
 
 func NewDashboardModel() DashboardModel {
@@ -45,6 +48,7 @@ func NewDashboardModel() DashboardModel {
 
 func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
+	m.bridge = NewAnalyzerDataBridge(data)
 }
 
 type exportMsg struct {
@@ -201,12 +205,6 @@ func (m DashboardModel) View() string {
 		BoxStyle.Render(content),
 	)
 }
-		return content
-	}
-
-	return lipgloss.Place(
-		m.width, m.height,
-		lipgloss.Center, lipgloss.Center,
 		content,
 	)
 }
