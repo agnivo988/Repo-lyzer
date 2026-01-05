@@ -169,7 +169,7 @@ After analysis, choose the export option from the menu to save results.
 | `Enter` | Confirm input / run analysis |
 | `ESC` | Go back / cancel current action |
 | `q` | Quit application (from main menu) |
-| `H` | Open analysis history |
+| `Ctrl + H` | Open analysis history |
 | `↑ / ↓` | Navigate menu or history |
 | `j / k` | Navigate lists (vim-style) |
 | `m` | Export comparison as Markdown |

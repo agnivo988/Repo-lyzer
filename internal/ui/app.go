@@ -263,14 +263,6 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case tea.KeyRunes:
 				r := string(msg.Runes)
-
-				// Shortcut: open history
-				if r == "h" || r == "H" {
-					m.state = stateHistory
-					m.historyCursor = 0
-					return m, nil
-				}
-
 				// Normal typing
 				m.input += r
 
@@ -282,7 +274,11 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Move to start - for TUI we just clear (no cursor)
 				// In a real implementation, you'd track cursor position
 			case tea.KeyCtrlE:
-				// Move to end - already at end in this simple impl
+			// Move to end - already at end in this simple impl
+			case tea.KeyCtrlH:
+				m.state = stateHistory
+				m.historyCursor = 0
+
 			case tea.KeyCtrlW:
 				// Delete word backward
 				m.input = strings.TrimRight(m.input, " ")
@@ -597,7 +593,7 @@ func (m MainModel) inputView() string {
 	inputContent :=
 		TitleStyle.Render("📥 ENTER REPOSITORY") + "\n\n" +
 			InputStyle.Render("> "+m.input) + "\n\n" +
-			SubtleStyle.Render("Format: owner/repo  •  Enter: run  •  ↑/↓: history  •  H: full history")
+			SubtleStyle.Render("Format: owner/repo  •  Enter: run  •  ↑/↓: history  •  Ctrl+H : full history")
 
 	if m.err != nil {
 		inputContent += "\n\n" + ErrorStyle.Render(fmt.Sprintf("Error: %v", m.err))
