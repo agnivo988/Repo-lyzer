@@ -61,6 +61,23 @@ repo-analyzer/
 │ ├── analyzer/
 │ └── output/
 │
+├── docs/
+│ ├── DOCUMENTATION_INDEX.md
+│ ├── QUICK_REFERENCE.md
+│ ├── IMPLEMENTATION_DETAILS.md
+│ ├── ANALYZER_INTEGRATION.md
+│ ├── CHANGE_LOG.md
+│ ├── PHASE2_README.md
+│ ├── PHASE2_DOCUMENTATION_INDEX.md
+│ ├── PHASE2_QUICK_REFERENCE.md
+│ ├── PHASE2_COMPLETION.md
+│ ├── PHASE2_FINAL_SUMMARY.md
+│ ├── PHASE2_FILE_CHANGES.md
+│ ├── FEATURE_INVENTORY_PHASE2.md
+│ ├── UI_FIXES_SUMMARY.md
+│ ├── RESOLUTION_REPORT.md
+│ └── TODO.md
+│
 ├── config/ 
 ├── main.go 
 ├── go.mod 
@@ -74,6 +91,19 @@ repo-analyzer/
 3. CLI fetches data from GitHub API (repos, commits, contributors, languages).
 4. Computes health, bus factor, maturity score, and recruiter summary.
 5. Displays results in a **beautifully styled, centered terminal dashboard**.
+
+---
+
+## 📚 Documentation
+
+For detailed information about the project, please refer to the documentation in the `docs/` folder:
+
+- **[DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)** – Main index for all documentation
+- **[QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)** – Quick reference guide
+- **[IMPLEMENTATION_DETAILS.md](docs/IMPLEMENTATION_DETAILS.md)** – Technical implementation details
+- **[ANALYZER_INTEGRATION.md](docs/ANALYZER_INTEGRATION.md)** – Analyzer integration guide
+- **[CHANGE_LOG.md](docs/CHANGE_LOG.md)** – Changelog and version history
+- **[PHASE2_README.md](docs/PHASE2_README.md)** – Phase 2 development overview
 
 ---
 

@@ -30,10 +30,15 @@ func NewProgressTracker() *ProgressTracker {
 	return &ProgressTracker{
 		stages: []ProgressStage{
 			{Name: "🔗 Fetching repository data", IsComplete: false, IsActive: true},
+			{Name: "🔗 Connecting to GitHub API", IsComplete: false, IsActive: false},
 			{Name: "📝 Analyzing commits", IsComplete: false, IsActive: false},
+			{Name: "📝 Processing commit history", IsComplete: false, IsActive: false},
 			{Name: "👥 Analyzing contributors", IsComplete: false, IsActive: false},
+			{Name: "👥 Calculating contributor metrics", IsComplete: false, IsActive: false},
 			{Name: "🗣️  Analyzing languages", IsComplete: false, IsActive: false},
+			{Name: "🗣️  Processing language statistics", IsComplete: false, IsActive: false},
 			{Name: "📊 Computing metrics", IsComplete: false, IsActive: false},
+			{Name: "📊 Generating final report", IsComplete: false, IsActive: false},
 			{Name: "✅ Analysis complete", IsComplete: false, IsActive: false},
 		},
 		current:   0,

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -44,9 +46,36 @@ type ContributorExport struct {
 	Commits int    `json:"commits"`
 }
 
-// ensureExportsDir creates the exports directory if it doesn't exist
-func ensureExportsDir() error {
-	return os.MkdirAll("exports", 0755)
+// getDownloadsDir returns the user's Downloads folder
+func getDownloadsDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, "Downloads"), nil
+}
+
+// openFileManager opens the file manager to show the exported file
+func openFileManager(filePath string) error {
+	var cmd *exec.Cmd
+
+	switch runtime.GOOS {
+	case "windows":
+		// Windows: use explorer with /select to highlight the file
+		// Path must be concatenated with /select, flag (no space)
+		cmd = exec.Command("explorer", "/select,"+filePath)
+	case "darwin":
+		// macOS: use open with -R to reveal in Finder
+		cmd = exec.Command("open", "-R", filePath)
+	case "linux":
+		// Linux: use xdg-open on the directory
+		dir := filepath.Dir(filePath)
+		cmd = exec.Command("xdg-open", dir)
+	default:
+		return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
+	}
+
+	return cmd.Start()
 }
 
 // generateFilename creates a filename with repo name and timestamp
@@ -54,15 +83,16 @@ func generateFilename(repoName, ext string) string {
 	// Replace / with _ for filename
 	safeName := strings.ReplaceAll(repoName, "/", "_")
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
-	return filepath.Join("exports", fmt.Sprintf("%s_%s.%s", safeName, timestamp, ext))
+	return fmt.Sprintf("%s_%s.%s", safeName, timestamp, ext)
 }
 
 func ExportJSON(data AnalysisResult, _ string) (string, error) {
-	if err := ensureExportsDir(); err != nil {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
 		return "", err
 	}
 
-	filename := generateFilename(data.Repo.FullName, "json")
+	filename := filepath.Join(downloadsDir, generateFilename(data.Repo.FullName, "json"))
 
 	// Build top contributors (max 10)
 	var topContribs []ContributorExport
@@ -114,15 +144,19 @@ func ExportJSON(data AnalysisResult, _ string) (string, error) {
 		return "", err
 	}
 
+	// Open file manager (ignore error - export succeeded even if reveal fails)
+	_ = openFileManager(filename)
+
 	return filename, nil
 }
 
 func ExportMarkdown(data AnalysisResult, _ string) (string, error) {
-	if err := ensureExportsDir(); err != nil {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
 		return "", err
 	}
 
-	filename := generateFilename(data.Repo.FullName, "md")
+	filename := filepath.Join(downloadsDir, generateFilename(data.Repo.FullName, "md"))
 
 	file, err := os.Create(filename)
 	if err != nil {
@@ -172,6 +206,9 @@ func ExportMarkdown(data AnalysisResult, _ string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// Open file manager (ignore error - export succeeded even if reveal fails)
+	_ = openFileManager(filename)
 
 	return filename, nil
 }
@@ -225,7 +262,8 @@ func buildExportData(data AnalysisResult) ExportData {
 }
 
 func ExportCompareJSON(data CompareResult) (string, error) {
-	if err := ensureExportsDir(); err != nil {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
 		return "", err
 	}
 
@@ -233,7 +271,7 @@ func ExportCompareJSON(data CompareResult) (string, error) {
 	safeName1 := strings.ReplaceAll(data.Repo1.Repo.FullName, "/", "_")
 	safeName2 := strings.ReplaceAll(data.Repo2.Repo.FullName, "/", "_")
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
-	filename := filepath.Join("exports", fmt.Sprintf("compare_%s_vs_%s_%s.json", safeName1, safeName2, timestamp))
+	filename := filepath.Join(downloadsDir, fmt.Sprintf("compare_%s_vs_%s_%s.json", safeName1, safeName2, timestamp))
 
 	// Determine verdict
 	var verdict string
@@ -264,18 +302,22 @@ func ExportCompareJSON(data CompareResult) (string, error) {
 		return "", err
 	}
 
+	// Open file manager (ignore error - export succeeded even if reveal fails)
+	_ = openFileManager(filename)
+
 	return filename, nil
 }
 
 func ExportCompareMarkdown(data CompareResult) (string, error) {
-	if err := ensureExportsDir(); err != nil {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
 		return "", err
 	}
 
 	safeName1 := strings.ReplaceAll(data.Repo1.Repo.FullName, "/", "_")
 	safeName2 := strings.ReplaceAll(data.Repo2.Repo.FullName, "/", "_")
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
-	filename := filepath.Join("exports", fmt.Sprintf("compare_%s_vs_%s_%s.md", safeName1, safeName2, timestamp))
+	filename := filepath.Join(downloadsDir, fmt.Sprintf("compare_%s_vs_%s_%s.md", safeName1, safeName2, timestamp))
 
 	file, err := os.Create(filename)
 	if err != nil {
@@ -292,13 +334,13 @@ func ExportCompareMarkdown(data CompareResult) (string, error) {
 	md += "## Summary\n\n"
 	md += "| Metric | " + r1.Repo.FullName + " | " + r2.Repo.FullName + " |\n"
 	md += "|--------|--------|--------|\n"
-	md += fmt.Sprintf("| ⭐ Stars | %d | %d |\n", r1.Repo.Stars, r2.Repo.Stars)
-	md += fmt.Sprintf("| 🍴 Forks | %d | %d |\n", r1.Repo.Forks, r2.Repo.Forks)
-	md += fmt.Sprintf("| 📦 Commits (1y) | %d | %d |\n", len(r1.Commits), len(r2.Commits))
-	md += fmt.Sprintf("| 👥 Contributors | %d | %d |\n", len(r1.Contributors), len(r2.Contributors))
-	md += fmt.Sprintf("| 💚 Health Score | %d | %d |\n", r1.HealthScore, r2.HealthScore)
-	md += fmt.Sprintf("| ⚠️ Bus Factor | %d (%s) | %d (%s) |\n", r1.BusFactor, r1.BusRisk, r2.BusFactor, r2.BusRisk)
-	md += fmt.Sprintf("| 🏗️ Maturity | %s (%d) | %s (%d) |\n", r1.MaturityLevel, r1.MaturityScore, r2.MaturityLevel, r2.MaturityScore)
+	md += fmt.Sprintf("| Stars | %d | %d |\n", r1.Repo.Stars, r2.Repo.Stars)
+	md += fmt.Sprintf("| Forks | %d | %d |\n", r1.Repo.Forks, r2.Repo.Forks)
+	md += fmt.Sprintf("| Commits (1y) | %d | %d |\n", len(r1.Commits), len(r2.Commits))
+	md += fmt.Sprintf("| Contributors | %d | %d |\n", len(r1.Contributors), len(r2.Contributors))
+	md += fmt.Sprintf("| Health Score | %d | %d |\n", r1.HealthScore, r2.HealthScore)
+	md += fmt.Sprintf("| Bus Factor | %d (%s) | %d (%s) |\n", r1.BusFactor, r1.BusRisk, r2.BusFactor, r2.BusRisk)
+	md += fmt.Sprintf("| Maturity | %s (%d) | %s (%d) |\n", r1.MaturityLevel, r1.MaturityScore, r2.MaturityLevel, r2.MaturityScore)
 
 	md += "\n## Verdict\n\n"
 	if r1.MaturityScore > r2.MaturityScore {
@@ -313,6 +355,9 @@ func ExportCompareMarkdown(data CompareResult) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// Open file manager (ignore error - export succeeded even if reveal fails)
+	_ = openFileManager(filename)
 
 	return filename, nil
 }

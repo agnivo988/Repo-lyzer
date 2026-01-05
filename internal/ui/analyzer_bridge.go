@@ -17,6 +17,7 @@ type AnalyzerDataBridge struct {
 	maturityScore int
 	maturityLevel string
 	fileTree      *FileNode
+	cache         map[string]interface{}
 }
 
 // NewAnalyzerDataBridge creates a new data bridge with analyzer results

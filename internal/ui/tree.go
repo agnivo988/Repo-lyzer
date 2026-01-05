@@ -2,9 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/agnivo988/Repo-lyzer/internal/github"
 )
 
 // FileNode represents a file or directory in the repository
@@ -199,46 +201,49 @@ func BuildFileTree(result AnalysisResult) *FileNode {
 		Children: []*FileNode{},
 	}
 
-	// Add directories based on languages
-	dirs := []string{"src", "pkg", "internal", "cmd", "test", "docs", "config", "scripts", "build", "web", "api"}
-	for _, dir := range dirs {
-		root.Children = append(root.Children, &FileNode{
-			Name:     dir,
-			Type:     "dir",
-			Path:     "/" + dir,
-			Children: []*FileNode{},
-		})
-	}
-
-	// Add files based on actual languages detected
-	for lang := range result.Languages {
-		ext := ".txt"
-		switch lang {
-		case "Go": ext = ".go"
-		case "Python": ext = ".py"
-		case "JavaScript": ext = ".js"
-		case "TypeScript": ext = ".ts"
-		case "Rust": ext = ".rs"
-		case "Java": ext = ".java"
-		}
-		root.Children = append(root.Children, &FileNode{
-			Name: "main" + ext,
-			Type: "file",
-			Path: "/src/main" + ext,
-			Size: 2048,
-		})
-	}
-
-	// Add common files in root
-	sampleFiles := []string{"README.md", "LICENSE", "go.mod", "go.sum", ".gitignore", "Makefile", "Dockerfile"}
-	for _, file := range sampleFiles {
-		root.Children = append(root.Children, &FileNode{
-			Name: file,
-			Type: "file",
-			Path: "/" + file,
-			Size: 1024,
-		})
+	// Build tree from actual FileTree data
+	for _, entry := range result.FileTree {
+		addEntryToTree(root, entry)
 	}
 
 	return root
+}
+
+// addEntryToTree recursively adds a TreeEntry to the FileNode tree
+func addEntryToTree(root *FileNode, entry github.TreeEntry) {
+	parts := strings.Split(strings.Trim(entry.Path, "/"), "/")
+	current := root
+
+	for i, part := range parts {
+		isLast := i == len(parts)-1
+		found := false
+
+		// Check if node already exists
+		for _, child := range current.Children {
+			if child.Name == part {
+				current = child
+				found = true
+				break
+			}
+		}
+
+		// Create new node if not found
+		if !found {
+			nodeType := "file"
+			if !isLast || entry.Type == "tree" {
+				nodeType = "dir"
+			}
+			newNode := &FileNode{
+				Name:     part,
+				Type:     nodeType,
+				Path:     "/" + strings.Join(parts[:i+1], "/"),
+				Children: []*FileNode{},
+			}
+			if isLast {
+				newNode.Size = int64(entry.Size)
+			}
+			current.Children = append(current.Children, newNode)
+			current = newNode
+		}
+	}
 }

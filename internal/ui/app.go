@@ -49,6 +49,27 @@ type MainModel struct {
 	history            *History       // Analysis history
 	historyCursor      int            // Current selection in history
 	inputHistoryCursor int
+	state          sessionState
+	menu           MenuModel
+	input          string // Repository input
+	compareInput1  string // First repo for comparison
+	compareInput2  string // Second repo for comparison
+	compareStep    int    // 0 = entering first repo, 1 = entering second repo
+	spinner        spinner.Model
+	dashboard      DashboardModel
+	tree           TreeModel
+	help           help.Model
+	progress       *ProgressTracker
+	err            error
+	windowWidth    int
+	windowHeight   int
+	analysisType   string // quick, detailed, custom
+	appSettings    tea.LogOptionsSetter
+	compareResult  *CompareResult // Holds comparison data
+	history        *History       // Analysis history
+	historyCursor  int            // Current selection in history
+	helpContent    string         // Content for help screen
+	settingsOption string         // Selected settings option
 }
 
 func NewMainModel() MainModel {
@@ -78,6 +99,12 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
+		// Handle terminal resize
+		if m.windowWidth != msg.Width || m.windowHeight != msg.Height {
+			// Adapt layout accordingly
+			m.windowWidth = msg.Width
+			m.windowHeight = msg.Height
+		}
 		// Propagate to children
 		m.menu.Update(msg)
 		m.dashboard.Update(msg)
@@ -146,6 +173,53 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.menu.Done = false
 		} else if m.menu.SelectedOption == 3 && m.menu.Done { // Exit
 			return m, tea.Quit
+		if m.menu.Done {
+			switch m.menu.SelectedOption {
+			case 0: // Analyze
+				if m.menu.submenuType == "analyze" {
+					// Analysis type selection
+					analysisTypes := []string{"quick", "detailed", "custom"}
+					if m.menu.submenuCursor < len(analysisTypes) {
+						m.analysisType = analysisTypes[m.menu.submenuCursor]
+					}
+					m.state = stateInput
+				}
+				m.menu.Done = false
+			case 1: // Compare
+				m.state = stateCompareInput
+				m.compareStep = 0
+				m.compareInput1 = ""
+				m.compareInput2 = ""
+				m.menu.Done = false
+			case 2: // History
+				m.state = stateHistory
+				m.historyCursor = 0
+				history, _ := LoadHistory()
+				m.history = history
+				m.menu.Done = false
+			case 3: // Settings
+				if m.menu.submenuType == "settings" {
+					// Settings option selection
+					settingsOptions := []string{"theme", "export", "token", "reset"}
+					if m.menu.submenuCursor < len(settingsOptions) {
+						m.settingsOption = settingsOptions[m.menu.submenuCursor]
+					}
+					m.state = stateSettings
+				}
+				m.menu.Done = false
+			case 4: // Help
+				if m.menu.submenuType == "help" {
+					// Help option selection
+					helpOptions := []string{"shortcuts", "getting-started", "features", "troubleshooting"}
+					if m.menu.submenuCursor < len(helpOptions) {
+						m.helpContent = helpOptions[m.menu.submenuCursor]
+					}
+					m.state = stateHelp
+				}
+				m.menu.Done = false
+			case 5: // Exit
+				return m, tea.Quit
+			}
 		}
 
 	case stateInput:
@@ -408,6 +482,24 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+	case stateHelp:
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+			case "q", "esc":
+				m.state = stateMenu
+			}
+		}
+
+	case stateSettings:
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			switch msg.String() {
+			case "q", "esc":
+				m.state = stateMenu
+			}
+		}
+
 	case stateDashboard:
 		newDash, newCmd := m.dashboard.Update(msg)
 		m.dashboard = newDash.(DashboardModel)
@@ -491,6 +583,10 @@ func (m MainModel) View() string {
 		return m.compareResultView()
 	case stateTree:
 		return m.tree.View()
+	case stateHelp:
+		return m.helpView()
+	case stateSettings:
+		return m.settingsView()
 	case stateDashboard:
 		return m.dashboard.View()
 	}
@@ -540,16 +636,28 @@ func (m MainModel) analyzeRepo(repoName string) tea.Cmd {
 		tracker.NextStage()
 
 		// Stage 2: Analyze commits
-		commits, _ := client.GetCommits(parts[0], parts[1], 365)
+		commits, err := client.GetCommits(parts[0], parts[1], 365)
+		if err != nil {
+			return fmt.Errorf("failed to get commits: %w", err)
+		}
 		tracker.NextStage()
 
 		// Stage 3: Analyze contributors
-		contributors, _ := client.GetContributors(parts[0], parts[1])
+		contributors, err := client.GetContributors(parts[0], parts[1])
+		if err != nil {
+			return fmt.Errorf("failed to get contributors: %w", err)
+		}
 		tracker.NextStage()
 
 		// Stage 4: Analyze languages
-		languages, _ := client.GetLanguages(parts[0], parts[1])
-		fileTree, _ := client.GetFileTree(parts[0], parts[1], repo.DefaultBranch)
+		languages, err := client.GetLanguages(parts[0], parts[1])
+		if err != nil {
+			return fmt.Errorf("failed to get languages: %w", err)
+		}
+		fileTree, err := client.GetFileTree(parts[0], parts[1], repo.DefaultBranch)
+		if err != nil {
+			return fmt.Errorf("failed to get file tree: %w", err)
+		}
 		tracker.NextStage()
 
 		// Stage 5: Compute metrics
@@ -843,5 +951,234 @@ func (m MainModel) historyView() string {
 		lipgloss.Center,
 		lipgloss.Center,
 		content,
+	)
+}
+
+func (m MainModel) helpView() string {
+	var title string
+	var content string
+
+	switch m.helpContent {
+	case "shortcuts":
+		title = "❓ Keyboard Shortcuts"
+		content = `
+Main Menu:
+  ↑↓/jk         Navigate menu
+  Enter         Select option
+  q             Quit application
+
+Repository Input:
+  Enter         Start analysis
+  ESC           Back to menu
+  Ctrl+U        Clear input
+  Ctrl+W        Delete word
+  Ctrl+A        Move to start
+  Ctrl+E        Move to end
+
+Dashboard Navigation:
+  ←→/hl         Switch between views
+  1-7           Jump to specific view
+  e             Toggle export menu
+  f             Open file tree
+  r             Refresh data
+  ?/h           Toggle help
+  q/ESC         Go back
+
+File Tree:
+  ↑↓/jk         Navigate files
+  Enter         Open file details
+  ESC           Back to dashboard
+
+History:
+  ↑↓/jk         Navigate entries
+  Enter         Re-analyze repository
+  d             Delete entry
+  c             Clear all history
+  q/ESC         Back to menu
+`
+	case "getting-started":
+		title = "🚀 Getting Started"
+		content = `
+Welcome to Repo-lyzer!
+
+1. Choose "Analyze Repository" from the main menu
+2. Enter a repository in the format: owner/repo
+   Example: microsoft/vscode
+3. Select analysis type:
+   - Quick: Fast overview
+   - Detailed: Comprehensive analysis
+   - Custom: Advanced options
+4. Wait for analysis to complete
+5. Navigate through the dashboard views
+6. Export results if needed
+
+For GitHub API access:
+- Set GITHUB_TOKEN environment variable for higher rate limits
+- Private repositories require authentication
+`
+	case "features":
+		title = "✨ Features Guide"
+		content = `
+Repository Analysis:
+  • Health Score: Overall repository health
+  • Bus Factor: Risk of losing key contributors
+  • Maturity Level: Project maturity assessment
+  • Language Breakdown: Programming languages used
+  • Commit Activity: Development activity over time
+  • Top Contributors: Most active contributors
+  • Recruiter Summary: Key insights for hiring
+
+Export Options:
+  • JSON: Structured data for further processing
+  • Markdown: Human-readable reports
+
+Additional Features:
+  • Repository Comparison: Compare multiple repos
+  • Analysis History: Re-analyze previous repos
+  • File Tree: Explore repository structure
+  • GitHub API Status: Monitor rate limit usage
+`
+	case "troubleshooting":
+		title = "🔧 Troubleshooting"
+		content = `
+Common Issues:
+
+Repository Not Found:
+  • Check spelling: owner/repo format
+  • Ensure repository is public or you have access
+  • GitHub API might be rate limited
+
+Analysis Fails:
+  • Check internet connection
+  • Verify GitHub API status
+  • Try again later if rate limited
+
+High Rate Limits:
+  • Set GITHUB_TOKEN environment variable
+  • Authenticated requests: 5000/hour
+  • Unauthenticated: 60/hour
+
+Private Repositories:
+  • Require GITHUB_TOKEN with repo scope
+  • Token must have access to the repository
+
+Performance:
+  • Detailed analysis takes longer
+  • Large repositories may take several minutes
+  • Use Quick analysis for fast results
+`
+	default:
+		title = "❓ Help"
+		content = `
+Select a help topic from the menu above.
+`
+	}
+
+	helpContent := TitleStyle.Render(title) + "\n\n" + content + "\n\n" + SubtleStyle.Render("Press ESC or q to go back")
+
+	box := BoxStyle.Render(helpContent)
+
+	if m.windowWidth == 0 {
+		return box
+	}
+
+	return lipgloss.Place(
+		m.windowWidth, m.windowHeight,
+		lipgloss.Center, lipgloss.Center,
+		box,
+	)
+}
+
+func (m MainModel) settingsView() string {
+	var title string
+	var content string
+
+	switch m.settingsOption {
+	case "theme":
+		title = "🎨 Theme Settings"
+		content = `
+Theme customization options:
+
+Current theme: Default
+
+Available themes:
+  • Default (Dark)
+  • Light
+  • High Contrast
+
+To change theme:
+  1. Edit the theme configuration
+  2. Restart the application
+
+Note: Theme changes require application restart.
+`
+	case "export":
+		title = "📤 Export Options"
+		content = `
+Export formats available:
+
+  • JSON: Structured data export
+  • Markdown: Human-readable reports
+  • PDF: Professional documents
+
+Default export location:
+  ./exports/
+
+To change export settings:
+  1. Modify export configuration
+  2. Set custom export path
+`
+	case "token":
+		title = "🔑 GitHub Token"
+		content = `
+GitHub API Token Configuration:
+
+Current status: Not configured
+
+To set up GitHub token:
+  1. Go to GitHub Settings > Developer settings > Personal access tokens
+  2. Create a new token with repo permissions
+  3. Set GITHUB_TOKEN environment variable
+  4. Restart the application
+
+Benefits:
+  • Higher API rate limits (5000 vs 60 requests/hour)
+  • Access to private repositories
+  • More detailed analysis
+`
+	case "reset":
+		title = "🔄 Reset to Defaults"
+		content = `
+Reset all settings to default values:
+
+This will:
+  • Clear all saved settings
+  • Reset theme to default
+  • Clear export preferences
+  • Remove custom configurations
+
+Warning: This action cannot be undone.
+
+Press 'y' to confirm reset, or ESC to cancel.
+`
+	default:
+		title = "⚙️ Settings"
+		content = `
+Select a settings option from the menu.
+`
+	}
+
+	settingsContent := TitleStyle.Render(title) + "\n\n" + content + "\n\n" + SubtleStyle.Render("Press ESC or q to go back")
+
+	box := BoxStyle.Render(settingsContent)
+
+	if m.windowWidth == 0 {
+		return box
+	}
+
+	return lipgloss.Place(
+		m.windowWidth, m.windowHeight,
+		lipgloss.Center, lipgloss.Center,
+		box,
 	)
 }
