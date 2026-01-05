@@ -29,25 +29,26 @@ const (
 )
 
 type MainModel struct {
-	state         sessionState
-	menu          MenuModel
-	input         string // Repository input
-	compareInput1 string // First repo for comparison
-	compareInput2 string // Second repo for comparison
-	compareStep   int    // 0 = entering first repo, 1 = entering second repo
-	spinner       spinner.Model
-	dashboard     DashboardModel
-	tree          TreeModel
-	help          help.Model
-	progress      *ProgressTracker
-	err           error
-	windowWidth   int
-	windowHeight  int
-	analysisType  string // quick, detailed, custom
-	appSettings   tea.LogOptionsSetter
-	compareResult *CompareResult // Holds comparison data
-	history       *History       // Analysis history
-	historyCursor int            // Current selection in history
+	state              sessionState
+	menu               MenuModel
+	input              string // Repository input
+	compareInput1      string // First repo for comparison
+	compareInput2      string // Second repo for comparison
+	compareStep        int    // 0 = entering first repo, 1 = entering second repo
+	spinner            spinner.Model
+	dashboard          DashboardModel
+	tree               TreeModel
+	help               help.Model
+	progress           *ProgressTracker
+	err                error
+	windowWidth        int
+	windowHeight       int
+	analysisType       string // quick, detailed, custom
+	appSettings        tea.LogOptionsSetter
+	compareResult      *CompareResult // Holds comparison data
+	history            *History       // Analysis history
+	historyCursor      int            // Current selection in history
+	inputHistoryCursor int
 }
 
 func NewMainModel() MainModel {
@@ -122,9 +123,14 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.menu = newMenu.(MenuModel)
 		cmds = append(cmds, newCmd)
 
-		if m.menu.SelectedOption == 0 && m.menu.Done { // Analyze
+		if m.menu.SelectedOption == 0 && m.menu.Done {
 			m.state = stateInput
-			m.menu.Done = false // Reset for back navigation
+			m.menu.Done = false
+
+			// Load history for input suggestions
+			history, _ := LoadHistory()
+			m.history = history
+			m.inputHistoryCursor = -1
 		} else if m.menu.SelectedOption == 1 && m.menu.Done { // Compare
 			m.state = stateCompareInput
 			m.compareStep = 0
@@ -158,12 +164,42 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.err = fmt.Errorf("please enter a valid repository (owner/repo or GitHub URL)")
 				}
 
+			case tea.KeyUp:
+				if m.history != nil && len(m.history.Entries) > 0 {
+					if m.inputHistoryCursor < len(m.history.Entries)-1 {
+						m.inputHistoryCursor++
+					}
+					m.input = m.history.Entries[m.inputHistoryCursor].RepoName
+				}
+
+			case tea.KeyDown:
+				if m.history != nil && len(m.history.Entries) > 0 {
+					if m.inputHistoryCursor > 0 {
+						m.inputHistoryCursor--
+						m.input = m.history.Entries[m.inputHistoryCursor].RepoName
+					} else {
+						m.inputHistoryCursor = -1
+						m.input = ""
+					}
+				}
+
 			case tea.KeyBackspace:
 				if len(m.input) > 0 {
 					m.input = m.input[:len(m.input)-1]
 				}
 			case tea.KeyRunes:
-				m.input += string(msg.Runes)
+				r := string(msg.Runes)
+
+				// Shortcut: open history
+				if r == "h" || r == "H" {
+					m.state = stateHistory
+					m.historyCursor = 0
+					return m, nil
+				}
+
+				// Normal typing
+				m.input += r
+
 			case tea.KeyEsc:
 				m.state = stateMenu
 			case tea.KeyCtrlU:
@@ -465,7 +501,7 @@ func (m MainModel) inputView() string {
 	inputContent :=
 		TitleStyle.Render("📥 ENTER REPOSITORY") + "\n\n" +
 			InputStyle.Render("> "+m.input) + "\n\n" +
-			SubtleStyle.Render("Format: owner/repo or GitHub URL  •  Press Enter to analyze")
+			SubtleStyle.Render("Format: owner/repo  •  Enter: run  •  ↑/↓: history  •  H: full history")
 
 	if m.err != nil {
 		inputContent += "\n\n" + ErrorStyle.Render(fmt.Sprintf("Error: %v", m.err))

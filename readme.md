@@ -47,7 +47,7 @@
 ## 📝 Project Overview
 
 Repo-lyzer is structured in a **modular architecture** for scalability and maintainability:
-
+```text
 
 repo-analyzer/
 │
@@ -65,7 +65,7 @@ repo-analyzer/
 ├── main.go 
 ├── go.mod 
 └── README.md
-
+```
 
 **Workflow:**
 
@@ -130,6 +130,23 @@ Launch the application and select **Compare Repositories** from the dashboard.
 Export functionality is available from within the interactive dashboard.  
 After analysis, choose the export option from the menu to save results.
 
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Key | Action |
+|----|-------|
+| `Enter` | Confirm input / run analysis |
+| `ESC` | Go back / cancel current action |
+| `q` | Quit application (from main menu) |
+| `H` | Open analysis history |
+| `↑ / ↓` | Navigate menu or history |
+| `j ` | Navigate lists (vim-style) |
+| `m` | Export comparison as Markdown |
+| `j` | Export comparison as JSON |
+
+These shortcuts make Repo-lyzer feel fast and efficient for terminal power users.
+---
 
 ## 🔐 GitHub API Configuration (Optional)
 
@@ -160,15 +177,31 @@ setx GITHUB_TOKEN your_token_here     # Windows
 ---
 
 ## Installation (For Users)
-1.Go to the terminal and run
+1. Go to the terminal and run
 ```bash
 go install github.com/agnivo988/Repo-lyzer@v1.0.0
 ```
 
-2.Then just run 
+2. Then run 
 ```bash
 repo-lyzer
 ```
+---
+
+
+## 🛠 Troubleshooting
+
+**Invalid repository input error**
+- Ensure the format is `owner/repo` (example: `golang/go`)
+- Avoid pasting full GitHub URLs
+
+**GitHub API rate limit issues**
+- Set a `GITHUB_TOKEN` for higher rate limits
+
+**Application doesn’t start**
+- Verify Go version is `v1.20+`
+- Run `go mod tidy` before `go run main.go`
+
 ---
 
 ## License
