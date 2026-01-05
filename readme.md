@@ -171,11 +171,13 @@ After analysis, choose the export option from the menu to save results.
 | `q` | Quit application (from main menu) |
 | `H` | Open analysis history |
 | `↑ / ↓` | Navigate menu or history |
-| `j ` | Navigate lists (vim-style) |
+| `j / k` | Navigate lists (vim-style) |
 | `m` | Export comparison as Markdown |
 | `j` | Export comparison as JSON |
 
 These shortcuts make Repo-lyzer feel fast and efficient for terminal power users.
+ℹ️ **Note:** Some shortcuts are context-specific.  
+> For example, `j` is used for navigation in list views and for exporting JSON in the comparison screen.
 ---
 
 ## 🔐 GitHub API Configuration (Optional)
