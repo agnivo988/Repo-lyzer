@@ -1,10 +1,12 @@
-// Package cmd provides command-line interface commands for the Repo-lyzer application.
-// It includes commands for analyzing repositories, comparing repositories, and running the interactive menu.
 package cmd
 
 import (
 	"fmt"
 	"strings"
+
+feat/code-search-filter-by-filetype
+	"github.com/spf13/cobra"
+
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
@@ -12,13 +14,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var fileTypes []string
+
 // RunAnalyze executes the analyze command for a given GitHub repository.
-// It takes the owner and repository name, performs comprehensive analysis including
-// repository info, languages, commits, contributors, and generates various reports.
-// Parameters:
-//   - owner: GitHub username or organization name
-//   - repo: Repository name
-// Returns an error if the analysis fails.
 func RunAnalyze(owner, repo string) error {
 	args := []string{owner + "/" + repo}
 	analyzeCmd.SetArgs(args)
@@ -36,6 +34,7 @@ var analyzeCmd = &cobra.Command{
 		}
 
 		client := github.NewClient()
+
 		repo, err := client.GetRepo(parts[0], parts[1])
 		if err != nil {
 			return err
@@ -51,10 +50,14 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get commits: %w", err)
 		}
 
-		_, err = client.GetFileTree(parts[0], parts[1], repo.DefaultBranch)
+		tree, err := client.GetFileTree(parts[0], parts[1], repo.DefaultBranch)
 		if err != nil {
 			return fmt.Errorf("failed to get file tree: %w", err)
 		}
+
+ feat/code-search-filter-by-filetype
+		// NEW: apply file-type filtering if provided
+		filteredFiles := analyzer.FilterFilesByExtension(tree, fileTypes)
 
 		score := analyzer.CalculateHealth(repo, commits)
 		activity := analyzer.CommitsPerDay(commits)
@@ -92,6 +95,24 @@ var analyzeCmd = &cobra.Command{
 		output.PrintGitHubAPIStatus(client)
 		output.PrintRecruiterSummary(summary)
 
+		// Optional: show filtered file count (non-breaking)
+		if len(fileTypes) > 0 {
+			output.PrintInfo(
+				fmt.Sprintf("Filtered files by extension (%v): %d files matched", fileTypes, len(filteredFiles)),
+			)
+		}
+
 		return nil
 	},
+}
+
+func init() {
+	analyzeCmd.Flags().StringSliceVar(
+		&fileTypes,
+		"ext",
+		[]string{},
+		"Filter search by file extensions (e.g. --ext js,py,md)",
+	)
+
+	rootCmd.AddCommand(analyzeCmd)
 }

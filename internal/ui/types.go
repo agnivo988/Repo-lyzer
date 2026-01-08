@@ -29,8 +29,24 @@ type CachedAnalysisResult struct {
 	CachedAt time.Time
 }
 
+feat/empty-state-error-handling-58
+type UIState int
+
+const (
+	StateLoading UIState = iota
+	StateReady
+	StateEmpty
+	StateError
+)
+
+type UIMessage struct {
+	Title       string
+	Description string
+	Retryable   bool
+
 // CompareResult holds analysis data for two repositories
 type CompareResult struct {
 	Repo1 AnalysisResult
 	Repo2 AnalysisResult
+
 }
