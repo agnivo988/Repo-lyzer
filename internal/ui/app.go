@@ -1,15 +1,10 @@
 package ui
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
-	"github.com/agnivo988/Repo-lyzer/internal/cache"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -25,54 +20,42 @@ const (
 	stateLoading
 	stateDashboard
 	stateTree
-	stateFileEdit
 	stateSettings
 	stateHelp
 	stateHistory
-	stateFavorites
 	stateCompareInput
 	stateCompareLoading
 	stateCompareResult
-	stateCloneInput
-	stateCloning
 )
 
 type MainModel struct {
-	state           sessionState
-	menu            MenuModel
-	input           string // Repository input
-	compareInput1   string // First repo for comparison
-	compareInput2   string // Second repo for comparison
-	compareStep     int    // 0 = entering first repo, 1 = entering second repo
-	spinner         spinner.Model
-	dashboard       DashboardModel
-	tree            TreeModel
-	fileEdit        FileEditModel
-	help            help.Model
-	progress        *ProgressTracker
-	err             error
-	windowWidth     int
-	windowHeight    int
-	analysisType    string // quick, detailed, custom
-	appSettings     tea.LogOptionsSetter
-	compareResult   *CompareResult // Holds comparison data
-	history         *History       // Analysis history
-	historyCursor   int            // Current selection in history
-	helpContent     string         // Content for help screen
-	settingsOption  string         // Selected settings option
-	cache           *cache.Cache   // Offline cache for analysis results
-	cacheStatus     string         // Cache status: "fresh", "cached", "expired", ""
-	favorites       *Favorites     // Favorite repositories
-	favoritesCursor int            // Current selection in favorites
+	state          sessionState
+	menu           MenuModel
+	input          string // Repository input
+	compareInput1  string // First repo for comparison
+	compareInput2  string // Second repo for comparison
+	compareStep    int    // 0 = entering first repo, 1 = entering second repo
+	spinner        spinner.Model
+	dashboard      DashboardModel
+	tree           TreeModel
+	help           help.Model
+	progress       *ProgressTracker
+	err            error
+	windowWidth    int
+	windowHeight   int
+	analysisType   string // quick, detailed, custom
+	appSettings    tea.LogOptionsSetter
+	compareResult  *CompareResult // Holds comparison data
+	history        *History       // Analysis history
+	historyCursor  int            // Current selection in history
+	helpContent    string         // Content for help screen
+	settingsOption string         // Selected settings option
 }
 
 func NewMainModel() MainModel {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-
-	// Initialize cache
-	repoCache, _ := cache.NewCache()
 
 	return MainModel{
 		state:       stateMenu,
@@ -81,7 +64,6 @@ func NewMainModel() MainModel {
 		dashboard:   NewDashboardModel(),
 		tree:        NewTreeModel(nil),
 		appSettings: nil,
-		cache:       repoCache,
 	}
 }
 
@@ -97,18 +79,25 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
-		// Handle terminal resize
-		if m.windowWidth != msg.Width || m.windowHeight != msg.Height {
-			// Adapt layout accordingly
-			m.windowWidth = msg.Width
-			m.windowHeight = msg.Height
-		}
-		// Propagate to children
-		m.menu.Update(msg)
-		m.dashboard.Update(msg)
-		m.help.Update(msg)
-		newTree, _ := m.tree.Update(msg)
+
+		// 1. Update Menu and SAVE the result
+		newMenu, cmdMenu := m.menu.Update(msg)
+		m.menu = newMenu.(MenuModel)
+		cmds = append(cmds, cmdMenu)
+
+		// 2. Update Dashboard and SAVE the result
+		// This ensures m.dashboard.width/height are actually set!
+		newDash, cmdDash := m.dashboard.Update(msg)
+		m.dashboard = newDash.(DashboardModel)
+		cmds = append(cmds, cmdDash)
+
+		// 3. Update Help
+		m.help.Width = msg.Width
+
+		// 4. Update Tree (You already had this correct)
+		newTree, cmdTree := m.tree.Update(msg)
 		m.tree = newTree.(TreeModel)
+		cmds = append(cmds, cmdTree)
 
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
@@ -140,17 +129,6 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, m.analyzeRepo(m.dashboard.data.Repo.FullName))
 			}
 		}
-		if msg == "add_to_favorites" {
-			// Add current repo to favorites
-			if m.dashboard.data.Repo != nil {
-				if m.favorites == nil {
-					m.favorites, _ = LoadFavorites()
-				}
-				m.favorites.Add(m.dashboard.data.Repo.FullName)
-				m.favorites.Save()
-				m.err = fmt.Errorf("⭐ Added to favorites: %s", m.dashboard.data.Repo.FullName)
-			}
-		}
 	}
 
 	switch m.state {
@@ -171,39 +149,29 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.state = stateInput
 				}
 				m.menu.Done = false
-			case 1: // Favorites
-				m.state = stateFavorites
-				m.favoritesCursor = 0
-				favs, _ := LoadFavorites()
-				m.favorites = favs
-				m.menu.Done = false
-			case 2: // Compare
+			case 1: // Compare
 				m.state = stateCompareInput
 				m.compareStep = 0
 				m.compareInput1 = ""
 				m.compareInput2 = ""
 				m.menu.Done = false
-			case 3: // History
+			case 2: // History
 				m.state = stateHistory
 				m.historyCursor = 0
 				history, _ := LoadHistory()
 				m.history = history
 				m.menu.Done = false
-			case 4: // Clone Repository
-				m.state = stateCloneInput
-				m.input = ""
-				m.menu.Done = false
-			case 5: // Settings
+			case 3: // Settings
 				if m.menu.submenuType == "settings" {
 					// Settings option selection
-					settingsOptions := []string{"theme", "cache", "export", "token", "reset"}
+					settingsOptions := []string{"theme", "export", "token", "reset"}
 					if m.menu.submenuCursor < len(settingsOptions) {
 						m.settingsOption = settingsOptions[m.menu.submenuCursor]
 					}
 					m.state = stateSettings
 				}
 				m.menu.Done = false
-			case 6: // Help
+			case 4: // Help
 				if m.menu.submenuType == "help" {
 					// Help option selection
 					helpOptions := []string{"shortcuts", "getting-started", "features", "troubleshooting"}
@@ -213,7 +181,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.state = stateHelp
 				}
 				m.menu.Done = false
-			case 7: // Exit
+			case 5: // Exit
 				return m, tea.Quit
 			}
 		}
@@ -387,15 +355,14 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case stateLoading:
+		// GAMIFYING THE UI: Add ASCII logo and visual enhancements
 		m.spinner, cmd = m.spinner.Update(msg)
 		cmds = append(cmds, cmd)
 
 		if result, ok := msg.(AnalysisResult); ok {
 			m.dashboard.SetData(result)
-			m.dashboard.SetCacheStatus("fresh")
 			m.state = stateDashboard
 			m.progress = nil
-			m.cacheStatus = "fresh"
 			// Save to history
 			if m.history == nil {
 				m.history, _ = LoadHistory()
@@ -403,62 +370,10 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.history.AddEntry(result)
 			m.history.Save()
 		}
-		if cachedResult, ok := msg.(CachedAnalysisResult); ok {
-			m.dashboard.SetData(cachedResult.Result)
-			m.dashboard.SetCacheStatus("cached")
-			m.state = stateDashboard
-			m.progress = nil
-			m.cacheStatus = "cached"
-			// Save to history
-			if m.history == nil {
-				m.history, _ = LoadHistory()
-			}
-			m.history.AddEntry(cachedResult.Result)
-			m.history.Save()
-		}
 		if err, ok := msg.(error); ok {
 			m.err = err
 			m.state = stateInput // Go back to input on error
 			m.progress = nil
-		}
-
-	case stateFavorites:
-		switch msg := msg.(type) {
-		case tea.KeyMsg:
-			switch msg.String() {
-			case "up", "k":
-				if m.favoritesCursor > 0 {
-					m.favoritesCursor--
-				}
-			case "down", "j":
-				if m.favorites != nil && m.favoritesCursor < len(m.favorites.Items)-1 {
-					m.favoritesCursor++
-				}
-			case "enter":
-				// Analyze selected favorite
-				if m.favorites != nil && len(m.favorites.Items) > 0 {
-					repoName := m.favorites.Items[m.favoritesCursor].RepoName
-					m.favorites.UpdateUsage(repoName)
-					m.favorites.Save()
-					m.input = repoName
-					m.state = stateLoading
-					cmds = append(cmds, m.analyzeRepo(repoName))
-				}
-			case "d":
-				// Remove from favorites
-				if m.favorites != nil && len(m.favorites.Items) > 0 {
-					m.favorites.Remove(m.favorites.Items[m.favoritesCursor].RepoName)
-					m.favorites.Save()
-					if m.favoritesCursor >= len(m.favorites.Items) && m.favoritesCursor > 0 {
-						m.favoritesCursor--
-					}
-				}
-			case "a":
-				// Add new favorite (go to input)
-				m.state = stateInput
-			case "q", "esc":
-				m.state = stateMenu
-			}
 		}
 
 	case stateHistory:
@@ -517,88 +432,6 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "q", "esc":
 				m.state = stateMenu
-			case "t":
-				// Cycle through themes
-				theme := CycleTheme()
-				m.err = fmt.Errorf("Theme changed to: %s", theme.Name)
-			case "1", "2", "3", "4", "5", "6", "7":
-				// Select theme by number
-				idx := int(msg.String()[0] - '1')
-				if idx >= 0 && idx < len(AvailableThemes) {
-					theme := SetThemeByIndex(idx)
-					m.err = fmt.Errorf("Theme: %s", theme.Name)
-				}
-			case "e":
-				// Toggle cache enabled (only in cache settings)
-				if m.settingsOption == "cache" && m.cache != nil {
-					cfg := m.cache.GetConfig()
-					m.cache.SetEnabled(!cfg.Enabled)
-					if cfg.Enabled {
-						m.err = fmt.Errorf("Cache disabled")
-					} else {
-						m.err = fmt.Errorf("Cache enabled")
-					}
-				}
-			case "a":
-				// Toggle auto-cache (only in cache settings)
-				if m.settingsOption == "cache" && m.cache != nil {
-					cfg := m.cache.GetConfig()
-					m.cache.SetAutoCache(!cfg.AutoCache)
-					if cfg.AutoCache {
-						m.err = fmt.Errorf("Auto-cache disabled")
-					} else {
-						m.err = fmt.Errorf("Auto-cache enabled")
-					}
-				}
-			case "c":
-				// Clear all cache (only in cache settings)
-				if m.settingsOption == "cache" && m.cache != nil {
-					m.cache.Clear()
-					m.err = fmt.Errorf("Cache cleared")
-				}
-			case "x":
-				// Clean expired entries (only in cache settings)
-				if m.settingsOption == "cache" && m.cache != nil {
-					removed := m.cache.CleanExpired()
-					m.err = fmt.Errorf("Removed %d expired entries", removed)
-				}
-			}
-		}
-
-	case stateCloneInput:
-		switch msg := msg.(type) {
-		case tea.KeyMsg:
-			switch msg.String() {
-			case "enter":
-				if m.input != "" {
-					m.state = stateCloning
-					cmds = append(cmds, m.cloneRepo(m.input))
-				}
-			case "esc":
-				m.state = stateMenu
-				m.input = ""
-			case "backspace":
-				if len(m.input) > 0 {
-					m.input = m.input[:len(m.input)-1]
-				}
-			case "ctrl+u":
-				m.input = ""
-			default:
-				if len(msg.String()) == 1 {
-					m.input += msg.String()
-				}
-			}
-		}
-
-	case stateCloning:
-		if result, ok := msg.(cloneResult); ok {
-			if result.err != nil {
-				m.err = result.err
-				m.state = stateCloneInput
-			} else {
-				m.err = fmt.Errorf("✓ Cloned to: %s", result.path)
-				m.state = stateMenu
-				m.input = ""
 			}
 		}
 
@@ -619,34 +452,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, newCmd)
 
 		if m.tree.Done {
-			if m.tree.SelectedPath != "" {
-				// Initialize file edit model
-				repoName := m.input
-				if m.dashboard.data.Repo != nil && m.dashboard.data.Repo.FullName != "" {
-					repoName = m.dashboard.data.Repo.FullName
-				}
-				m.fileEdit = NewFileEditModel(m.tree.SelectedPath, repoName)
-
-				// Check ownership
-				isOwner := m.checkOwnership()
-				m.fileEdit.SetOwnership(isOwner)
-
-				m.state = stateFileEdit
-			} else {
-				m.state = stateDashboard
-			}
+			m.state = stateDashboard
 			m.tree.Done = false
-			m.tree.SelectedPath = ""
-		}
-
-	case stateFileEdit:
-		newFileEdit, newCmd := m.fileEdit.Update(msg)
-		m.fileEdit = newFileEdit.(FileEditModel)
-		cmds = append(cmds, newCmd)
-
-		if m.fileEdit.Done {
-			m.state = stateTree
-			m.fileEdit.Done = false
 		}
 	}
 
@@ -661,21 +468,34 @@ func (m MainModel) View() string {
 		return m.inputView()
 	case stateCompareInput:
 		return m.compareInputView()
-	case stateFavorites:
-		return m.favoritesView()
 	case stateHistory:
 		return m.historyView()
-	case stateCloneInput:
-		return m.cloneInputView()
-	case stateCloning:
-		return m.cloningView()
 	case stateLoading:
-		loadMsg := fmt.Sprintf("📊 Analyzing %s", m.input)
+		// GAMIFYING THE UI: Responsive ASCII Art
+		var asciiLogo string
+		
+		// Only show big ASCII art if we have space (width > 80)
+		if m.windowWidth > 80 {
+			asciiLogo = `
+    ____                       __                     
+   / __ \___  ____  ____      / /_  ______  ___  _____
+  / /_/ / _ \/ __ \/ __ \____/ / / / /_  / / _ \/ ___/
+ / _, _/  __/ /_/ / /_/ /___/ / /_/ / / /_/  __/ /    
+/_/ |_|\___/ .___/\____/   /_/\__, / /___/\___/_/     
+          /_/                /____/                   
+    `
+			asciiLogo = TitleStyle.Render(asciiLogo) + "\n"
+		} else {
+			// Small header for mobile
+			asciiLogo = TitleStyle.Render("⚡ REPO-LYZER SYSTEM ⚡") + "\n"
+		}
+
+		loadMsg := fmt.Sprintf("🚀 INITIALIZING SCAN: %s", m.input)
 		if m.analysisType != "" {
 			loadMsg += fmt.Sprintf(" (%s mode)", strings.ToUpper(m.analysisType))
 		}
 
-		statusView := fmt.Sprintf("%s %s...", m.spinner.View(), loadMsg)
+		statusView := fmt.Sprintf("%s\n%s %s...", TitleStyle.Render(asciiLogo), m.spinner.View(), loadMsg)
 
 		// Show progress stages if available
 		if m.progress != nil {
@@ -717,8 +537,6 @@ func (m MainModel) View() string {
 		return m.compareResultView()
 	case stateTree:
 		return m.tree.View()
-	case stateFileEdit:
-		return m.fileEdit.View()
 	case stateHelp:
 		return m.helpView()
 	case stateSettings:
@@ -754,69 +572,11 @@ func (m MainModel) inputView() string {
 	)
 }
 
-// cloneResult is the result of a clone operation
-type cloneResult struct {
-	err  error
-	path string
-}
-
-// cloneRepo clones a repository to the Desktop folder
-func (m MainModel) cloneRepo(repoName string) tea.Cmd {
-	return func() tea.Msg {
-		parts := strings.Split(repoName, "/")
-		if len(parts) != 2 {
-			return cloneResult{err: fmt.Errorf("repository must be in owner/repo format")}
-		}
-
-		// Get Desktop path
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return cloneResult{err: err}
-		}
-		desktopPath := filepath.Join(home, "Desktop")
-		clonePath := filepath.Join(desktopPath, parts[1])
-
-		// Check if already exists
-		if _, err := os.Stat(clonePath); err == nil {
-			return cloneResult{err: fmt.Errorf("folder already exists: %s", clonePath)}
-		}
-
-		// Clone the repository
-		repoURL := fmt.Sprintf("https://github.com/%s/%s.git", parts[0], parts[1])
-		cmd := exec.Command("git", "clone", repoURL, clonePath)
-		
-		if err := cmd.Run(); err != nil {
-			return cloneResult{err: fmt.Errorf("clone failed: %w", err)}
-		}
-
-		// Open file manager to show the cloned folder
-		openFileManager(clonePath)
-
-		return cloneResult{path: clonePath}
-	}
-}
-
 func (m MainModel) analyzeRepo(repoName string) tea.Cmd {
 	return func() tea.Msg {
 		parts := strings.Split(repoName, "/")
 		if len(parts) != 2 {
 			return fmt.Errorf("repository must be in owner/repo format")
-		}
-
-		// Check cache first
-		if m.cache != nil {
-			if entry, found := m.cache.Get(repoName); found {
-				// Unmarshal cached analysis
-				var result AnalysisResult
-				if err := json.Unmarshal(entry.Analysis, &result); err == nil {
-					// Return cached result with status
-					return CachedAnalysisResult{
-						Result:   result,
-						IsCached: true,
-						CachedAt: entry.CachedAt,
-					}
-				}
-			}
 		}
 
 		tracker := NewProgressTracker()
@@ -858,50 +618,24 @@ func (m MainModel) analyzeRepo(repoName string) tea.Cmd {
 		score := analyzer.CalculateHealth(repo, commits)
 		busFactor, busRisk := analyzer.BusFactor(contributors)
 		maturityScore, maturityLevel := analyzer.RepoMaturityScore(repo, len(commits), len(contributors), false)
-		
-		// Stage 6: Analyze dependencies, contributor insights, and code quality
-		deps, _ := analyzer.AnalyzeDependencies(client, parts[0], parts[1], repo.DefaultBranch, fileTree)
-		contributorInsights := analyzer.AnalyzeContributors(contributors)
-		codeQuality := analyzer.AnalyzeCodeQuality(repo, fileTree, languages)
 		tracker.NextStage()
 
 		// Mark complete
 		tracker.NextStage()
 
-		result := AnalysisResult{
-			Repo:                repo,
-			Commits:             commits,
-			Contributors:        contributors,
-			FileTree:            fileTree,
-			Languages:           languages,
-			HealthScore:         score,
-			BusFactor:           busFactor,
-			BusRisk:             busRisk,
-			MaturityScore:       maturityScore,
-			MaturityLevel:       maturityLevel,
-			Dependencies:        deps,
-			ContributorInsights: contributorInsights,
-			CodeQuality:         codeQuality,
+		return AnalysisResult{
+			Repo:          repo,
+			Commits:       commits,
+			Contributors:  contributors,
+			FileTree:      fileTree,
+			Languages:     languages,
+			HealthScore:   score,
+			BusFactor:     busFactor,
+			BusRisk:       busRisk,
+			MaturityScore: maturityScore,
+			MaturityLevel: maturityLevel,
 		}
-
-		// Save to cache
-		if m.cache != nil {
-			m.cache.Set(repoName, result)
-		}
-
-		return result
 	}
-}
-
-func (m MainModel) checkOwnership() bool {
-	client := github.NewClient()
-	user, err := client.GetUser()
-	if err != nil {
-		return false // If we can't get user, assume not owner
-	}
-
-	expectedOwner := m.fileEdit.repoOwner
-	return user.Login == expectedOwner
 }
 
 func (m MainModel) compareInputView() string {
@@ -1101,76 +835,6 @@ func sanitizeRepoInput(input string) string {
 	return clean
 }
 
-func (m MainModel) favoritesView() string {
-	header := TitleStyle.Render("⭐ Favorite Repositories")
-
-	if m.favorites == nil || len(m.favorites.Items) == 0 {
-		content := lipgloss.JoinVertical(
-			lipgloss.Left,
-			header,
-			BoxStyle.Render("No favorites yet!\n\nAnalyze a repository and press 'b' to bookmark it."),
-			SubtleStyle.Render("a: add new • q/ESC: back to menu"),
-		)
-
-		if m.windowWidth == 0 {
-			return content
-		}
-
-		return lipgloss.Place(
-			m.windowWidth,
-			m.windowHeight,
-			lipgloss.Center,
-			lipgloss.Center,
-			content,
-		)
-	}
-
-	// Build favorites list
-	var lines []string
-	lines = append(lines, fmt.Sprintf("%-35s │ %-10s │ %s", "Repository", "Uses", "Last Used"))
-	lines = append(lines, strings.Repeat("─", 65))
-
-	for i, fav := range m.favorites.Items {
-		prefix := "  "
-		if i == m.favoritesCursor {
-			prefix = "▶ "
-		}
-		line := fmt.Sprintf("%s%-33s │ %-10d │ %s",
-			prefix,
-			fav.RepoName,
-			fav.UseCount,
-			fav.LastUsed.Format("2006-01-02"),
-		)
-		if i == m.favoritesCursor {
-			lines = append(lines, SelectedStyle.Render(line))
-		} else {
-			lines = append(lines, line)
-		}
-	}
-
-	tableBox := BoxStyle.Render(strings.Join(lines, "\n"))
-	footer := SubtleStyle.Render("↑↓: navigate • Enter: analyze • d: remove • a: add new • q/ESC: back")
-
-	content := lipgloss.JoinVertical(
-		lipgloss.Left,
-		header,
-		tableBox,
-		footer,
-	)
-
-	if m.windowWidth == 0 {
-		return content
-	}
-
-	return lipgloss.Place(
-		m.windowWidth,
-		m.windowHeight,
-		lipgloss.Center,
-		lipgloss.Center,
-		content,
-	)
-}
-
 func (m MainModel) historyView() string {
 	header := TitleStyle.Render("📜 Analysis History")
 
@@ -1241,66 +905,6 @@ func (m MainModel) historyView() string {
 		lipgloss.Center,
 		lipgloss.Center,
 		content,
-	)
-}
-
-func (m MainModel) cloneInputView() string {
-	header := TitleStyle.Render("📥 CLONE REPOSITORY")
-
-	inputContent := fmt.Sprintf(
-		"Enter repository to clone (owner/repo):\n\n> %s█\n\n"+
-			"The repository will be cloned to your Desktop folder.",
-		m.input,
-	)
-
-	var errMsg string
-	if m.err != nil {
-		errMsg = "\n" + ErrorStyle.Render(m.err.Error())
-	}
-
-	footer := SubtleStyle.Render("Enter: clone • ESC: back • Ctrl+U: clear")
-
-	content := lipgloss.JoinVertical(
-		lipgloss.Left,
-		header,
-		BoxStyle.Render(inputContent),
-		errMsg,
-		footer,
-	)
-
-	if m.windowWidth == 0 {
-		return content
-	}
-
-	return lipgloss.Place(
-		m.windowWidth,
-		m.windowHeight,
-		lipgloss.Center,
-		lipgloss.Center,
-		content,
-	)
-}
-
-func (m MainModel) cloningView() string {
-	header := TitleStyle.Render("📥 CLONING REPOSITORY")
-
-	content := fmt.Sprintf(
-		"%s Cloning %s to Desktop...\n\n"+
-			"Please wait while the repository is being cloned.",
-		m.spinner.View(),
-		m.input,
-	)
-
-	return lipgloss.Place(
-		m.windowWidth,
-		m.windowHeight,
-		lipgloss.Center,
-		lipgloss.Center,
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			header,
-			BoxStyle.Render(content),
-		),
 	)
 }
 
@@ -1446,69 +1050,22 @@ func (m MainModel) settingsView() string {
 	switch m.settingsOption {
 	case "theme":
 		title = "🎨 Theme Settings"
-		
-		// Build theme list with current indicator
-		themeList := ""
-		for i, theme := range AvailableThemes {
-			indicator := "  "
-			if i == CurrentThemeIndex {
-				indicator = "▶ "
-			}
-			themeList += fmt.Sprintf("  %s[%d] %s\n", indicator, i+1, theme.Name)
-		}
-		
-		content = fmt.Sprintf(`
-Current theme: %s
+		content = `
+Theme customization options:
+
+Current theme: Default
 
 Available themes:
-%s
-Keybindings:
-  • Press 1-7 to select a theme
-  • Press 't' to cycle through themes
+  • Default (Dark)
+  • Light
+  • High Contrast
 
-Theme changes are applied immediately!
-`, CurrentTheme.Name, themeList)
-	case "cache":
-		title = "� Cachre Settings"
-		
-		// Get cache stats
-		cacheInfo := "Cache not initialized"
-		if m.cache != nil {
-			stats := m.cache.GetStats()
-			cfg := m.cache.GetConfig()
-			
-			enabledStr := "Disabled"
-			if cfg.Enabled {
-				enabledStr = "Enabled"
-			}
-			autoStr := "Off"
-			if cfg.AutoCache {
-				autoStr = "On"
-			}
-			
-			cacheInfo = fmt.Sprintf(`
-Status: %s
-Auto-cache: %s
-TTL: %s
-Max Size: %d MB
+To change theme:
+  1. Edit the theme configuration
+  2. Restart the application
 
-Statistics:
-  • Total repos cached: %d
-  • Valid (not expired): %d
-  • Expired: %d
-  • Cache size: %.2f MB
-  • Location: %s
-
-Keybindings:
-  • Press 'e' to toggle caching
-  • Press 'a' to toggle auto-cache
-  • Press 'c' to clear all cache
-  • Press 'x' to clean expired entries
-`, enabledStr, autoStr, cache.FormatTTL(cfg.TTL), cfg.MaxSize,
-				stats.TotalRepos, stats.ValidRepos, stats.ExpiredRepos,
-				stats.TotalSizeMB, stats.CacheDir)
-		}
-		content = cacheInfo
+Note: Theme changes require application restart.
+`
 	case "export":
 		title = "📤 Export Options"
 		content = `
@@ -1519,7 +1076,7 @@ Export formats available:
   • PDF: Professional documents
 
 Default export location:
-  ~/Downloads/
+  ./exports/
 
 To change export settings:
   1. Modify export configuration
