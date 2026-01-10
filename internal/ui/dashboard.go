@@ -20,6 +20,9 @@ const (
 	viewLanguages
 	viewActivity
 	viewContributors
+	viewContributorInsights
+	viewDependencies
+	viewSecurity
 	viewRecruiter
 	viewAPIStatus
 )
@@ -150,6 +153,22 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.showHelp = false
 			m.showExport = false
 		case "7":
+			m.currentView = viewContributorInsights
+			m.showHelp = false
+			m.showExport = false
+		case "7":
+			m.currentView = viewDependencies
+			m.showHelp = false
+			m.showExport = false
+		case "8":
+			m.currentView = viewSecurity
+			m.showHelp = false
+			m.showExport = false
+		case "9":
+			m.currentView = viewRecruiter
+			m.showHelp = false
+			m.showExport = false
+		case "0":
 			m.currentView = viewAPIStatus
 			m.showHelp = false
 			m.showExport = false
@@ -196,6 +215,12 @@ func (m DashboardModel) View() string {
 		content = m.activityView()
 	case viewContributors:
 		content = m.contributorsView()
+	case viewContributorInsights:
+		content = m.contributorInsightsView()
+	case viewDependencies:
+		content = m.dependenciesView()
+	case viewSecurity:
+		content = m.securityView()
 	case viewRecruiter:
 		content = m.recruiterView()
 	case viewAPIStatus:
@@ -218,6 +243,7 @@ func (m DashboardModel) View() string {
 	// Navigation tabs
 	tabs := m.renderTabs()
 	footer := SubtleStyle.Render("←→/hl: switch view • 1-6: jump to view • e: export • f: file tree • ?: help • q: back")
+	footer := SubtleStyle.Render("←→/hl: switch view • 1-0: jump to view • e: export • f: file tree • ?: help • q: back")
 
 	fullContent := lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -241,10 +267,11 @@ func (m DashboardModel) View() string {
 
 func (m DashboardModel) renderTabs() string {
 	views := []string{"Overview", "Repo", "Languages", "Activity", "Contributors", "Recruiter", "API"}
+	views := []string{"Overview", "Repo", "Langs", "Activity", "Contribs", "Insights", "Deps", "Security", "Recruiter", "API"}
 	var tabs []string
 
 	for i, name := range views {
-		tab := fmt.Sprintf(" %d:%s ", i+1, name)
+		tab := fmt.Sprintf(" %d:%s ", (i+1)%10, name)
 		if dashboardView(i) == m.currentView {
 			tabs = append(tabs, SelectedStyle.Render(tab))
 		} else {
@@ -456,6 +483,277 @@ func (m DashboardModel) contributorsView() string {
 	return lipgloss.JoinVertical(lipgloss.Left, header, BoxStyle.Render(strings.Join(lines, "\n")))
 }
 
+func (m DashboardModel) contributorInsightsView() string {
+	header := TitleStyle.Render("🔍 Contributor Insights")
+
+	insights := m.data.ContributorInsights
+	if insights == nil {
+		// Generate insights on the fly if not pre-computed
+		insights = analyzer.AnalyzeContributors(m.data.Contributors)
+	}
+
+	if insights.TotalContributors == 0 {
+		return lipgloss.JoinVertical(lipgloss.Left, header, BoxStyle.Render("No contributor data available"))
+	}
+
+	// Overview section
+	overview := fmt.Sprintf(
+		"📊 Overview\n"+
+			"   Total Contributors: %d\n"+
+			"   Active Contributors: %d (>1%% commits)\n"+
+			"   Team Size: %s\n"+
+			"   Diversity Score: %.1f/100\n"+
+			"   Concentration Risk: %s",
+		insights.TotalContributors,
+		insights.ActiveContributors,
+		insights.TeamSize,
+		insights.DiversityScore,
+		insights.ConcentrationRisk,
+	)
+
+	// Top contributor
+	topContrib := ""
+	if insights.TopContributor != nil {
+		topContrib = fmt.Sprintf(
+			"\n\n👑 Top Contributor\n"+
+				"   %s: %d commits (%.1f%%)\n"+
+				"   Type: %s",
+			insights.TopContributor.Login,
+			insights.TopContributor.Commits,
+			insights.TopContributor.Percentage,
+			insights.TopContributor.ContributorType,
+		)
+	}
+
+	// Distribution stats
+	dist := insights.CommitDistribution
+	distribution := fmt.Sprintf(
+		"\n\n📈 Commit Distribution\n"+
+			"   Top 1%%:  %.1f%% of commits\n"+
+			"   Top 10%%: %.1f%% of commits\n"+
+			"   Top 50%%: %.1f%% of commits\n"+
+			"   Gini Index: %.2f (0=equal, 1=unequal)",
+		dist.Top1Percent,
+		dist.Top10Percent,
+		dist.Top50Percent,
+		dist.GiniCoefficient,
+	)
+
+	// Contributor breakdown
+	breakdown := fmt.Sprintf(
+		"\n\n👥 Contributor Breakdown\n"+
+			"   Veterans (>100 commits): %d\n"+
+			"   New (<10 commits): %d",
+		insights.VeteranContributors,
+		insights.NewContributors,
+	)
+
+	// Recommendations
+	recs := "\n\n💡 Recommendations\n"
+	for _, rec := range insights.Recommendations {
+		recs += fmt.Sprintf("   %s\n", rec)
+	}
+
+	content := overview + topContrib + distribution + breakdown + recs
+
+	return lipgloss.JoinVertical(lipgloss.Left, header, BoxStyle.Render(content))
+}
+
+func (m DashboardModel) dependenciesView() string {
+	header := TitleStyle.Render("📦 Dependencies")
+
+	insights := m.data.ContributorInsights
+	if insights == nil {
+		// Generate insights on the fly if not pre-computed
+		insights = analyzer.AnalyzeContributors(m.data.Contributors)
+	}
+
+	if insights.TotalContributors == 0 {
+		return lipgloss.JoinVertical(lipgloss.Left, header, BoxStyle.Render("No contributor data available"))
+	}
+
+	// Overview section
+	overview := fmt.Sprintf(
+		"📊 Overview\n"+
+			"   Total Contributors: %d\n"+
+			"   Active Contributors: %d (>1%% commits)\n"+
+			"   Team Size: %s\n"+
+			"   Diversity Score: %.1f/100\n"+
+			"   Concentration Risk: %s",
+		insights.TotalContributors,
+		insights.ActiveContributors,
+		insights.TeamSize,
+		insights.DiversityScore,
+		insights.ConcentrationRisk,
+	)
+
+	// Top contributor
+	topContrib := ""
+	if insights.TopContributor != nil {
+		topContrib = fmt.Sprintf(
+			"\n\n👑 Top Contributor\n"+
+				"   %s: %d commits (%.1f%%)\n"+
+				"   Type: %s",
+			insights.TopContributor.Login,
+			insights.TopContributor.Commits,
+			insights.TopContributor.Percentage,
+			insights.TopContributor.ContributorType,
+		)
+	}
+
+	// Distribution stats
+	dist := insights.CommitDistribution
+	distribution := fmt.Sprintf(
+		"\n\n📈 Commit Distribution\n"+
+			"   Top 1%%:  %.1f%% of commits\n"+
+			"   Top 10%%: %.1f%% of commits\n"+
+			"   Top 50%%: %.1f%% of commits\n"+
+			"   Gini Index: %.2f (0=equal, 1=unequal)",
+		dist.Top1Percent,
+		dist.Top10Percent,
+		dist.Top50Percent,
+		dist.GiniCoefficient,
+	)
+
+	// Contributor breakdown
+	breakdown := fmt.Sprintf(
+		"\n\n👥 Contributor Breakdown\n"+
+			"   Veterans (>100 commits): %d\n"+
+			"   New (<10 commits): %d",
+		insights.VeteranContributors,
+		insights.NewContributors,
+	)
+
+	// Recommendations
+	recs := "\n\n💡 Recommendations\n"
+	for _, rec := range insights.Recommendations {
+		recs += fmt.Sprintf("   %s\n", rec)
+	}
+
+	content := overview + topContrib + distribution + breakdown + recs
+
+	return lipgloss.JoinVertical(lipgloss.Left, header, BoxStyle.Render(content))
+}
+
+func (m DashboardModel) securityView() string {
+	header := TitleStyle.Render("🔒 Security Scan")
+
+	quality := m.data.CodeQuality
+	if quality == nil {
+		// Generate on the fly if not pre-computed
+		quality = analyzer.AnalyzeCodeQuality(m.data.Repo, m.data.FileTree, m.data.Languages)
+	}
+
+	if quality.Grade == "N/A" {
+		return lipgloss.JoinVertical(lipgloss.Left, header, BoxStyle.Render("No file tree data available for analysis"))
+	}
+
+	// Grade and overall score
+	gradeColor := getGradeColor(quality.Grade)
+	overview := fmt.Sprintf(
+		"🎯 Overall Score: %d/100  Grade: %s\n\n"+
+			"📊 Score Breakdown:\n"+
+			"   Documentation: %s %d/100\n"+
+			"   Testing:       %s %d/100\n"+
+			"   Structure:     %s %d/100\n"+
+			"   Maintenance:   %s %d/100",
+		quality.OverallScore,
+		gradeColor(quality.Grade),
+		getScoreBar(quality.DocumentationScore), quality.DocumentationScore,
+		getScoreBar(quality.TestingScore), quality.TestingScore,
+		getScoreBar(quality.StructureScore), quality.StructureScore,
+		getScoreBar(quality.MaintenanceScore), quality.MaintenanceScore,
+	)
+
+	// Project files checklist
+	checklist := "\n\n📁 Project Files:\n"
+	checklist += fmt.Sprintf("   %s README\n", checkMark(quality.HasReadme))
+	checklist += fmt.Sprintf("   %s LICENSE\n", checkMark(quality.HasLicense))
+	checklist += fmt.Sprintf("   %s CONTRIBUTING\n", checkMark(quality.HasContributing))
+	checklist += fmt.Sprintf("   %s CHANGELOG\n", checkMark(quality.HasChangelog))
+	checklist += fmt.Sprintf("   %s .gitignore\n", checkMark(quality.HasGitignore))
+	checklist += fmt.Sprintf("   %s CI/CD\n", checkMark(quality.HasCI))
+	checklist += fmt.Sprintf("   %s Tests\n", checkMark(quality.HasTests))
+
+	// File statistics
+	stats := fmt.Sprintf(
+		"\n\n📈 File Statistics:\n"+
+			"   Total Files: %d\n"+
+			"   Source Files: %d\n"+
+			"   Test Files: %d\n"+
+			"   Test Ratio: %.1f%%",
+		quality.FileStats.TotalFiles,
+		quality.FileStats.SourceFiles,
+		quality.FileStats.TestFiles,
+		quality.FileStats.TestRatio*100,
+	)
+
+	// CI/Test frameworks
+	frameworks := ""
+	if len(quality.CIProviders) > 0 {
+		frameworks += fmt.Sprintf("\n\n🔄 CI: %s", strings.Join(quality.CIProviders, ", "))
+	}
+	if len(quality.TestFrameworks) > 0 {
+		frameworks += fmt.Sprintf("\n🧪 Tests: %s", strings.Join(quality.TestFrameworks, ", "))
+	}
+
+	// Code smells
+	smells := ""
+	if len(quality.CodeSmells) > 0 {
+		smells = "\n\n⚠️ Issues Found:\n"
+		for _, smell := range quality.CodeSmells {
+			icon := "⚪"
+			if smell.Severity == "High" {
+				icon = "🔴"
+			} else if smell.Severity == "Medium" {
+				icon = "🟡"
+			}
+			smells += fmt.Sprintf("   %s %s\n", icon, smell.Description)
+		}
+	}
+
+	// Recommendations
+	recs := "\n\n💡 Recommendations:\n"
+	for _, rec := range quality.Recommendations {
+		recs += fmt.Sprintf("   %s\n", rec)
+	}
+
+	content := overview + checklist + stats + frameworks + smells + recs
+
+	return lipgloss.JoinVertical(lipgloss.Left, header, BoxStyle.Render(content))
+}
+
+// Helper functions for code quality view
+func getGradeColor(grade string) func(string) string {
+	return func(g string) string {
+		switch grade {
+		case "A":
+			return "🟢 " + g
+		case "B":
+			return "🟢 " + g
+		case "C":
+			return "🟡 " + g
+		case "D":
+			return "🟠 " + g
+		default:
+			return "🔴 " + g
+		}
+	}
+}
+
+func getScoreBar(score int) string {
+	filled := score / 10
+	empty := 10 - filled
+	return "[" + strings.Repeat("█", filled) + strings.Repeat("░", empty) + "]"
+}
+
+func checkMark(has bool) string {
+	if has {
+		return "✅"
+	}
+	return "❌"
+}
+
 func (m DashboardModel) recruiterView() string {
 	header := TitleStyle.Render("👔 Recruiter Summary")
 
@@ -477,7 +775,7 @@ func (m DashboardModel) recruiterView() string {
 			"👥 Contributors: %d\n"+
 			"🏗️ Maturity: %s (%d)\n"+
 			"⚠️ Bus Factor: %d - %s\n"+
-			"🔥 Activity: %s\n"+
+			"� Activity: %s\n"+
 			"💚 Health Score: %d/100",
 		m.data.Repo.FullName,
 		m.data.Repo.Stars,
@@ -500,6 +798,7 @@ func (m DashboardModel) helpView() string {
 Dashboard Navigation:
   ←/→ or h/l    Switch between views
   1-7           Jump to specific view
+  1-0           Jump to specific view
   
 Views:
   1  Overview     - Health, Bus Factor, Maturity
@@ -509,6 +808,12 @@ Views:
   5  Contributors - Top contributors
   6  Recruiter    - Summary for recruiters
   7  API Status   - GitHub API rate limits
+  5  Contributors - Top contributors list
+  6  Insights     - Detailed contributor insights
+  7  Dependencies - Project dependencies
+  8  Security     - Security vulnerability scan
+  9  Recruiter    - Summary for recruiters
+  0  API Status   - GitHub API rate limits
 
 Actions:
   e             Toggle export menu
