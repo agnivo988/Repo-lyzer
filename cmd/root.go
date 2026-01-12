@@ -13,6 +13,7 @@ var rootCmd = &cobra.Command{
 	Long:  "Repo-lyzer is a fast CLI tool written in Go to analyze GitHub repositories.",
 }
 
+// Execute is used for cobra commands
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

@@ -14,8 +14,8 @@ type ProgressStage struct {
 
 // ProgressTracker manages multi-step analysis progress
 type ProgressTracker struct {
-	stages   []ProgressStage
-	current  int
+	stages    []ProgressStage
+	current   int
 	startTime time.Time
 }
 
@@ -23,6 +23,57 @@ type ProgressTracker struct {
 type ProgressUpdateMsg struct {
 	StageIndex int
 	IsComplete bool
+}
+
+var SatelliteFrames = []string{
+	`
+        .
+       / \
+      | . |
+       \ /
+        '
+    Scanning...
+	`,
+	`
+        o
+       / \
+      | o |
+       \ /
+        o
+    Scanning...
+	`,
+	`
+        O
+       / \
+      | O |
+       \ /
+        O
+    Scanning...
+	`,
+	`
+        @
+       / \
+      | @ |
+       \ /
+        @
+    Scanning...
+	`,
+	`
+        O
+       / \
+      | O |
+       \ /
+        O
+    Scanning...
+	`,
+	`
+        o
+       / \
+      | o |
+       \ /
+        o
+    Scanning...
+	`,
 }
 
 // NewProgressTracker creates a tracker with default analysis stages
@@ -82,7 +133,7 @@ func (pt *ProgressTracker) GetProgress() (completed int, total int) {
 	return
 }
 
-// GetProgressBar returns a visual progress bar string
+// GetProgressBar returns a visual progress bar with a shimmering skeleton effect
 func (pt *ProgressTracker) GetProgressBar(width int) string {
 	completed, total := pt.GetProgress()
 	if width < 10 {
@@ -97,14 +148,20 @@ func (pt *ProgressTracker) GetProgressBar(width int) string {
 		fill += "█"
 	}
 
+	// SKELETON EFFECT: Create a shimmering effect in the empty area
+	elapsedMs := time.Since(pt.startTime).Milliseconds()
+	shimmerPos := int((elapsedMs / 150) % int64(emptyWidth+1))
+
 	empty := ""
 	for i := 0; i < emptyWidth; i++ {
-		empty += "░"
+		if i == shimmerPos || i == shimmerPos-1 {
+			empty += "▒" // The "shimmer" highlight
+		} else {
+			empty += "░" // The standard background
+		}
 	}
 
-	percentage := (completed * 100) / total
-
-	return "[" + fill + empty + "] " + string(rune(percentage)) + "%"
+	return "[" + fill + empty + "] "
 }
 
 // GetElapsedTime returns how long the analysis has been running
@@ -112,9 +169,9 @@ func (pt *ProgressTracker) GetElapsedTime() time.Duration {
 	return time.Since(pt.startTime)
 }
 
-// TickProgressCmd returns a command that ticks every 300ms to update progress display
+// TickProgressCmd returns a command that ticks every 150ms for smoother skeleton animation
 func TickProgressCmd() tea.Cmd {
-	return tea.Tick(time.Millisecond*300, func(t time.Time) tea.Msg {
+	return tea.Tick(time.Millisecond*150, func(t time.Time) tea.Msg {
 		return struct{}{} // Progress tick message
 	})
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/agnivo988/Repo-lyzer/internal/github"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/agnivo988/Repo-lyzer/internal/github"
 )
 
 // FileNode represents a file or directory in the repository
@@ -21,12 +21,12 @@ type FileNode struct {
 
 // TreeModel represents the file tree view
 type TreeModel struct {
-	root        *FileNode
-	cursor      int
-	visibleList []*FileNode
-	width       int
-	height      int
-	Done        bool
+	root         *FileNode
+	cursor       int
+	visibleList  []*FileNode
+	width        int
+	height       int
+	Done         bool
 	SelectedPath string
 }
 
@@ -106,8 +106,11 @@ func (m TreeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			if m.cursor < len(m.visibleList) {
-				m.SelectedPath = m.visibleList[m.cursor].Path
-				m.Done = true
+				node := m.visibleList[m.cursor]
+				if node.Type == "file" {
+					m.SelectedPath = node.Path
+					m.Done = true
+				}
 			}
 		case "esc":
 			m.Done = true
@@ -125,7 +128,7 @@ func (m TreeModel) View() string {
 	content := TitleStyle.Render("📁 REPOSITORY FILE TREE") + "\n\n"
 
 	// Display visible nodes
-	startIdx := m.cursor - (m.height - 5) / 2
+	startIdx := m.cursor - (m.height-5)/2
 	if startIdx < 0 {
 		startIdx = 0
 	}
@@ -157,7 +160,7 @@ func (m TreeModel) View() string {
 		content += style.Render(line) + "\n"
 	}
 
-	footer := SubtleStyle.Render("↑↓ navigate • ← → expand/collapse • Enter select • ESC back")
+	footer := SubtleStyle.Render("↑↓ navigate • ← → expand/collapse • Enter edit file • ESC back")
 	content += "\n" + footer
 
 	return lipgloss.Place(

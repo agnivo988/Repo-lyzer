@@ -3,8 +3,8 @@ package output
 import (
 	"fmt"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
+	"github.com/charmbracelet/lipgloss"
 )
 
 func PrintRecruiterSummary(s analyzer.RecruiterSummary) {

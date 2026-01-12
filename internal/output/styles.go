@@ -4,20 +4,20 @@ import "github.com/charmbracelet/lipgloss"
 
 var (
 	TitleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#7CFF00"))
+			Bold(true).
+			Foreground(lipgloss.Color("#7CFF00"))
 
 	SectionStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#00E5FF"))
+			Bold(true).
+			Foreground(lipgloss.Color("#00E5FF"))
 
 	SuccessStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#00FF87"))
+			Bold(true).
+			Foreground(lipgloss.Color("#00FF87"))
 
 	WarningStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFB000"))
+			Foreground(lipgloss.Color("#FFB000"))
 
 	ErrorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF5F5F"))
+			Foreground(lipgloss.Color("#FF5F5F"))
 )

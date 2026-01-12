@@ -14,8 +14,8 @@ var (
 	countStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFB000"))
 )
 
-func barColor (count, max int ) lipgloss.Style{
-	if max == 0{
+func barColor(count, max int) lipgloss.Style {
+	if max == 0 {
 		return lipgloss.NewStyle()
 	}
 
@@ -67,4 +67,3 @@ func PrintCommitActivity(data map[string]int, maxDays int) {
 		)
 	}
 }
-

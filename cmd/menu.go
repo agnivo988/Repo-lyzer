@@ -13,4 +13,3 @@ func RunMenu() {
 		os.Exit(1)
 	}
 }
-

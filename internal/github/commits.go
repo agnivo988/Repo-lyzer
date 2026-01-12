@@ -11,7 +11,6 @@ type Commit struct {
 	} `json:"commit"`
 }
 
-
 func (c *Client) GetCommits(owner, repo string, days int) ([]Commit, error) {
 	var commits []Commit
 	since := time.Now().AddDate(0, 0, -days).Format(time.RFC3339)

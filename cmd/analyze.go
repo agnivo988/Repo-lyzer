@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/agnivo988/Repo-lyzer/internal/output"
+	"github.com/spf13/cobra"
 )
 
 // RunAnalyze executes the analyze command for a given GitHub repository.
@@ -112,8 +112,4 @@ var analyzeCmd = &cobra.Command{
 
 		return nil
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(analyzeCmd)
 }

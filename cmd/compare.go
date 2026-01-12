@@ -4,12 +4,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-
-	"os"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
@@ -27,7 +26,6 @@ func RunCompare(r1, r2 string) error {
 	compareCmd.SetArgs([]string{r1, r2})
 	return compareCmd.Execute()
 }
-
 
 var compareCmd = &cobra.Command{
 	Use:   "compare owner1/repo1 owner2/repo2",
@@ -50,10 +48,10 @@ var compareCmd = &cobra.Command{
 			return err
 		}
 
-		langs1, _ := client.GetLanguages(r1[0], r1[1])
+		_, _ = client.GetLanguages(r1[0], r1[1])
 		commits1, _ := client.GetCommits(r1[0], r1[1], 14)
 		contributors1, _ := client.GetContributors(r1[0], r1[1])
-		fileTree1, _ := client.GetFileTree(r1[0], r1[1], repo1.DefaultBranch)
+		_, _ = client.GetFileTree(r1[0], r1[1], repo1.DefaultBranch)
 		bus1, risk1 := analyzer.BusFactor(contributors1)
 
 		maturityScore1, maturityLevel1 :=
@@ -65,10 +63,10 @@ var compareCmd = &cobra.Command{
 			return err
 		}
 
-		langs2, _ := client.GetLanguages(r2[0], r2[1])
+		_, _ = client.GetLanguages(r2[0], r2[1])
 		commits2, _ := client.GetCommits(r2[0], r2[1], 14)
 		contributors2, _ := client.GetContributors(r2[0], r2[1])
-		fileTree2, _ := client.GetFileTree(r2[0], r2[1], repo2.DefaultBranch)
+		_, _ = client.GetFileTree(r2[0], r2[1], repo2.DefaultBranch)
 		bus2, risk2 := analyzer.BusFactor(contributors2)
 
 		maturityScore2, maturityLevel2 :=
@@ -142,4 +140,3 @@ func countTreeStats(tree []github.TreeEntry) (files, dirs, totalSize int) {
 	}
 	return
 }
-

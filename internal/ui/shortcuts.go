@@ -1,100 +1,123 @@
 package ui
 
+import (
+	"fmt"
+	"strings"
+)
+
 // KeyboardShortcut represents a single keyboard shortcut
 type KeyboardShortcut struct {
 	Key         string
+	AltKey      string // Alternative key (vim-style)
 	Description string
+	Category    string
 }
 
 // GetMainMenuShortcuts returns shortcuts for the main menu screen
 func GetMainMenuShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "↑/↓ or j/k", Description: "Navigate menu"},
-		{Key: "Enter", Description: "Select option"},
-		{Key: "h", Description: "Show help"},
-		{Key: "s", Description: "Settings"},
-		{Key: "ESC", Description: "Go back"},
-		{Key: "q or Ctrl+C", Description: "Quit application"},
+		{Key: "↑/↓", AltKey: "j/k", Description: "Navigate menu", Category: "Navigation"},
+		{Key: "Home", AltKey: "g", Description: "Jump to first", Category: "Navigation"},
+		{Key: "End", AltKey: "G", Description: "Jump to last", Category: "Navigation"},
+		{Key: "1-7", AltKey: "", Description: "Quick jump to item", Category: "Navigation"},
+		{Key: "Enter", AltKey: "Space", Description: "Select option", Category: "Actions"},
+		{Key: "a", AltKey: "", Description: "Quick: Analyze", Category: "Quick Access"},
+		{Key: "c", AltKey: "", Description: "Quick: Compare", Category: "Quick Access"},
+		{Key: "h", AltKey: "", Description: "Quick: History", Category: "Quick Access"},
+		{Key: "s", AltKey: "", Description: "Quick: Settings", Category: "Quick Access"},
+		{Key: "?", AltKey: "", Description: "Show help", Category: "Help"},
+		{Key: "ESC", AltKey: "q", Description: "Go back / Quit", Category: "System"},
+		{Key: "Ctrl+C", AltKey: "", Description: "Force quit", Category: "System"},
 	}
 }
 
 // GetInputShortcuts returns shortcuts for input screen
 func GetInputShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "Enter", Description: "Analyze repository"},
-		{Key: "Backspace", Description: "Delete character"},
-		{Key: "Ctrl+U", Description: "Clear input"},
-		{Key: "Ctrl+A", Description: "Go to start"},
-		{Key: "Ctrl+E", Description: "Go to end"},
-		{Key: "ESC", Description: "Cancel"},
+		{Key: "Enter", AltKey: "", Description: "Submit input", Category: "Actions"},
+		{Key: "Backspace", AltKey: "Ctrl+H", Description: "Delete character", Category: "Editing"},
+		{Key: "Ctrl+U", AltKey: "", Description: "Clear entire line", Category: "Editing"},
+		{Key: "Ctrl+W", AltKey: "", Description: "Delete word", Category: "Editing"},
+		{Key: "Ctrl+A", AltKey: "Home", Description: "Go to start", Category: "Editing"},
+		{Key: "Ctrl+E", AltKey: "End", Description: "Go to end", Category: "Editing"},
+		{Key: "ESC", AltKey: "", Description: "Cancel", Category: "System"},
 	}
 }
 
 // GetDashboardShortcuts returns shortcuts for dashboard screen
 func GetDashboardShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "e", Description: "Export results"},
-		{Key: "↑/↓ or j/k", Description: "Navigate export menu"},
-		{Key: "Enter", Description: "Select export format"},
-		{Key: "t", Description: "Toggle theme"},
-		{Key: "f", Description: "Show file tree"},
-		{Key: "q or ESC", Description: "Back to menu"},
+		{Key: "←/→", AltKey: "h/l", Description: "Switch tabs", Category: "Navigation"},
+		{Key: "1-8", AltKey: "", Description: "Jump to tab", Category: "Navigation"},
+		{Key: "e", AltKey: "", Description: "Export menu", Category: "Actions"},
+		{Key: "j", AltKey: "", Description: "Export JSON", Category: "Actions"},
+		{Key: "m", AltKey: "", Description: "Export Markdown", Category: "Actions"},
+		{Key: "f", AltKey: "", Description: "File tree", Category: "Actions"},
+		{Key: "r", AltKey: "F5", Description: "Refresh data", Category: "Actions"},
+		{Key: "b", AltKey: "", Description: "Toggle bookmark", Category: "Actions"},
+		{Key: "t", AltKey: "", Description: "Cycle theme", Category: "Display"},
+		{Key: "?", AltKey: "", Description: "Show help", Category: "Help"},
+		{Key: "ESC", AltKey: "q", Description: "Back to menu", Category: "System"},
 	}
 }
 
 // GetSettingsShortcuts returns shortcuts for settings screen
 func GetSettingsShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "↑/↓ or j/k", Description: "Navigate settings"},
-		{Key: "Enter/Space", Description: "Toggle option"},
-		{Key: "→/← or h/l", Description: "Change value"},
-		{Key: "r", Description: "Reset to defaults"},
-		{Key: "s", Description: "Save settings"},
-		{Key: "ESC", Description: "Go back"},
+		{Key: "↑/↓", AltKey: "j/k", Description: "Navigate settings", Category: "Navigation"},
+		{Key: "Enter", AltKey: "Space", Description: "Toggle option", Category: "Actions"},
+		{Key: "1-7", AltKey: "", Description: "Select theme", Category: "Theme"},
+		{Key: "t", AltKey: "", Description: "Cycle theme", Category: "Theme"},
+		{Key: "e", AltKey: "", Description: "Toggle cache", Category: "Cache"},
+		{Key: "a", AltKey: "", Description: "Toggle auto-cache", Category: "Cache"},
+		{Key: "c", AltKey: "", Description: "Clear cache", Category: "Cache"},
+		{Key: "x", AltKey: "", Description: "Clean expired", Category: "Cache"},
+		{Key: "ESC", AltKey: "q", Description: "Go back", Category: "System"},
 	}
 }
 
 // GetHistoryShortcuts returns shortcuts for history screen
 func GetHistoryShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "↑/↓ or j/k", Description: "Navigate history"},
-		{Key: "Enter", Description: "Re-analyze repository"},
-		{Key: "d", Description: "Delete entry"},
-		{Key: "c", Description: "Clear history"},
-		{Key: "ESC", Description: "Go back"},
+		{Key: "↑/↓", AltKey: "j/k", Description: "Navigate history", Category: "Navigation"},
+		{Key: "Enter", AltKey: "", Description: "Re-analyze repo", Category: "Actions"},
+		{Key: "d", AltKey: "Delete", Description: "Delete entry", Category: "Actions"},
+		{Key: "c", AltKey: "", Description: "Clear all history", Category: "Actions"},
+		{Key: "ESC", AltKey: "q", Description: "Go back", Category: "System"},
 	}
 }
 
 // GetHelpShortcuts returns shortcuts for help screen
 func GetHelpShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "↑/↓ or j/k", Description: "Navigate topics"},
-		{Key: "→/← or h/l", Description: "Next/Previous topic"},
-		{Key: "Enter", Description: "Select topic"},
-		{Key: "/", Description: "Search help"},
-		{Key: "ESC", Description: "Go back"},
+		{Key: "↑/↓", AltKey: "j/k", Description: "Navigate topics", Category: "Navigation"},
+		{Key: "←/→", AltKey: "h/l", Description: "Previous/Next topic", Category: "Navigation"},
+		{Key: "Enter", AltKey: "", Description: "Select topic", Category: "Actions"},
+		{Key: "/", AltKey: "Ctrl+F", Description: "Search help", Category: "Actions"},
+		{Key: "ESC", AltKey: "q", Description: "Go back", Category: "System"},
 	}
 }
 
 // GetFileTreeShortcuts returns shortcuts for file tree viewer
 func GetFileTreeShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "↑/↓ or j/k", Description: "Navigate files"},
-		{Key: "→ or l", Description: "Expand folder"},
-		{Key: "← or h", Description: "Collapse folder"},
-		{Key: "Enter", Description: "View file details"},
-		{Key: "Ctrl+S", Description: "Search files"},
-		{Key: "ESC", Description: "Go back"},
+		{Key: "↑/↓", AltKey: "j/k", Description: "Navigate files", Category: "Navigation"},
+		{Key: "→", AltKey: "l/o", Description: "Expand folder", Category: "Navigation"},
+		{Key: "←", AltKey: "h/c", Description: "Collapse folder", Category: "Navigation"},
+		{Key: "O", AltKey: "", Description: "Expand all", Category: "Navigation"},
+		{Key: "C", AltKey: "", Description: "Collapse all", Category: "Navigation"},
+		{Key: "Enter", AltKey: "", Description: "View file", Category: "Actions"},
+		{Key: "/", AltKey: "Ctrl+F", Description: "Search files", Category: "Actions"},
+		{Key: "ESC", AltKey: "q", Description: "Go back", Category: "System"},
 	}
 }
 
 // GetUniversalShortcuts returns shortcuts that work everywhere
 func GetUniversalShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
-		{Key: "?", Description: "Show this help"},
-		{Key: "Ctrl+C", Description: "Quit application"},
-		{Key: "Ctrl+L", Description: "Clear screen"},
-		{Key: "Ctrl+R", Description: "Refresh"},
+		{Key: "?", AltKey: "F1", Description: "Show help", Category: "Help"},
+		{Key: "Ctrl+C", AltKey: "", Description: "Quit application", Category: "System"},
+		{Key: "Ctrl+L", AltKey: "", Description: "Redraw screen", Category: "System"},
 	}
 }
 
@@ -121,8 +144,6 @@ func GetShortcutsForScreen(screenName string) []KeyboardShortcut {
 		shortcuts = GetMainMenuShortcuts()
 	}
 
-	// Always append universal shortcuts
-	shortcuts = append(shortcuts, GetUniversalShortcuts()...)
 	return shortcuts
 }
 
@@ -132,15 +153,52 @@ func FormatShortcutsForDisplay(shortcuts []KeyboardShortcut, maxWidth int) strin
 		return ""
 	}
 
-	result := ""
-	for i, sc := range shortcuts {
-		if i > 0 && i%3 == 0 { // 3 shortcuts per line
-			result += "\n"
-		} else if i > 0 {
-			result += " • "
+	// Group by category
+	categories := make(map[string][]KeyboardShortcut)
+	categoryOrder := []string{}
+	
+	for _, sc := range shortcuts {
+		if _, exists := categories[sc.Category]; !exists {
+			categoryOrder = append(categoryOrder, sc.Category)
 		}
-		result += sc.Key + ": " + sc.Description
+		categories[sc.Category] = append(categories[sc.Category], sc)
 	}
 
-	return result
+	var sections []string
+	for _, cat := range categoryOrder {
+		scs := categories[cat]
+		section := fmt.Sprintf("━━ %s ━━\n", cat)
+		for _, sc := range scs {
+			keys := sc.Key
+			if sc.AltKey != "" {
+				keys += " / " + sc.AltKey
+			}
+			section += fmt.Sprintf("  %-18s %s\n", keys, sc.Description)
+		}
+		sections = append(sections, section)
+	}
+
+	return strings.Join(sections, "\n")
+}
+
+// FormatShortcutsCompact returns a compact one-line hint
+func FormatShortcutsCompact(shortcuts []KeyboardShortcut) string {
+	var hints []string
+	for _, sc := range shortcuts {
+		if sc.Category == "Navigation" || sc.Category == "Actions" {
+			hint := sc.Key
+			if sc.AltKey != "" {
+				hint += "/" + sc.AltKey
+			}
+			hints = append(hints, hint+": "+sc.Description)
+		}
+	}
+	
+	// Limit to first 5 hints
+	if len(hints) > 5 {
+		hints = hints[:5]
+		hints = append(hints, "?: more")
+	}
+	
+	return strings.Join(hints, " • ")
 }

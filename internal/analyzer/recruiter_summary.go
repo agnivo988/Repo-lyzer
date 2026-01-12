@@ -7,17 +7,16 @@ type RecruiterSummary struct {
 	CommitsLastYear int
 	Contributors    int
 
-	MaturityScore   int
-	MaturityLevel   string
+	MaturityScore int
+	MaturityLevel string
 
-	BusFactor       int
-	BusRisk         string
+	BusFactor int
+	BusRisk   string
 
-	IssueHealth     string
-	PRHealth        string
-	ActivityLevel   string
+	IssueHealth   string
+	PRHealth      string
+	ActivityLevel string
 }
-
 
 func BuildRecruiterSummary(
 	repoName string,
