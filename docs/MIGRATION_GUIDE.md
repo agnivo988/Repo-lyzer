@@ -45,6 +45,8 @@ This guide provides instructions for upgrading Repo-lyzer from older versions to
        format: json
      ```
 
+     > **Security Warning**: Never store sensitive credentials like GitHub tokens in `~/.repo-lyzer/config.yaml`. This file may be committed to version control or backed up unintentionally, exposing your tokens. Instead, use environment variables (e.g., `GITHUB_TOKEN`) or a secrets manager. For example, set the token when running the tool: `GITHUB_TOKEN=your_token_here repo-lyzer analyze`.
+
 4. **Test Analysis**:
    - Run a test analysis on a small repository to verify output format compatibility.
 

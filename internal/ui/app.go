@@ -27,7 +27,7 @@ const (
 
 type MainModel struct {
 	state         sessionState
-	menu          EnhancedMenuModel
+	menu          MenuModel
 	input         string // Repository input
 	spinner       spinner.Model
 	dashboard     DashboardModel

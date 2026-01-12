@@ -235,7 +235,7 @@ The main model for the Bubble Tea application, managing the application state an
 
 **Key Fields:**
 - `state` (sessionState): Current application state
-- `menu` (EnhancedMenuModel): Menu component
+- `menu` (MenuModel): Menu component
 - `dashboard` (DashboardModel): Dashboard component
 - `tree` (TreeModel): File tree component
 - `settings` (SettingsModel): Settings component

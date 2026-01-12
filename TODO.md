@@ -1,10 +1,8 @@
-# API Reference Documentation Tasks
+# Task: Fix MainModel menu field type and add security note to migration guide
 
-- [x] Create docs/API_REFERENCE.md with basic structure
-- [x] Add GetLanguages function to GitHub API Client section
-- [x] Add GetFileTree function to GitHub API Client section
-- [x] Add TreeEntry struct to Data Structures section
-- [x] Add Analyzer Modules section with exported functions and examples
-- [x] Add UI Components section with main functions and structs
-- [x] Add Data Structures section with key types
-- [x] Review and finalize the documentation
+## Steps to Complete
+
+- [x] Update `internal/ui/app.go`: Change the type of the `menu` field in MainModel from `EnhancedMenuModel` to `MenuModel`
+- [x] Update `docs/API_REFERENCE.md`: Change the documentation for the menu field from `EnhancedMenuModel` to `MenuModel`
+- [x] Run `go build` to ensure the changes compile successfully
+- [x] Update `docs/MIGRATION_GUIDE.md`: Add a security note next to the YAML example warning against storing sensitive credentials, recommending environment variables or secrets managers, and providing an example of loading the token from environment
