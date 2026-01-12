@@ -79,6 +79,8 @@ PHASE2_QUICK_REFERENCE.md     ← Developer reference (250 lines)
 FEATURE_INVENTORY_PHASE2.md    ← Feature list (450 lines)
 PHASE2_FILE_CHANGES.md         ← File changes detail (400 lines)
 PHASE2_FINAL_SUMMARY.md        ← Final summary & recommendations (350 lines)
+MIGRATION_GUIDE.md             ← Upgrade instructions (150 lines)
+ARCHITECTURE_OVERVIEW.md       ← System architecture (200 lines)
 PHASE2_DOCUMENTATION_INDEX.md  ← This file
 ```
 
