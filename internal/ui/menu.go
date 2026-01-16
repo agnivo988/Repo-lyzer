@@ -25,9 +25,6 @@ type SubmenuOption struct {
 	Action string
 }
 
-// NewMenuModel creates a new menu model with default options for repository analysis.
-// It initializes the menu with choices for analyzing a repository, comparing repositories, and exiting.
-// Returns the initialized MenuModel with cursor at the first option.
 func NewMenuModel() MenuModel {
 	return MenuModel{
 		choices: []string{
@@ -59,14 +56,12 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.submenuCursor > 0 {
 					m.submenuCursor--
 				} else {
-					// Wrap to bottom
 					m.submenuCursor = len(m.submenuChoices) - 1
 				}
 			} else {
 				if m.cursor > 0 {
 					m.cursor--
 				} else {
-					// Wrap to bottom
 					m.cursor = len(m.choices) - 1
 				}
 			}
@@ -75,33 +70,28 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.submenuCursor < len(m.submenuChoices)-1 {
 					m.submenuCursor++
 				} else {
-					// Wrap to top
 					m.submenuCursor = 0
 				}
 			} else {
 				if m.cursor < len(m.choices)-1 {
 					m.cursor++
 				} else {
-					// Wrap to top
 					m.cursor = 0
 				}
 			}
 		case "home", "g":
-			// Jump to first item
 			if m.inSubmenu {
 				m.submenuCursor = 0
 			} else {
 				m.cursor = 0
 			}
 		case "end", "G":
-			// Jump to last item
 			if m.inSubmenu {
 				m.submenuCursor = len(m.submenuChoices) - 1
 			} else {
 				m.cursor = len(m.choices) - 1
 			}
 		case "1", "2", "3", "4", "5", "6", "7":
-			// Quick jump to menu item by number
 			idx := int(msg.String()[0] - '1')
 			if !m.inSubmenu && idx < len(m.choices) {
 				m.cursor = idx
@@ -138,31 +128,26 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.submenuType = ""
 			}
 		case "?":
-			// Show help - jump to help menu
 			if !m.inSubmenu {
 				m.cursor = 5 // Help
 				m.enterSubmenu()
 			}
 		case "a":
-			// Quick access: Analyze
 			if !m.inSubmenu {
 				m.cursor = 0
 				m.enterSubmenu()
 			}
 		case "c":
-			// Quick access: Compare
 			if !m.inSubmenu {
 				m.cursor = 1
 				m.enterSubmenu()
 			}
 		case "h":
-			// Quick access: History
 			if !m.inSubmenu {
 				m.cursor = 2
 				m.enterSubmenu()
 			}
 		case "s":
-			// Quick access: Settings
 			if !m.inSubmenu {
 				m.cursor = 4
 				m.enterSubmenu()
@@ -177,9 +162,9 @@ func (m *MenuModel) enterSubmenu() {
 	case 0: // Analyze Repository
 		m.submenuType = "analyze"
 		m.submenuChoices = []string{
-			"Quick Analysis (⚡ fast)",
-			"Detailed Analysis (🔍 comprehensive)",
-			"Custom Analysis (⚙️ custom)",
+			"Quick Analysis",
+			"Detailed Analysis",
+			"Custom Analysis",
 		}
 		m.inSubmenu = true
 		m.submenuCursor = 0
@@ -231,92 +216,104 @@ func (m MenuModel) View() string {
  ██║  ██║███████╗██║     ╚██████╔╝     ███████╗   ██║      ██╔╝     ███████╗██║  ██║   
  ╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝      ╚══════╝   ╚═╝     ███████╗ ╚══════╝╚═╝  ╚═╝     
 `
-	content := TitleStyle.Render(logo) + "\n\n"
+	logoView := LogoStyle.Render(logo)
 
 	if m.inSubmenu {
-		return m.submenuView()
+		return m.submenuView(logoView)
 	}
 
 	// Menu items with keyboard shortcuts
 	shortcuts := []string{"a", "c", "h", "d", "s", "?", "q"}
 	
+	var menuItems []string
+	
 	for i, choice := range m.choices {
-		cursor := "  "
-		style := NormalStyle
 		shortcut := ""
-		
 		if i < len(shortcuts) {
 			shortcut = fmt.Sprintf("[%s] ", shortcuts[i])
 		}
 
 		if m.cursor == i {
-			cursor = "▶ "
-			style = SelectedStyle
+			item := fmt.Sprintf("%s%s", shortcut, choice)
+			menuItems = append(menuItems, SelectedStyle.Render(item))
+		} else {
+			item := fmt.Sprintf("%s%s", shortcut, choice)
+			menuItems = append(menuItems, NormalStyle.Render(item))
 		}
-
-		content += fmt.Sprintf("%s%s%s\n", cursor, SubtleStyle.Render(shortcut), style.Render(choice))
 	}
 
-	content += "\n" + SubtleStyle.Render("↑↓/jk: navigate • 1-7: jump • Enter/Space: select • ?: help • q: quit")
+	menuContent := lipgloss.JoinVertical(lipgloss.Left, menuItems...)
+	
+	footer := SubtleStyle.Render("\n↑↓: navigate • Enter: select")
 
-	box := BoxStyle.Render(content)
+	content := lipgloss.JoinVertical(
+		lipgloss.Center, 
+		logoView, 
+		"\n",
+		BoxStyle.Render(menuContent),
+		footer,
+	)
 
 	if m.width == 0 {
-		return box
+		return content
 	}
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		box,
+		content,
 	)
 }
 
-func (m MenuModel) submenuView() string {
+func (m MenuModel) submenuView(logoView string) string {
 	var title string
-	var hint string
 
 	switch m.submenuType {
 	case "analyze":
 		title = "📊 ANALYSIS TYPE"
-		hint = "↑↓/jk: navigate • 1-3: jump • Enter/Space: select • Esc/q: back"
 	case "settings":
 		title = "⚙️ SETTINGS"
-		hint = "↑↓/jk: navigate • 1-5: jump • Enter/Space: select • Esc/q: back"
 	case "help":
 		title = "❓ HELP MENU"
-		hint = "↑↓/jk: navigate • 1-4: jump • Enter/Space: select • Esc/q: back"
 	default:
 		title = "SUBMENU"
-		hint = "↑↓/jk: navigate • Enter/Space: select • Esc/q: back"
 	}
 
-	content := TitleStyle.Render(title) + "\n\n"
+	header := TitleStyle.Render(title)
+	
+	var menuItems []string
 
 	for i, choice := range m.submenuChoices {
-		cursor := "  "
-		style := NormalStyle
 		shortcut := fmt.Sprintf("[%d] ", i+1)
 
 		if m.submenuCursor == i {
-			cursor = "▶ "
-			style = SelectedStyle
+			item := fmt.Sprintf("%s%s", shortcut, choice)
+			menuItems = append(menuItems, SelectedStyle.Render(item))
+		} else {
+			item := fmt.Sprintf("%s%s", shortcut, choice)
+			menuItems = append(menuItems, NormalStyle.Render(item))
 		}
-
-		content += fmt.Sprintf("%s%s%s\n", cursor, SubtleStyle.Render(shortcut), style.Render(choice))
 	}
 
-	content += "\n" + SubtleStyle.Render(hint)
+	menuContent := lipgloss.JoinVertical(lipgloss.Left, menuItems...)
+	footer := SubtleStyle.Render("\n↑↓: navigate • Enter: select • Esc: back")
 
-	box := BoxStyle.Render(content)
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		logoView,
+		"\n",
+		header,
+		BoxStyle.Render(menuContent),
+		footer,
+	)
 
 	if m.width == 0 {
-		return box
+		return content
 	}
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		box,
+		content,
 	)
 }

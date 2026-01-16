@@ -35,6 +35,11 @@ func (c *Client) HasToken() bool {
 	return c.token != ""
 }
 
+// SetToken sets the GitHub token for authentication
+func (c *Client) SetToken(token string) {
+	c.token = token
+}
+
 // get performs a GET request to the GitHub API and decodes the JSON response.
 // It handles authentication and provides detailed error messages for rate limiting.
 func (c *Client) get(url string, target interface{}) error {

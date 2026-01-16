@@ -3,7 +3,9 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
@@ -50,7 +52,28 @@ var analyzeCmd = &cobra.Command{
 		// Fetch repository information
 		repo, err := client.GetRepo(parts[0], parts[1])
 		if err != nil {
-			return err
+			// Check if it's a private repo error and no token is set
+			if strings.Contains(err.Error(), "repository not found") && !client.HasToken() {
+				fmt.Print("This appears to be a private repository. Please enter your GitHub access token: ")
+				scanner := bufio.NewScanner(os.Stdin)
+				if scanner.Scan() {
+					token := strings.TrimSpace(scanner.Text())
+					if token != "" {
+						client.SetToken(token)
+						// Retry fetching the repo with the token
+						repo, err = client.GetRepo(parts[0], parts[1])
+						if err != nil {
+							return fmt.Errorf("failed to access repository even with token: %w", err)
+						}
+					} else {
+						return fmt.Errorf("no token provided, cannot access private repository")
+					}
+				} else {
+					return fmt.Errorf("failed to read token input")
+				}
+			} else {
+				return err
+			}
 		}
 
 		// Fetch programming languages used in the repository
