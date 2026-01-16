@@ -51,6 +51,7 @@ type MainModel struct {
 	fileEdit        FileEditModel
 	help            help.Model
 	progress        *ProgressTracker
+	animTick        int
 	err             error
 	windowWidth     int
 	windowHeight    int
@@ -142,6 +143,12 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.history = history
 			return m, nil
 		}
+	
+	case struct{}:
+		if m.state == stateLoading || m.state == stateCompareLoading {
+			m.animTick++
+			return m, TickProgressCmd()
+		}
 
 	case string:
 		if msg == "switch_to_tree" {
@@ -161,7 +168,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Re-analyze the current repo
 			if m.dashboard.data.Repo != nil {
 				m.state = stateLoading
-				cmds = append(cmds, m.analyzeRepo(m.dashboard.data.Repo.FullName))
+				cmds = append(cmds, m.analyzeRepo(m.dashboard.data.Repo.FullName), TickProgressCmd()) // Add TickProgressCmd
 			}
 		}
 		if msg == "add_to_favorites" {
@@ -253,7 +260,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.input = cleanInput
 					m.err = nil
 					m.state = stateLoading
-					cmds = append(cmds, m.analyzeRepo(cleanInput))
+					cmds = append(cmds, m.analyzeRepo(cleanInput), TickProgressCmd())
 				} else {
 					m.err = fmt.Errorf("please enter a valid repository (owner/repo or GitHub URL)")
 				}
@@ -301,7 +308,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 					m.err = nil
 					m.state = stateCompareLoading
-					cmds = append(cmds, m.compareRepos(m.compareInput1, m.compareInput2))
+					cmds = append(cmds, m.compareRepos(m.compareInput1, m.compareInput2), TickProgressCmd())
 				}
 
 			case tea.KeyBackspace:
@@ -466,7 +473,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.favorites.Save()
 					m.input = repoName
 					m.state = stateLoading
-					cmds = append(cmds, m.analyzeRepo(repoName))
+					cmds = append(cmds, m.analyzeRepo(repoName), TickProgressCmd())
 				}
 			case "d":
 				// Remove from favorites
@@ -503,7 +510,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					repoName := m.history.Entries[m.historyCursor].RepoName
 					m.input = repoName
 					m.state = stateLoading
-					cmds = append(cmds, m.analyzeRepo(repoName))
+					cmds = append(cmds, m.analyzeRepo(repoName), TickProgressCmd())
 				}
 			case "d":
 				// Delete selected entry
@@ -694,7 +701,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.dashboard.data.Repo != nil {
 					m.input = m.dashboard.data.Repo.FullName
 					m.state = stateLoading
-					cmds = append(cmds, m.analyzeRepo(m.input))
+					cmds = append(cmds, m.analyzeRepo(m.input), TickProgressCmd())
 					return m, tea.Batch(cmds...)
 				}
 			}
@@ -772,6 +779,11 @@ func (m MainModel) View() string {
 		}
 
 		statusView := fmt.Sprintf("%s %s...", m.spinner.View(), loadMsg)
+		
+		if len(SatelliteFrames) > 0 {
+			frame := SatelliteFrames[m.animTick%len(SatelliteFrames)]
+			statusView += "\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("#00E5FF")).Render(frame)
+		}
 
 		// Show progress stages if available
 		if m.progress != nil {
@@ -802,6 +814,12 @@ func (m MainModel) View() string {
 	case stateCompareLoading:
 		loadMsg := fmt.Sprintf("📊 Comparing %s vs %s", m.compareInput1, m.compareInput2)
 		statusView := fmt.Sprintf("%s %s...", m.spinner.View(), loadMsg)
+		
+		if len(SatelliteFrames) > 0 {
+			frame := SatelliteFrames[m.animTick%len(SatelliteFrames)]
+			statusView += "\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("#00E5FF")).Render(frame)
+		}
+		
 		statusView += "\n\n" + SubtleStyle.Render("Press ESC to cancel")
 
 		return lipgloss.Place(
