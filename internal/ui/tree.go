@@ -28,6 +28,9 @@ type TreeModel struct {
 	height       int
 	Done         bool
 	SelectedPath string
+	searchMode   bool
+	searchQuery  string
+	filteredList []*FileNode
 }
 
 // NewTreeModel creates a new tree model for displaying the repository file structure.
@@ -55,9 +58,28 @@ func NewTreeModel(result *AnalysisResult) TreeModel {
 	return m
 }
 
-func (m *TreeModel) updateVisibleList() {
-	m.visibleList = []*FileNode{}
-	m.addVisibleNodes(m.root, 0)
+func (m *TreeModel) applySearchFilter() {
+	if m.searchQuery == "" {
+		m.updateVisibleList()
+		return
+	}
+
+	m.filteredList = []*FileNode{}
+	m.filterNodes(m.root, strings.ToLower(m.searchQuery))
+	m.visibleList = m.filteredList
+	m.cursor = 0
+}
+
+func (m *TreeModel) filterNodes(node *FileNode, query string) {
+	// Check if this node matches the search
+	if strings.Contains(strings.ToLower(node.Name), query) {
+		m.filteredList = append(m.filteredList, node)
+	}
+
+	// Recursively search children
+	for _, child := range node.Children {
+		m.filterNodes(child, query)
+	}
 }
 
 func (m *TreeModel) addVisibleNodes(node *FileNode, depth int) {
@@ -70,6 +92,11 @@ func (m *TreeModel) addVisibleNodes(node *FileNode, depth int) {
 	}
 }
 
+func (m *TreeModel) updateVisibleList() {
+	m.visibleList = []*FileNode{}
+	m.addVisibleNodes(m.root, 0)
+}
+
 func (m TreeModel) Init() tea.Cmd { return nil }
 
 func (m TreeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -79,41 +106,65 @@ func (m TreeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case "down", "j":
-			if m.cursor < len(m.visibleList)-1 {
-				m.cursor++
-			}
-		case "right", "l":
-			if m.cursor < len(m.visibleList) {
-				node := m.visibleList[m.cursor]
-				if node.Type == "dir" && len(node.Children) > 0 {
-					node.Expanded = true
-					m.updateVisibleList()
+		if m.searchMode {
+			// Search input mode
+			switch msg.Type {
+			case tea.KeyEnter:
+				m.searchMode = false
+				m.applySearchFilter()
+			case tea.KeyBackspace:
+				if len(m.searchQuery) > 0 {
+					m.searchQuery = m.searchQuery[:len(m.searchQuery)-1]
+					m.applySearchFilter()
 				}
+			case tea.KeyRunes:
+				m.searchQuery += string(msg.Runes)
+				m.applySearchFilter()
+			case tea.KeyEsc:
+				m.searchMode = false
+				m.searchQuery = ""
+				m.updateVisibleList()
 			}
-		case "left", "h":
-			if m.cursor < len(m.visibleList) {
-				node := m.visibleList[m.cursor]
-				if node.Type == "dir" && node.Expanded {
-					node.Expanded = false
-					m.updateVisibleList()
+		} else {
+			// Normal navigation mode
+			switch msg.String() {
+			case "up", "k":
+				if m.cursor > 0 {
+					m.cursor--
 				}
-			}
-		case "enter":
-			if m.cursor < len(m.visibleList) {
-				node := m.visibleList[m.cursor]
-				if node.Type == "file" {
-					m.SelectedPath = node.Path
-					m.Done = true
+			case "down", "j":
+				if m.cursor < len(m.visibleList)-1 {
+					m.cursor++
 				}
+			case "right", "l":
+				if m.cursor < len(m.visibleList) {
+					node := m.visibleList[m.cursor]
+					if node.Type == "dir" && len(node.Children) > 0 {
+						node.Expanded = true
+						m.updateVisibleList()
+					}
+				}
+			case "left", "h":
+				if m.cursor < len(m.visibleList) {
+					node := m.visibleList[m.cursor]
+					if node.Type == "dir" && node.Expanded {
+						node.Expanded = false
+						m.updateVisibleList()
+					}
+				}
+			case "enter":
+				if m.cursor < len(m.visibleList) {
+					node := m.visibleList[m.cursor]
+					if node.Type == "file" {
+						m.SelectedPath = node.Path
+						m.Done = true
+					}
+				}
+			case "/":
+				m.searchMode = true
+			case "esc":
+				m.Done = true
 			}
-		case "esc":
-			m.Done = true
 		}
 	}
 
@@ -127,12 +178,21 @@ func (m TreeModel) View() string {
 
 	content := TitleStyle.Render("📁 REPOSITORY FILE TREE") + "\n\n"
 
+	// Show search input if in search mode
+	if m.searchMode {
+		searchPrompt := "🔍 Search: " + m.searchQuery + "_"
+		content += SubtleStyle.Render(searchPrompt) + "\n\n"
+	} else if m.searchQuery != "" {
+		searchInfo := fmt.Sprintf("🔍 Filtered by: '%s' (%d results)", m.searchQuery, len(m.visibleList))
+		content += SubtleStyle.Render(searchInfo) + "\n\n"
+	}
+
 	// Display visible nodes
-	startIdx := m.cursor - (m.height-5)/2
+	startIdx := m.cursor - (m.height-8)/2
 	if startIdx < 0 {
 		startIdx = 0
 	}
-	endIdx := startIdx + (m.height - 5)
+	endIdx := startIdx + (m.height - 8)
 	if endIdx > len(m.visibleList) {
 		endIdx = len(m.visibleList)
 	}
@@ -160,7 +220,13 @@ func (m TreeModel) View() string {
 		content += style.Render(line) + "\n"
 	}
 
-	footer := SubtleStyle.Render("↑↓ navigate • ← → expand/collapse • Enter edit file • ESC back")
+	// Update footer based on mode
+	var footer string
+	if m.searchMode {
+		footer = SubtleStyle.Render("Type to search • Enter to apply • ESC to cancel")
+	} else {
+		footer = SubtleStyle.Render("↑↓ navigate • ← → expand/collapse • / search • Enter edit file • ESC back")
+	}
 	content += "\n" + footer
 
 	return lipgloss.Place(
