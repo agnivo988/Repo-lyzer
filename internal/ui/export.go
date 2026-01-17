@@ -211,6 +211,172 @@ func ExportMarkdown(data AnalysisResult, _ string) (string, error) {
 	return filename, nil
 }
 
+func ExportCSV(data AnalysisResult, _ string) (string, error) {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
+		return "", err
+	}
+
+	filename := filepath.Join(downloadsDir, generateFilename(data.Repo.FullName, "csv"))
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Write CSV header
+	header := "Metric,Value\n"
+	file.WriteString(header)
+
+	// Repository info
+	fmt.Fprintf(file, "Repository Name,%s\n", data.Repo.FullName)
+	fmt.Fprintf(file, "Description,%s\n", strings.ReplaceAll(data.Repo.Description, "\n", " "))
+	fmt.Fprintf(file, "Stars,%d\n", data.Repo.Stars)
+	fmt.Fprintf(file, "Forks,%d\n", data.Repo.Forks)
+	fmt.Fprintf(file, "Open Issues,%d\n", data.Repo.OpenIssues)
+	fmt.Fprintf(file, "Created,%s\n", data.Repo.CreatedAt.Format("2006-01-02"))
+	fmt.Fprintf(file, "Last Push,%s\n", data.Repo.PushedAt.Format("2006-01-02"))
+	fmt.Fprintf(file, "Default Branch,%s\n", data.Repo.DefaultBranch)
+	fmt.Fprintf(file, "URL,%s\n", data.Repo.HTMLURL)
+
+	// Metrics
+	file.WriteString("\n")
+	fmt.Fprintf(file, "Health Score,%d\n", data.HealthScore)
+	fmt.Fprintf(file, "Bus Factor,%d\n", data.BusFactor)
+	fmt.Fprintf(file, "Bus Risk,%s\n", data.BusRisk)
+	fmt.Fprintf(file, "Maturity Score,%d\n", data.MaturityScore)
+	fmt.Fprintf(file, "Maturity Level,%s\n", data.MaturityLevel)
+	fmt.Fprintf(file, "Commits (1 year),%d\n", len(data.Commits))
+	fmt.Fprintf(file, "Contributors,%d\n", len(data.Contributors))
+
+	// Languages
+	file.WriteString("\nLanguages\n")
+	total := 0
+	for _, bytes := range data.Languages {
+		total += bytes
+	}
+	for lang, bytes := range data.Languages {
+		pct := float64(bytes) / float64(total) * 100
+		fmt.Fprintf(file, "%s,%.1f%%\n", lang, pct)
+	}
+
+	// Top Contributors
+	file.WriteString("\nTop Contributors\n")
+	maxContribs := 10
+	if len(data.Contributors) < maxContribs {
+		maxContribs = len(data.Contributors)
+	}
+	for i := 0; i < maxContribs; i++ {
+		c := data.Contributors[i]
+		fmt.Fprintf(file, "%s,%d\n", c.Login, c.Commits)
+	}
+
+	_ = openFileManager(filename)
+
+	return filename, nil
+}
+
+func ExportHTML(data AnalysisResult, _ string) (string, error) {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
+		return "", err
+	}
+
+	filename := filepath.Join(downloadsDir, generateFilename(data.Repo.FullName, "html"))
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	html := fmt.Sprintf(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis for %s</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #007acc; padding-bottom: 10px; }
+        h2 { color: #555; margin-top: 30px; }
+        .metric { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .metric:last-child { border-bottom: none; }
+        .languages { margin: 20px 0; }
+        .contributors { margin: 20px 0; }
+        .contributors li { margin: 5px 0; }
+        .exported-at { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analysis for %s</h1>
+        <div class="exported-at">Exported: %s</div>
+`, data.Repo.FullName, data.Repo.FullName, time.Now().Format("2006-01-02 15:04"))
+
+	html += "<h2>Repository Info</h2>"
+	html += "<div class=\"metrics\">"
+	html += fmt.Sprintf("<div class=\"metric\"><span>Stars:</span> <strong>%d</strong></div>", data.Repo.Stars)
+	html += fmt.Sprintf("<div class=\"metric\"><span>Forks:</span> <strong>%d</strong></div>", data.Repo.Forks)
+	html += fmt.Sprintf("<div class=\"metric\"><span>Open Issues:</span> <strong>%d</strong></div>", data.Repo.OpenIssues)
+	html += fmt.Sprintf("<div class=\"metric\"><span>Created:</span> <strong>%s</strong></div>", data.Repo.CreatedAt.Format("2006-01-02"))
+	html += fmt.Sprintf("<div class=\"metric\"><span>URL:</span> <strong><a href=\"%s\">%s</a></strong></div>", data.Repo.HTMLURL, data.Repo.HTMLURL)
+	html += "</div>"
+
+	html += "<h2>Metrics</h2>"
+	html += "<div class=\"metrics\">"
+	html += fmt.Sprintf("<div class=\"metric\"><span>Health Score:</span> <strong>%d/100</strong></div>", data.HealthScore)
+	html += fmt.Sprintf("<div class=\"metric\"><span>Bus Factor:</span> <strong>%d (%s)</strong></div>", data.BusFactor, data.BusRisk)
+	html += fmt.Sprintf("<div class=\"metric\"><span>Maturity:</span> <strong>%s (%d)</strong></div>", data.MaturityLevel, data.MaturityScore)
+	html += fmt.Sprintf("<div class=\"metric\"><span>Commits (1 year):</span> <strong>%d</strong></div>", len(data.Commits))
+	html += fmt.Sprintf("<div class=\"metric\"><span>Contributors:</span> <strong>%d</strong></div>", len(data.Contributors))
+	html += "</div>"
+
+	html += "<h2>Languages</h2>"
+	html += "<div class=\"languages\">"
+	total := 0
+	for _, bytes := range data.Languages {
+		total += bytes
+	}
+	if total == 0 {
+		html += "<p>No language data available</p>"
+	} else {
+		for lang, bytes := range data.Languages {
+			pct := float64(bytes) / float64(total) * 100
+			html += fmt.Sprintf("<div class=\"metric\"><span>%s:</span> <strong>%.1f%%</strong></div>", lang, pct)
+		}
+	}
+	html += "</div>"
+
+	html += "<h2>Top Contributors</h2>"
+	html += "<ul class=\"contributors\">"
+	maxContribs := 10
+	if len(data.Contributors) < maxContribs {
+		maxContribs = len(data.Contributors)
+	}
+	for i := 0; i < maxContribs; i++ {
+		c := data.Contributors[i]
+		html += fmt.Sprintf("<li>%s (%d commits)</li>", c.Login, c.Commits)
+	}
+	html += "</ul>"
+
+	html += `
+    </div>
+</body>
+</html>`
+
+	_, err = file.WriteString(html)
+	if err != nil {
+		return "", err
+	}
+
+	_ = openFileManager(filename)
+
+	return filename, nil
+}
+
 func ExportPDF(data AnalysisResult, _ string) (string, error) {
 	downloadsDir, err := getDownloadsDir()
 	if err != nil {

@@ -1658,7 +1658,7 @@ Keybindings:
 
 		// Build format list with indicator
 		formatList := ""
-		formats := []string{"JSON", "Markdown", "CSV", "HTML"}
+		formats := []string{"JSON", "Markdown", "CSV", "HTML", "PDF"}
 		for _, f := range formats {
 			indicator := "  "
 			if f == currentFormat {

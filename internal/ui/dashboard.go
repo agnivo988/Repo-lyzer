@@ -136,6 +136,28 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
+		case "c":
+			if m.showExport {
+				return m, func() tea.Msg {
+					_, err := ExportCSV(m.data, "analysis.csv")
+					if err != nil {
+						return exportMsg{err, ""}
+					}
+					return exportMsg{nil, "✓ Exported to analysis.csv"}
+				}
+			}
+
+		case "x":
+			if m.showExport {
+				return m, func() tea.Msg {
+					_, err := ExportHTML(m.data, "analysis.html")
+					if err != nil {
+						return exportMsg{err, ""}
+					}
+					return exportMsg{nil, "✓ Exported to analysis.html"}
+				}
+			}
+
 		case "f":
 			return m, func() tea.Msg { return "switch_to_tree" }
 
@@ -237,7 +259,7 @@ func (m DashboardModel) View() string {
 		content = lipgloss.JoinVertical(
 			lipgloss.Left,
 			content,
-			CardStyle.Render("📥 Export Options:\n[J] JSON  [M] Markdown  [P] PDF"),
+			CardStyle.Render("📥 Export Options:\n[J] JSON  [M] Markdown  [C] CSV  [X] HTML  [P] PDF"),
 		)
 	}
 
