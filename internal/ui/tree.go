@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -28,6 +29,10 @@ type TreeModel struct {
 	height       int
 	Done         bool
 	SelectedPath string
+	searchInput  textinput.Model
+	searchMode   bool
+	searchQuery  string
+	allNodes     []*FileNode // Store all nodes for search filtering
 }
 
 // NewTreeModel creates a new tree model for displaying the repository file structure.
@@ -48,16 +53,52 @@ func NewTreeModel(result *AnalysisResult) TreeModel {
 		}
 	}
 
+	// Initialize search input
+	ti := textinput.New()
+	ti.Placeholder = "Search files..."
+	ti.CharLimit = 50
+	ti.Width = 30
+
 	m := TreeModel{
-		root: root,
+		root:        root,
+		searchInput: ti,
+		searchMode:  false,
 	}
+	m.updateAllNodes()
 	m.updateVisibleList()
 	return m
 }
 
+func (m *TreeModel) updateAllNodes() {
+	m.allNodes = []*FileNode{}
+	m.addAllNodes(m.root)
+}
+
+func (m *TreeModel) addAllNodes(node *FileNode) {
+	m.allNodes = append(m.allNodes, node)
+	for _, child := range node.Children {
+		m.addAllNodes(child)
+	}
+}
+
 func (m *TreeModel) updateVisibleList() {
+	if m.searchMode && m.searchQuery != "" {
+		m.updateFilteredList()
+	} else {
+		m.visibleList = []*FileNode{}
+		m.addVisibleNodes(m.root, 0)
+	}
+}
+
+func (m *TreeModel) updateFilteredList() {
 	m.visibleList = []*FileNode{}
-	m.addVisibleNodes(m.root, 0)
+	query := strings.ToLower(m.searchQuery)
+	
+	for _, node := range m.allNodes {
+		if strings.Contains(strings.ToLower(node.Name), query) {
+			m.visibleList = append(m.visibleList, node)
+		}
+	}
 }
 
 func (m *TreeModel) addVisibleNodes(node *FileNode, depth int) {
@@ -73,51 +114,75 @@ func (m *TreeModel) addVisibleNodes(node *FileNode, depth int) {
 func (m TreeModel) Init() tea.Cmd { return nil }
 
 func (m TreeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
 
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
+		if m.searchMode {
+			switch msg.String() {
+			case "esc":
+				m.searchMode = false
+				m.searchQuery = ""
+				m.searchInput.Reset()
+				m.updateVisibleList()
+				m.cursor = 0
+			case "enter":
+				m.searchMode = false
+			default:
+				m.searchInput, cmd = m.searchInput.Update(msg)
+				m.searchQuery = m.searchInput.Value()
+				m.updateVisibleList()
+				m.cursor = 0
 			}
-		case "down", "j":
-			if m.cursor < len(m.visibleList)-1 {
-				m.cursor++
-			}
-		case "right", "l":
-			if m.cursor < len(m.visibleList) {
-				node := m.visibleList[m.cursor]
-				if node.Type == "dir" && len(node.Children) > 0 {
-					node.Expanded = true
-					m.updateVisibleList()
+		} else {
+			switch msg.String() {
+			case "up", "k":
+				if m.cursor > 0 {
+					m.cursor--
 				}
-			}
-		case "left", "h":
-			if m.cursor < len(m.visibleList) {
-				node := m.visibleList[m.cursor]
-				if node.Type == "dir" && node.Expanded {
-					node.Expanded = false
-					m.updateVisibleList()
+			case "down", "j":
+				if m.cursor < len(m.visibleList)-1 {
+					m.cursor++
 				}
-			}
-		case "enter":
-			if m.cursor < len(m.visibleList) {
-				node := m.visibleList[m.cursor]
-				if node.Type == "file" {
-					m.SelectedPath = node.Path
-					m.Done = true
+			case "right", "l":
+				if m.cursor < len(m.visibleList) {
+					node := m.visibleList[m.cursor]
+					if node.Type == "dir" && len(node.Children) > 0 {
+						node.Expanded = true
+						m.updateVisibleList()
+					}
 				}
+			case "left", "h":
+				if m.cursor < len(m.visibleList) {
+					node := m.visibleList[m.cursor]
+					if node.Type == "dir" && node.Expanded {
+						node.Expanded = false
+						m.updateVisibleList()
+					}
+				}
+			case "enter":
+				if m.cursor < len(m.visibleList) {
+					node := m.visibleList[m.cursor]
+					if node.Type == "file" {
+						m.SelectedPath = node.Path
+						m.Done = true
+					}
+				}
+			case "/":
+				m.searchMode = true
+				m.searchInput.Focus()
+				cmd = m.searchInput.Cursor.BlinkCmd()
+			case "esc":
+				m.Done = true
 			}
-		case "esc":
-			m.Done = true
 		}
 	}
 
-	return m, nil
+	return m, cmd
 }
 
 func (m TreeModel) View() string {
@@ -127,12 +192,20 @@ func (m TreeModel) View() string {
 
 	content := TitleStyle.Render("📁 REPOSITORY FILE TREE") + "\n\n"
 
+	// Show search input if in search mode
+	if m.searchMode {
+		searchView := m.searchInput.View()
+		content += "🔍 " + searchView + "\n\n"
+	} else {
+		content += SubtleStyle.Render("Press / to search files") + "\n\n"
+	}
+
 	// Display visible nodes
-	startIdx := m.cursor - (m.height-5)/2
+	startIdx := m.cursor - (m.height-8)/2
 	if startIdx < 0 {
 		startIdx = 0
 	}
-	endIdx := startIdx + (m.height - 5)
+	endIdx := startIdx + (m.height - 8)
 	if endIdx > len(m.visibleList) {
 		endIdx = len(m.visibleList)
 	}
@@ -160,7 +233,7 @@ func (m TreeModel) View() string {
 		content += style.Render(line) + "\n"
 	}
 
-	footer := SubtleStyle.Render("↑↓ navigate • ← → expand/collapse • Enter edit file • ESC back")
+	footer := SubtleStyle.Render("↑↓ navigate • ← → expand/collapse • / search • Enter edit file • ESC back")
 	content += "\n" + footer
 
 	return lipgloss.Place(
@@ -171,6 +244,16 @@ func (m TreeModel) View() string {
 }
 
 func (m TreeModel) getIndent(node *FileNode) string {
+	if m.searchMode && m.searchQuery != "" {
+		// For search results, show the full path as context
+		pathParts := strings.Split(strings.Trim(node.Path, "/"), "/")
+		if len(pathParts) > 1 {
+			parentPath := strings.Join(pathParts[:len(pathParts)-1], "/")
+			return SubtleStyle.Render("└─ " + parentPath + "/")
+		}
+		return ""
+	}
+	
 	depth := m.getNodeDepth(m.root, node)
 	indent := ""
 	for i := 0; i < depth; i++ {

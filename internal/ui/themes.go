@@ -124,6 +124,21 @@ var (
 		Border:     lipgloss.Color("#61afef"), // Blue
 	}
 
+	// Solarized Dark - carefully calibrated low contrast theme
+	SolarizedDark = Theme{
+		Name:       "Solarized Dark",
+		Primary:    lipgloss.Color("#268bd2"), // Blue
+		Secondary:  lipgloss.Color("#6c71c4"), // Purple
+		Accent:     lipgloss.Color("#2aa198"), // Cyan
+		Background: lipgloss.Color("#002b36"), // Base03
+		Text:       lipgloss.Color("#839496"), // Base0
+		TextMuted:  lipgloss.Color("#586e75"), // Base01
+		Success:    lipgloss.Color("#859900"), // Green
+		Error:      lipgloss.Color("#dc322f"), // Red
+		Warning:    lipgloss.Color("#b58900"), // Yellow
+		Border:     lipgloss.Color("#268bd2"), // Blue
+	}
+
 	// All available themes
 	AvailableThemes = []Theme{
 		CatppuccinMocha,
@@ -133,6 +148,7 @@ var (
 		TokyoNight,
 		GruvboxDark,
 		OneDark,
+		SolarizedDark,
 	}
 
 	// Current active theme
