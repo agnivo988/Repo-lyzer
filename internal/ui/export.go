@@ -12,6 +12,23 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
+// ValidateExportFormat checks if the given format is supported and returns a descriptive error if not
+func ValidateExportFormat(format string) error {
+	supportedFormats := []string{"json", "markdown", "csv", "html", "pdf"}
+	
+	// Convert to lowercase for case-insensitive comparison
+	formatLower := strings.ToLower(format)
+	
+	for _, supported := range supportedFormats {
+		if formatLower == supported {
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("unsupported export format '%s'. Supported formats are: %s", 
+		format, strings.Join(supportedFormats, ", "))
+}
+
 // ExportData is the structure for JSON export with additional metadata
 type ExportData struct {
 	ExportedAt      string              `json:"exported_at"`
@@ -43,8 +60,9 @@ type MetricsExport struct {
 }
 
 type ContributorExport struct {
-	Login   string `json:"login"`
-	Commits int    `json:"commits"`
+	Login     string `json:"login"`
+	Commits   int    `json:"commits"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 // getDownloadsDir returns the user's Downloads folder
@@ -100,8 +118,9 @@ func ExportJSON(data AnalysisResult, _ string) (string, error) {
 	}
 	for i := 0; i < maxContribs; i++ {
 		topContribs = append(topContribs, ContributorExport{
-			Login:   data.Contributors[i].Login,
-			Commits: data.Contributors[i].Commits,
+			Login:     data.Contributors[i].Login,
+			Commits:   data.Contributors[i].Commits,
+			AvatarURL: data.Contributors[i].AvatarURL,
 		})
 	}
 
@@ -306,6 +325,211 @@ func ExportPDF(data AnalysisResult, _ string) (string, error) {
 	return filename, nil
 }
 
+func ExportCSV(data AnalysisResult, _ string) (string, error) {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
+		return "", err
+	}
+
+	filename := filepath.Join(downloadsDir, generateFilename(data.Repo.FullName, "csv"))
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Write CSV header
+	header := "Metric,Value\n"
+	file.WriteString(header)
+
+	// Repository info
+	fmt.Fprintf(file, "Repository Name,%s\n", data.Repo.FullName)
+	fmt.Fprintf(file, "Description,%s\n", strings.ReplaceAll(data.Repo.Description, "\n", " "))
+	fmt.Fprintf(file, "Stars,%d\n", data.Repo.Stars)
+	fmt.Fprintf(file, "Forks,%d\n", data.Repo.Forks)
+	fmt.Fprintf(file, "Open Issues,%d\n", data.Repo.OpenIssues)
+	fmt.Fprintf(file, "Created At,%s\n", data.Repo.CreatedAt.Format("2006-01-02"))
+	fmt.Fprintf(file, "Last Push,%s\n", data.Repo.PushedAt.Format("2006-01-02"))
+	fmt.Fprintf(file, "Default Branch,%s\n", data.Repo.DefaultBranch)
+	fmt.Fprintf(file, "URL,%s\n", data.Repo.HTMLURL)
+
+	// Metrics
+	fmt.Fprintf(file, "Health Score,%d\n", data.HealthScore)
+	fmt.Fprintf(file, "Bus Factor,%d\n", data.BusFactor)
+	fmt.Fprintf(file, "Bus Risk,%s\n", data.BusRisk)
+	fmt.Fprintf(file, "Maturity Score,%d\n", data.MaturityScore)
+	fmt.Fprintf(file, "Maturity Level,%s\n", data.MaturityLevel)
+	fmt.Fprintf(file, "Total Commits,%d\n", len(data.Commits))
+	fmt.Fprintf(file, "Total Contributors,%d\n", len(data.Contributors))
+
+	// Languages
+	file.WriteString("\nLanguages\n")
+	file.WriteString("Language,Lines of Code\n")
+	total := 0
+	for _, bytes := range data.Languages {
+		total += bytes
+	}
+	for lang, bytes := range data.Languages {
+		pct := float64(bytes) / float64(total) * 100
+		fmt.Fprintf(file, "%s,%.1f%%\n", lang, pct)
+	}
+
+	// Top Contributors
+	file.WriteString("\nTop Contributors\n")
+	file.WriteString("Login,Commits\n")
+	maxContribs := 10
+	if len(data.Contributors) < maxContribs {
+		maxContribs = len(data.Contributors)
+	}
+	for i := 0; i < maxContribs; i++ {
+		c := data.Contributors[i]
+		fmt.Fprintf(file, "%s,%d\n", c.Login, c.Commits)
+	}
+
+	_ = openFileManager(filename)
+
+	return filename, nil
+}
+
+func ExportHTML(data AnalysisResult, _ string) (string, error) {
+	downloadsDir, err := getDownloadsDir()
+	if err != nil {
+		return "", err
+	}
+
+	filename := filepath.Join(downloadsDir, generateFilename(data.Repo.FullName, "html"))
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	html := fmt.Sprintf(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis for %s</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #f0f0f0; padding: 20px; border-radius: 5px; }
+        .section { margin: 20px 0; }
+        table { border-collapse: collapse; width: 100%%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .metric { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Analysis for %s</h1>
+        <p><em>Exported: %s</em></p>
+    </div>
+
+    <div class="section">
+        <h2>Repository Info</h2>
+        <table>
+            <tr><td class="metric">Stars</td><td>%d</td></tr>
+            <tr><td class="metric">Forks</td><td>%d</td></tr>
+            <tr><td class="metric">Open Issues</td><td>%d</td></tr>
+            <tr><td class="metric">Created</td><td>%s</td></tr>
+            <tr><td class="metric">URL</td><td><a href="%s">%s</a></td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Metrics</h2>
+        <table>
+            <tr><td class="metric">Health Score</td><td>%d/100</td></tr>
+            <tr><td class="metric">Bus Factor</td><td>%d (%s)</td></tr>
+            <tr><td class="metric">Maturity</td><td>%s (%d)</td></tr>
+            <tr><td class="metric">Commits (1 year)</td><td>%d</td></tr>
+            <tr><td class="metric">Contributors</td><td>%d</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Languages</h2>
+        <table>
+            <tr><th>Language</th><th>Percentage</th></tr>`,
+		data.Repo.FullName, data.Repo.FullName, time.Now().Format("2006-01-02 15:04"),
+		data.Repo.Stars, data.Repo.Forks, data.Repo.OpenIssues,
+		data.Repo.CreatedAt.Format("2006-01-02"), data.Repo.HTMLURL, data.Repo.HTMLURL,
+		data.HealthScore, data.BusFactor, data.BusRisk, data.MaturityLevel, data.MaturityScore,
+		len(data.Commits), len(data.Contributors))
+
+	// Languages
+	total := 0
+	for _, bytes := range data.Languages {
+		total += bytes
+	}
+	for lang, bytes := range data.Languages {
+		pct := float64(bytes) / float64(total) * 100
+		html += fmt.Sprintf("<tr><td>%s</td><td>%.1f%%</td></tr>", lang, pct)
+	}
+	html += `        </table>
+    </div>
+
+    <div class="section">
+        <h2>Top Contributors</h2>
+        <table>
+            <tr><th>Contributor</th><th>Commits</th></tr>`
+
+	// Top Contributors
+	maxContribs := 10
+	if len(data.Contributors) < maxContribs {
+		maxContribs = len(data.Contributors)
+	}
+	for i := 0; i < maxContribs; i++ {
+		c := data.Contributors[i]
+		html += fmt.Sprintf("<tr><td>%s</td><td>%d</td></tr>", c.Login, c.Commits)
+	}
+
+	html += `        </table>
+    </div>
+</body>
+</html>`
+
+	_, err = file.WriteString(html)
+	if err != nil {
+		return "", err
+	}
+
+	_ = openFileManager(filename)
+
+	return filename, nil
+}
+
+// ExportAnalysis exports analysis data in the specified format with validation
+func ExportAnalysis(data AnalysisResult, format string) (string, error) {
+	// Validate the export format
+	if err := ValidateExportFormat(format); err != nil {
+		return "", err
+	}
+	
+	// Convert format to lowercase for consistency
+	format = strings.ToLower(format)
+	
+	// Call the appropriate export function based on format
+	switch format {
+	case "json":
+		return ExportJSON(data, "")
+	case "markdown":
+		return ExportMarkdown(data, "")
+	case "csv":
+		return ExportCSV(data, "")
+	case "html":
+		return ExportHTML(data, "")
+	case "pdf":
+		return ExportPDF(data, "")
+	default:
+		// This should not happen due to validation, but just in case
+		return "", fmt.Errorf("unexpected format after validation: %s", format)
+	}
+}
+
 // CompareExportData is the structure for comparison JSON export
 type CompareExportData struct {
 	ExportedAt string     `json:"exported_at"`
@@ -322,8 +546,9 @@ func buildExportData(data AnalysisResult) ExportData {
 	}
 	for i := 0; i < maxContribs; i++ {
 		topContribs = append(topContribs, ContributorExport{
-			Login:   data.Contributors[i].Login,
-			Commits: data.Contributors[i].Commits,
+			Login:     data.Contributors[i].Login,
+			Commits:   data.Contributors[i].Commits,
+			AvatarURL: data.Contributors[i].AvatarURL,
 		})
 	}
 

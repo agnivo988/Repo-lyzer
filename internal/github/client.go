@@ -18,8 +18,9 @@ type Client struct {
 
 // User represents a GitHub user
 type User struct {
-	Login string `json:"login"`
-	Name  string `json:"name"`
+	Login     string `json:"login"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 // NewClient creates a new GitHub API client
@@ -109,6 +110,14 @@ func formatDuration(d time.Duration) string {
 func (c *Client) GetUser() (*User, error) {
 	var u User
 	err := c.get("https://api.github.com/user", &u)
+	return &u, err
+}
+
+// GetUserByLogin fetches a user by their login/username
+func (c *Client) GetUserByLogin(login string) (*User, error) {
+	url := fmt.Sprintf("https://api.github.com/users/%s", login)
+	var u User
+	err := c.get(url, &u)
 	return &u, err
 }
 

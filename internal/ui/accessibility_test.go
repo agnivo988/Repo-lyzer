@@ -267,3 +267,39 @@ func TestKeyBindings_Coverage(t *testing.T) {
 		}
 	}
 }
+
+func TestAvailableThemes(t *testing.T) {
+	// Test that we have the expected number of themes (8 including the new Solarized Dark)
+	expectedThemes := 8
+	if len(AvailableThemes) != expectedThemes {
+		t.Errorf("Expected %d themes, got %d", expectedThemes, len(AvailableThemes))
+	}
+
+	// Test that Solarized Dark theme is included
+	found := false
+	for _, theme := range AvailableThemes {
+		if theme.Name == "Solarized Dark" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Solarized Dark theme should be included in AvailableThemes")
+	}
+
+	// Test that all themes have required fields
+	for _, theme := range AvailableThemes {
+		if theme.Name == "" {
+			t.Error("Theme should have a name")
+		}
+		if theme.Primary == "" {
+			t.Error("Theme should have a primary color")
+		}
+		if theme.Background == "" {
+			t.Error("Theme should have a background color")
+		}
+		if theme.Text == "" {
+			t.Error("Theme should have a text color")
+		}
+	}
+}

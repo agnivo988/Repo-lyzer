@@ -20,11 +20,12 @@ const (
 	ExportMarkdown ExportFormat = "markdown"
 	ExportCSV      ExportFormat = "csv"
 	ExportHTML     ExportFormat = "html"
+	ExportPDF      ExportFormat = "pdf"
 )
 
 // AllExportFormats returns all available export formats
 func AllExportFormats() []ExportFormat {
-	return []ExportFormat{ExportJSON, ExportMarkdown, ExportCSV, ExportHTML}
+	return []ExportFormat{ExportJSON, ExportMarkdown, ExportCSV, ExportHTML, ExportPDF}
 }
 
 // AppSettings holds all user-configurable application settings
@@ -200,6 +201,8 @@ func (f ExportFormat) DisplayName() string {
 		return "CSV"
 	case ExportHTML:
 		return "HTML"
+	case ExportPDF:
+		return "PDF"
 	default:
 		return string(f)
 	}

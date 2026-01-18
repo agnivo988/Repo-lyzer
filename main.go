@@ -3,10 +3,18 @@
 // into code health, contributor activity, and project maturity.
 package main
 
-import "github.com/agnivo988/Repo-lyzer/cmd"
+import (
+	"os"
+
+	"github.com/agnivo988/Repo-lyzer/cmd"
+)
 
 // main initializes and runs the Repo-lyzer application.
-// It starts the interactive menu interface for repository analysis.
+// It starts the interactive menu interface for repository analysis or executes CLI commands.
 func main() {
-	cmd.RunMenu()
+	if len(os.Args) > 1 {
+		cmd.Execute()
+	} else {
+		cmd.RunMenu()
+	}
 }

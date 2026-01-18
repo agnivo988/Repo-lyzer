@@ -163,6 +163,7 @@ func (b *AnalyzerDataBridge) getTopContributors(count int) []map[string]interfac
 		top = append(top, map[string]interface{}{
 			"login":         contrib.Login,
 			"contributions": contrib.Commits,
+			"avatar_url":    contrib.AvatarURL,
 		})
 	}
 	return top

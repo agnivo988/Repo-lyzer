@@ -4,8 +4,9 @@ import "fmt"
 
 // Contributor represents a GitHub contributor
 type Contributor struct {
-	Login   string `json:"login"`
-	Commits int    `json:"contributions"`
+	Login     string `json:"login"`
+	Commits   int    `json:"contributions"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 // GetContributors fetches ALL contributors (paginated)
@@ -37,4 +38,29 @@ func (c *Client) GetContributors(owner, repo string) ([]Contributor, error) {
 	}
 
 	return allContributors, nil
+}
+
+// GetContributorsWithAvatars fetches contributors and avatar URLs for top N contributors
+func (c *Client) GetContributorsWithAvatars(owner, repo string, topN int) ([]Contributor, error) {
+	contributors, err := c.GetContributors(owner, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch avatars for top contributors
+	maxAvatars := topN
+	if len(contributors) < maxAvatars {
+		maxAvatars = len(contributors)
+	}
+
+	for i := 0; i < maxAvatars; i++ {
+		user, err := c.GetUserByLogin(contributors[i].Login)
+		if err != nil {
+			// Log error but continue
+			continue
+		}
+		contributors[i].AvatarURL = user.AvatarURL
+	}
+
+	return contributors, nil
 }
