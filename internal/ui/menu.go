@@ -129,7 +129,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "q":
 			if !m.inSubmenu {
-				m.SelectedOption = 6 // Exit
+				m.SelectedOption = 7 // Exit
 				m.Done = true
 			} else {
 				m.inSubmenu = false
@@ -152,19 +152,25 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "c":
 			// Quick access: Compare
 			if !m.inSubmenu {
-				m.cursor = 1
+				m.cursor = 2
 				m.enterSubmenu()
 			}
 		case "h", "H":
 			// Quick access: History
 			if !m.inSubmenu {
-				m.cursor = 2
+				m.cursor = 3
+				m.enterSubmenu()
+			}
+		case "d":
+			// Quick access: Clone
+			if !m.inSubmenu {
+				m.cursor = 4
 				m.enterSubmenu()
 			}
 		case "s":
 			// Quick access: Settings
 			if !m.inSubmenu {
-				m.cursor = 4
+				m.cursor = 5
 				m.enterSubmenu()
 			}
 		}
