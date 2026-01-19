@@ -25,6 +25,57 @@ type ProgressUpdateMsg struct {
 	IsComplete bool
 }
 
+var SatelliteFrames = []string{
+	`
+        .
+       / \
+      | . |
+       \ /
+        '
+    Scanning...
+	`,
+	`
+        o
+       / \
+      | o |
+       \ /
+        o
+    Scanning...
+	`,
+	`
+        O
+       / \
+      | O |
+       \ /
+        O
+    Scanning...
+	`,
+	`
+        @
+       / \
+      | @ |
+       \ /
+        @
+    Scanning...
+	`,
+	`
+        O
+       / \
+      | O |
+       \ /
+        O
+    Scanning...
+	`,
+	`
+        o
+       / \
+      | o |
+       \ /
+        o
+    Scanning...
+	`,
+}
+
 // NewProgressTracker creates a tracker with default analysis stages
 func NewProgressTracker() *ProgressTracker {
 	return &ProgressTracker{
