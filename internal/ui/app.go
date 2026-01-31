@@ -842,6 +842,7 @@ func (m MainModel) analyzeRepo(repoName string) tea.Cmd {
 			security,
 			nil, // codeQuality - not implemented yet
 			deps,
+			nil, // pluginResults - not loaded yet
 		)
 
 		result := AnalysisResult{

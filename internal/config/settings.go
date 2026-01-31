@@ -48,6 +48,10 @@ type AppSettings struct {
 	MonitoringEnabled      bool          `json:"monitoring_enabled"`
 	DefaultMonitorInterval time.Duration `json:"default_monitor_interval"`
 	NotificationEnabled    bool          `json:"notification_enabled"`
+
+	// Plugin settings
+	PluginDirectory string   `json:"plugin_directory"`
+	EnabledPlugins  []string `json:"enabled_plugins"`
 }
 
 // DefaultSettings returns the default application settings
@@ -59,6 +63,8 @@ func DefaultSettings() *AppSettings {
 		ExportDirectory:     filepath.Join(home, "Downloads"),
 		GitHubToken:         "",
 		DefaultAnalysisType: "quick",
+		PluginDirectory:     filepath.Join(home, ".repo-lyzer", "plugins"),
+		EnabledPlugins:      []string{},
 	}
 }
 

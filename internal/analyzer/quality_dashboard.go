@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/agnivo988/Repo-lyzer/internal/github"
+	"github.com/agnivo988/Repo-lyzer/internal/plugins"
 )
 
 // QualityDashboard represents the high-level summary
@@ -47,6 +48,7 @@ func GenerateQualityDashboard(
 	security *SecurityScanResult,
 	codeQuality *CodeQualityMetrics,
 	dependencies *DependencyAnalysis,
+	pluginResults []*plugins.PluginResult,
 ) *QualityDashboard {
 
 	dashboard := &QualityDashboard{
@@ -60,7 +62,7 @@ func GenerateQualityDashboard(
 		securityScore = security.SecurityScore
 	}
 
-	dashboard.OverallScore = calculateOverallScore(healthScore, securityScore, maturityScore, busFactor)
+	dashboard.OverallScore = calculateOverallScore(healthScore, securityScore, maturityScore, busFactor, pluginResults)
 	dashboard.RiskLevel = determineRiskLevel(dashboard.OverallScore, busFactor, securityScore)
 	dashboard.QualityGrade = getQualityGrade(dashboard.OverallScore)
 
@@ -76,27 +78,43 @@ func GenerateQualityDashboard(
 
 	// Identify problem hotspots
 	dashboard.ProblemHotspots = identifyProblemHotspots(
-		healthScore, securityScore, busFactor, commits, security,
+		healthScore, securityScore, busFactor, commits, security, pluginResults,
 	)
 
 	// Generate actionable recommendations
 	dashboard.Recommendations = generateDashboardRecommendations(
-		healthScore, securityScore, busFactor, commits, contributors, security, dependencies,
+		healthScore, securityScore, busFactor, commits, contributors, security, dependencies, pluginResults,
 	)
 
 	return dashboard
 }
 
-func calculateOverallScore(health, security, maturity, busFactor int) int {
-	// Weighted scoring: Health(30%), Security(30%), Maturity(25%), Bus Factor(15%)
+func calculateOverallScore(health, security, maturity, busFactor int, pluginResults []*plugins.PluginResult) int {
+	// Base weighted scoring: Health(25%), Security(25%), Maturity(20%), Bus Factor(10%)
 	busFactorScore := normalizeBusFactor(busFactor)
 
-	score := int(
-		float64(health)*0.30 +
-			float64(security)*0.30 +
-			float64(maturity)*0.25 +
-			float64(busFactorScore)*0.15,
-	)
+	baseScore := float64(health)*0.25 +
+		float64(security)*0.25 +
+		float64(maturity)*0.20 +
+		float64(busFactorScore)*0.10
+
+	// Plugin contribution (up to 20% of total score)
+	pluginScore := 0.0
+	totalPluginWeight := 0.0
+
+	for _, result := range pluginResults {
+		if result.Weight > 0 {
+			pluginScore += float64(result.Score) * result.Weight
+			totalPluginWeight += result.Weight
+		}
+	}
+
+	// Normalize plugin score contribution
+	if totalPluginWeight > 0 {
+		pluginScore = (pluginScore / totalPluginWeight) * 0.20 // 20% max contribution
+	}
+
+	score := int(baseScore + pluginScore)
 
 	if score > 100 {
 		score = 100
@@ -170,6 +188,7 @@ func identifyProblemHotspots(
 	health, security, busFactor int,
 	commits []github.Commit,
 	securityResult *SecurityScanResult,
+	pluginResults []*plugins.PluginResult,
 ) []ProblemHotspot {
 
 	var hotspots []ProblemHotspot
@@ -236,6 +255,22 @@ func identifyProblemHotspots(
 		})
 	}
 
+	// Plugin hotspots
+	for _, result := range pluginResults {
+		if result.RiskLevel == "High" || result.RiskLevel == "Critical" {
+			severity := "High"
+			if result.RiskLevel == "Critical" {
+				severity = "Critical"
+			}
+			hotspots = append(hotspots, ProblemHotspot{
+				Area:        result.Category,
+				Severity:    severity,
+				Description: fmt.Sprintf("Plugin '%s' detected issues", result.Category),
+				Impact:      "Custom analysis plugin identified potential problems",
+			})
+		}
+	}
+
 	// Sort by severity (Critical > High > Medium > Low)
 	sort.Slice(hotspots, func(i, j int) bool {
 		severityOrder := map[string]int{"Critical": 4, "High": 3, "Medium": 2, "Low": 1}
@@ -251,6 +286,7 @@ func generateDashboardRecommendations(
 	contributors []github.Contributor,
 	securityResult *SecurityScanResult,
 	deps *DependencyAnalysis,
+	pluginResults []*plugins.PluginResult,
 ) []string {
 
 	var recommendations []string

@@ -104,6 +104,26 @@ func (m SettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.inTokenInput = true
 				m.tokenInput = ""
 			}
+		case "l":
+			// List plugins
+			if m.settingsOption == "plugins" {
+				// Would need to list plugins
+			}
+		case "e":
+			// Enable plugin
+			if m.settingsOption == "plugins" {
+				// Would need to enable plugin
+			}
+		case "d":
+			// Disable plugin
+			if m.settingsOption == "plugins" {
+				// Would need to disable plugin
+			}
+		case "s":
+			// Set plugin directory
+			if m.settingsOption == "plugins" {
+				// Would need to set plugin directory
+			}
 		case "y":
 			// Confirm reset
 			if m.settingsOption == "reset" {

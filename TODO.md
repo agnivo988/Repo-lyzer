@@ -1,13 +1,14 @@
-# Real-Time Repository Monitoring Implementation
+# Custom Analysis Plugins Implementation
 
-## Current Status
-- [x] Create `cmd/monitor.go` - New Cobra command for monitoring
-- [x] Develop `internal/monitor/` package - Polling modules for GitHub API
-- [ ] Extend `internal/ui/` - Add monitoring dashboard view with notifications
-- [ ] Extend `internal/cache/cache.go` - Store monitored repository states
-- [ ] Update `internal/config/settings.go` - Add monitoring intervals and notification preferences
-- [ ] Update `internal/ui/menu.go` - Add "Monitor" option to main menu
-- [ ] Update `cmd/root.go` - Register new monitor command
-- [ ] Test monitoring functionality
-- [ ] Verify error handling and user feedback
-- [ ] Ensure proper integration
+## Steps to Complete
+
+- [x] Create internal/plugins/ package with plugin interfaces
+- [x] Define Plugin interface in internal/plugins/plugin.go
+- [x] Implement plugin loader in internal/plugins/loader.go
+- [x] Integrate plugin results into analyzer QualityDashboard
+- [x] Add cmd/plugins.go command for plugin management
+- [x] Update internal/config/settings.go for plugin settings
+- [x] Enhance internal/ui/settings.go with plugin submenu
+- [ ] Test plugin loading and execution
+- [ ] Verify integration with existing analyzer output
+- [ ] Ensure UI updates work correctly
