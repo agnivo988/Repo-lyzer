@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -26,17 +27,18 @@ type MonitorState struct {
 
 // Monitor manages real-time monitoring of a GitHub repository
 type Monitor struct {
-	client       *github.Client
-	cache        *cache.Cache
-	owner        string
-	repo         string
-	interval     time.Duration
-	state        *MonitorState
-	stateMutex   sync.RWMutex
-	ctx          context.Context
-	cancel       context.CancelFunc
-	wg           sync.WaitGroup
-	notifications chan Notification
+	client          *github.Client
+	cache           *cache.Cache
+	owner           string
+	repo            string
+	interval        time.Duration
+	state           *MonitorState
+	stateMutex      sync.RWMutex
+	ctx             context.Context
+	cancel          context.CancelFunc
+	wg              sync.WaitGroup
+	notifications   chan Notification
+	prevContribCount int
 }
 
 // Notification represents a monitoring notification
@@ -71,38 +73,50 @@ func NewMonitor(owner, repo string, interval time.Duration) (*Monitor, error) {
 	}, nil
 }
 
-// Start begins the monitoring process
+// Start begins the monitoring process and spawns goroutines
+// Use Wait() to block until the monitor is stopped
 func (m *Monitor) Start() error {
 	// Load previous state
 	m.loadState()
 
 	// Start notification handler
+	m.wg.Add(1)
 	go m.handleNotifications()
 
 	// Start monitoring loop
 	m.wg.Add(1)
 	go m.monitorLoop()
 
-	// Wait for interrupt signal
+	// Start signal handler in a separate goroutine
+	m.wg.Add(1)
+	go m.handleSignals()
+
+	return nil
+}
+
+// Wait blocks until the monitoring process is stopped via signal or context cancellation
+func (m *Monitor) Wait() {
+	m.wg.Wait()
+}
+
+// handleSignals waits for interrupt signals and gracefully stops monitoring
+func (m *Monitor) handleSignals() {
+	defer m.wg.Done()
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
 
-	select {
-	case <-sigChan:
-		fmt.Println("\n🛑 Stopping monitoring...")
-		m.Stop()
-	case <-m.ctx.Done():
-		// Context cancelled
-	}
-
-	m.wg.Wait()
-	return nil
+	<-sigChan
+	fmt.Println("\n🛑 Stopping monitoring...")
+	m.Stop()
 }
 
 // Stop stops the monitoring process
 func (m *Monitor) Stop() {
 	m.cancel()
 	close(m.notifications)
+	m.wg.Wait()
 }
 
 // monitorLoop runs the main monitoring loop
@@ -127,121 +141,185 @@ func (m *Monitor) monitorLoop() {
 
 // checkForUpdates performs the actual monitoring checks
 func (m *Monitor) checkForUpdates() {
-	m.stateMutex.Lock()
-	defer m.stateMutex.Unlock()
+	select {
+	case <-m.ctx.Done():
+		return
+	default:
+	}
+
+	// Perform all checks without holding the mutex (to avoid deadlock with network calls)
+	var notifications []Notification
 
 	// Check for new commits
-	m.checkCommits()
+	commitNotifs := m.checkCommits()
+	notifications = append(notifications, commitNotifs...)
 
 	// Check for new issues
-	m.checkIssues()
+	issueNotifs := m.checkIssues()
+	notifications = append(notifications, issueNotifs...)
 
 	// Check for new pull requests
-	m.checkPullRequests()
+	prNotifs := m.checkPullRequests()
+	notifications = append(notifications, prNotifs...)
 
 	// Check for contributor changes
-	m.checkContributors()
+	contribNotifs := m.checkContributors()
+	notifications = append(notifications, contribNotifs...)
 
-	// Save state
+	// Now acquire mutex to save state and send notifications
+	m.stateMutex.Lock()
 	m.saveState()
+	m.stateMutex.Unlock()
+
+	// Send notifications after releasing mutex
+	for _, notif := range notifications {
+		select {
+		case <-m.ctx.Done():
+			return
+		case m.notifications <- notif:
+		}
+	}
 }
 
 // checkCommits monitors for new commits
-func (m *Monitor) checkCommits() {
+func (m *Monitor) checkCommits() []Notification {
+	var notifs []Notification
+
 	commits, err := m.client.GetCommits(m.owner, m.repo, 1) // Get latest commit
 	if err != nil {
 		log.Printf("Failed to get commits: %v", err)
-		return
+		return notifs
 	}
 
 	if len(commits) > 0 {
 		latestCommit := commits[0]
-		if latestCommit.SHA != m.state.LastCommitSHA {
+		m.stateMutex.RLock()
+		lastSHA := m.state.LastCommitSHA
+		m.stateMutex.RUnlock()
+
+		if latestCommit.SHA != lastSHA {
 			// New commit detected
 			notification := Notification{
 				Type:      "commit",
 				Title:     "New Commit",
-				Message:   fmt.Sprintf("New commit: %s", latestCommit.SHA[:8]),
+				Message:   fmt.Sprintf("New commit: %s", truncateSHA(latestCommit.SHA, 8)),
 				Timestamp: time.Now(),
 				Severity:  "info",
 			}
-			m.notifications <- notification
+			notifs = append(notifs, notification)
 
+			m.stateMutex.Lock()
 			m.state.LastCommitSHA = latestCommit.SHA
 			m.state.LastUpdated = time.Now()
+			m.stateMutex.Unlock()
 		}
 	}
+
+	return notifs
 }
 
 // checkIssues monitors for new issues
-func (m *Monitor) checkIssues() {
+func (m *Monitor) checkIssues() []Notification {
+	var notifs []Notification
+
 	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
 	if err != nil {
 		log.Printf("Failed to get issues: %v", err)
-		return
+		return notifs
 	}
 
-	// For now, just check if there are any open issues
-	// In a full implementation, we'd track individual issues
-	if len(issues) > 0 {
+	// Check if issue count changed (since we can't track individual issue IDs from the minimal Issue struct)
+	currentIssueCount := len(issues)
+
+	m.stateMutex.RLock()
+	lastIssueCount := m.state.LastIssueID // Re-using this field to store issue count for now
+	m.stateMutex.RUnlock()
+
+	if currentIssueCount != lastIssueCount {
 		notification := Notification{
 			Type:      "issue",
 			Title:     "Issues Update",
-			Message:   fmt.Sprintf("Repository has %d open issues", len(issues)),
+			Message:   fmt.Sprintf("Repository has %d open issues", currentIssueCount),
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+		notifs = append(notifs, notification)
+
+		m.stateMutex.Lock()
+		m.state.LastIssueID = currentIssueCount
+		m.stateMutex.Unlock()
 	}
+
+	return notifs
 }
 
 // checkPullRequests monitors for new pull requests
-func (m *Monitor) checkPullRequests() {
+func (m *Monitor) checkPullRequests() []Notification {
+	var notifs []Notification
+
 	// For now, we'll use the same issues endpoint since PRs are a type of issue
 	// In a full implementation, we'd filter for pull requests specifically
 	prs, err := m.client.GetIssues(m.owner, m.repo, "open")
 	if err != nil {
 		log.Printf("Failed to get pull requests: %v", err)
-		return
+		return notifs
 	}
 
-	// Simplified check - in reality, we'd distinguish between issues and PRs
-	if len(prs) > 0 {
+	// Check if PR count changed
+	currentPRCount := len(prs)
+
+	m.stateMutex.RLock()
+	lastPRCount := m.state.LastPRID // Re-using this field to store PR count for now
+	m.stateMutex.RUnlock()
+
+	if currentPRCount != lastPRCount {
 		notification := Notification{
 			Type:      "pr",
 			Title:     "Pull Requests Update",
-			Message:   fmt.Sprintf("Repository has %d open pull requests/issues", len(prs)),
+			Message:   fmt.Sprintf("Repository has %d open pull requests/issues", currentPRCount),
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+		notifs = append(notifs, notification)
+
+		m.stateMutex.Lock()
+		m.state.LastPRID = currentPRCount
+		m.stateMutex.Unlock()
 	}
+
+	return notifs
 }
 
 // checkContributors monitors for contributor changes
-func (m *Monitor) checkContributors() {
+func (m *Monitor) checkContributors() []Notification {
+	var notifs []Notification
+
 	contributors, err := m.client.GetContributors(m.owner, m.repo)
 	if err != nil {
 		log.Printf("Failed to get contributors: %v", err)
-		return
+		return notifs
 	}
 
-	// For now, just check if contributor count changed
-	// In a full implementation, we'd track individual contributors
-	if len(contributors) > 0 {
+	// Only notify if contributor count actually changed
+	currentCount := len(contributors)
+	if currentCount != m.prevContribCount {
 		notification := Notification{
 			Type:      "contributor",
 			Title:     "Contributor Update",
-			Message:   fmt.Sprintf("Repository has %d contributors", len(contributors)),
+			Message:   fmt.Sprintf("Repository has %d contributors", currentCount),
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+		notifs = append(notifs, notification)
+		m.prevContribCount = currentCount
 	}
+
+	return notifs
 }
 
 // handleNotifications processes incoming notifications
 func (m *Monitor) handleNotifications() {
+	defer m.wg.Done()
 	for notification := range m.notifications {
 		m.displayNotification(notification)
 	}
@@ -271,16 +349,32 @@ func (m *Monitor) loadState() {
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
 	if entry, found := m.cache.Get(key); found {
-		// In a full implementation, we'd deserialize the state
-		// For now, just initialize with current time
-		m.state.LastUpdated = time.Now()
+		var cachedState MonitorState
+		if err := json.Unmarshal(entry.Analysis, &cachedState); err != nil {
+			// On error, initialize with current time
+			m.state.LastUpdated = time.Now()
+		} else {
+			// Assign the cached state
+			m.state = &cachedState
+		}
 	}
 }
 
 // saveState saves the monitoring state to cache
 func (m *Monitor) saveState() {
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	// In a full implementation, we'd serialize the state
-	// For now, just save a placeholder
-	m.cache.Set(key, m.state)
+	jsonData, err := json.Marshal(m.state)
+	if err != nil {
+		log.Printf("Failed to marshal state: %v", err)
+		return
+	}
+	m.cache.Set(key, jsonData)
+}
+
+// truncateSHA truncates a SHA to a maximum length
+func truncateSHA(sha string, maxLen int) string {
+	if len(sha) <= maxLen {
+		return sha
+	}
+	return sha[:maxLen]
 }

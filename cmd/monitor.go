@@ -33,6 +33,10 @@ notifications within the interactive TUI.`,
 			interval = 5 * time.Minute // Default 5 minutes
 		}
 
+		if interval <= 0 {
+			return fmt.Errorf("invalid interval: must be > 0")
+		}
+
 		// Create monitor instance
 		mon, err := monitor.NewMonitor(owner, repo, interval)
 		if err != nil {

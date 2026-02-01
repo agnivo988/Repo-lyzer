@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 
+	"github.com/agnivo988/Repo-lyzer/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -11,14 +12,16 @@ type SettingsModel struct {
 	inTokenInput   bool
 	tokenInput     string
 	settingsOption string
+	appConfig      *config.AppSettings
 }
 
-func NewSettingsModel() SettingsModel {
+func NewSettingsModel(appConfig *config.AppSettings) SettingsModel {
 	return SettingsModel{
 		cursor:         0,
 		inTokenInput:   false,
 		tokenInput:     "",
 		settingsOption: "",
+		appConfig:      appConfig,
 	}
 }
 
@@ -35,7 +38,11 @@ func (m SettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case tea.KeyEnter:
 				// Save the token
 				if m.tokenInput != "" {
-					// This would need access to appConfig, but for now just return
+					if m.appConfig != nil {
+						m.appConfig.GitHubToken = m.tokenInput
+						// Note: Saving to disk would be done through a command
+						// For now, the token is stored in appConfig in memory
+					}
 					m.inTokenInput = false
 					m.tokenInput = ""
 				}
@@ -109,7 +116,7 @@ func (m SettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.settingsOption == "plugins" {
 				// Would need to list plugins
 			}
-		case "e":
+		case "p":
 			// Enable plugin
 			if m.settingsOption == "plugins" {
 				// Would need to enable plugin

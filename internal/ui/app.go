@@ -124,7 +124,7 @@ func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
 		compareInput:    NewCompareInputModel(),
 		compareLoading:  NewCompareLoadingModel(),
 		compareResult:   NewCompareResultModel(),
-		settings:        NewSettingsModel(),
+		settings:        NewSettingsModel(config),
 		help:            NewHelpModel(),
 		history:         NewHistoryModel(),
 		favorites:       NewFavoritesModel(),

@@ -19,12 +19,35 @@ func TestGenerateQualityDashboard(t *testing.T) {
 
 	// Mock commits
 	commits := []github.Commit{
-		{SHA: "abc123"},
-		{SHA: "def456"},
+		{
+			SHA: "abc123",
+			Commit: struct {
+				Author struct {
+					Date time.Time `json:"date"`
+				} `json:"author"`
+			}{
+				Author: struct {
+					Date time.Time `json:"date"`
+				}{
+					Date: time.Now(),
+				},
+			},
+		},
+		{
+			SHA: "def456",
+			Commit: struct {
+				Author struct {
+					Date time.Time `json:"date"`
+				} `json:"author"`
+			}{
+				Author: struct {
+					Date time.Time `json:"date"`
+				}{
+					Date: time.Now().AddDate(0, 0, -1),
+				},
+			},
+		},
 	}
-	// Set commit dates
-	commits[0].Commit.Author.Date = time.Now()
-	commits[1].Commit.Author.Date = time.Now().AddDate(0, 0, -1)
 
 	// Mock contributors
 	contributors := []github.Contributor{
