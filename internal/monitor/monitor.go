@@ -17,12 +17,13 @@ import (
 
 // MonitorState represents the current state of a monitored repository
 type MonitorState struct {
-	Owner         string    `json:"owner"`
-	Repo          string    `json:"repo"`
-	LastCommitSHA string    `json:"last_commit_sha"`
-	LastIssueID   int       `json:"last_issue_id"`
-	LastPRID      int       `json:"last_pr_id"`
-	LastUpdated   time.Time `json:"last_updated"`
+	Owner               string    `json:"owner"`
+	Repo                string    `json:"repo"`
+	LastCommitSHA       string    `json:"last_commit_sha"`
+	LastIssueID         int       `json:"last_issue_id"`
+	LastPRID            int       `json:"last_pr_id"`
+	LastContributorCount int      `json:"last_contributor_count"`
+	LastUpdated         time.Time `json:"last_updated"`
 }
 
 // Monitor manages real-time monitoring of a GitHub repository
@@ -228,14 +229,8 @@ func (m *Monitor) checkIssues() []Notification {
 		return notifs
 	}
 
-	// Check if issue count changed (since we can't track individual issue IDs from the minimal Issue struct)
-	currentIssueCount := len(issues)
-
-	m.stateMutex.RLock()
-	lastIssueCount := m.state.LastIssueID // Re-using this field to store issue count for now
-	m.stateMutex.RUnlock()
-
-	if currentIssueCount != lastIssueCount {
+	// Check if the number of issues has changed
+	if len(issues) != m.state.LastIssueID {
 		notification := Notification{
 			Type:      "issue",
 			Title:     "Issues Update",
@@ -243,11 +238,8 @@ func (m *Monitor) checkIssues() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		notifs = append(notifs, notification)
-
-		m.stateMutex.Lock()
-		m.state.LastIssueID = currentIssueCount
-		m.stateMutex.Unlock()
+		m.notifications <- notification
+		m.state.LastIssueID = len(issues)
 	}
 
 	return notifs
@@ -300,9 +292,8 @@ func (m *Monitor) checkContributors() []Notification {
 		return notifs
 	}
 
-	// Only notify if contributor count actually changed
-	currentCount := len(contributors)
-	if currentCount != m.prevContribCount {
+	// Check if the contributor count has changed
+	if len(contributors) != m.state.LastContributorCount {
 		notification := Notification{
 			Type:      "contributor",
 			Title:     "Contributor Update",
@@ -310,8 +301,8 @@ func (m *Monitor) checkContributors() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		notifs = append(notifs, notification)
-		m.prevContribCount = currentCount
+		m.notifications <- notification
+		m.state.LastContributorCount = len(contributors)
 	}
 
 	return notifs
@@ -348,15 +339,10 @@ func (m *Monitor) loadState() {
 	defer m.stateMutex.Unlock()
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	if entry, found := m.cache.Get(key); found {
-		var cachedState MonitorState
-		if err := json.Unmarshal(entry.Analysis, &cachedState); err != nil {
-			// On error, initialize with current time
-			m.state.LastUpdated = time.Now()
-		} else {
-			// Assign the cached state
-			m.state = &cachedState
-		}
+	if _, found := m.cache.Get(key); found {
+		// In a full implementation, we'd deserialize the state
+		// For now, just initialize with current time
+		m.state.LastUpdated = time.Now()
 	}
 }
 

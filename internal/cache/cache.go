@@ -46,15 +46,7 @@ type CacheEntry struct {
 	Analysis  json.RawMessage `json:"analysis"`   // Serialized AnalysisResult
 }
 
-// MonitorState represents the current state of a monitored repository
-type MonitorState struct {
-	Owner         string    `json:"owner"`
-	Repo          string    `json:"repo"`
-	LastCommitSHA string    `json:"last_commit_sha"`
-	LastIssueID   int       `json:"last_issue_id"`
-	LastPRID      int       `json:"last_pr_id"`
-	LastUpdated   time.Time `json:"last_updated"`
-}
+
 
 // CacheIndex stores metadata about all cached repositories.
 // This index enables quick lookups without reading individual cache files.
