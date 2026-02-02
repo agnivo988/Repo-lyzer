@@ -229,13 +229,8 @@ func (m *Monitor) checkIssues() []Notification {
 		return notifs
 	}
 
-	currentIssueCount := len(issues)
-
-	m.stateMutex.RLock()
-	lastIssueCount := m.state.LastIssueID
-	m.stateMutex.RUnlock()
-
-	if currentIssueCount != lastIssueCount {
+	// Check if the number of issues has changed
+	if len(issues) != m.state.LastIssueID {
 		notification := Notification{
 			Type:      "issue",
 			Title:     "Issues Update",
@@ -243,11 +238,8 @@ func (m *Monitor) checkIssues() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		notifs = append(notifs, notification)
-
-		m.stateMutex.Lock()
-		m.state.LastIssueID = currentIssueCount
-		m.stateMutex.Unlock()
+		m.notifications <- notification
+		m.state.LastIssueID = len(issues)
 	}
 
 	return notifs
@@ -300,9 +292,8 @@ func (m *Monitor) checkContributors() []Notification {
 		return notifs
 	}
 
-	// Only notify if contributor count actually changed
-	currentCount := len(contributors)
-	if currentCount != m.prevContribCount {
+	// Check if the contributor count has changed
+	if len(contributors) != m.state.LastContributorCount {
 		notification := Notification{
 			Type:      "contributor",
 			Title:     "Contributor Update",
@@ -310,8 +301,8 @@ func (m *Monitor) checkContributors() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		notifs = append(notifs, notification)
-		m.prevContribCount = currentCount
+		m.notifications <- notification
+		m.state.LastContributorCount = len(contributors)
 	}
 
 	return notifs
@@ -348,15 +339,10 @@ func (m *Monitor) loadState() {
 	defer m.stateMutex.Unlock()
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	if entry, found := m.cache.Get(key); found {
-		var cachedState MonitorState
-		if err := json.Unmarshal(entry.Analysis, &cachedState); err != nil {
-			// On error, initialize with current time
-			m.state.LastUpdated = time.Now()
-		} else {
-			// Assign the cached state
-			m.state = &cachedState
-		}
+	if _, found := m.cache.Get(key); found {
+		// In a full implementation, we'd deserialize the state
+		// For now, just initialize with current time
+		m.state.LastUpdated = time.Now()
 	}
 }
 
