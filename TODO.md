@@ -1,8 +1,12 @@
-# TODO: Fix Issues in cmd/plugins.go
+# TODO: Add Loading/Progress Indicator in CLI Analyzer
 
-- [x] Remove unused "strings" import from the import block in cmd/plugins.go
-- [x] Update directory validation in pluginsDirCmd to check if path exists but is not a directory using os.Stat and FileInfo.IsDir()
-- [x] Change config.SaveSettings(settings) to settings.SaveSettings() in pluginsDirCmd for consistency
-- [x] Fix config.LoadSettings() calls to handle the error return value
-- [x] Verify the file compiles without errors
-- [ ] Test the plugins commands to ensure they work correctly
+## Tasks
+- [ ] Import ProgressTracker in cmd/analyze.go
+- [ ] Initialize ProgressTracker in analyzeCmd RunE function
+- [ ] Add progress updates after each major analysis step
+- [ ] Display progress messages in terminal output
+- [ ] Test the implementation
+
+## Progress
+- [x] Plan approved by user
+- [ ] Implementation started

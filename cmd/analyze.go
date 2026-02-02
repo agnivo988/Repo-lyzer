@@ -12,6 +12,7 @@ import (
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/agnivo988/Repo-lyzer/internal/output"
+	"github.com/agnivo988/Repo-lyzer/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -157,10 +158,15 @@ var analyzeCmd = &cobra.Command{
 		// Record start time for analysis timing
 		startTime := time.Now()
 
+		// Initialize progress tracker
+		tracker := ui.NewProgressTracker()
+		fmt.Printf("🔍 Analyzing %s...\n", args[0])
+
 		// Initialize GitHub client
 		client := github.NewClient()
 
 		// Fetch repository information
+		fmt.Printf("📡 Fetching repository data...\n")
 		repoInfo, err := client.GetRepo(owner, repo)
 		if err != nil {
 			// Check if it's a private repo error and no token is set
@@ -186,18 +192,21 @@ var analyzeCmd = &cobra.Command{
 				return err
 			}
 		}
+		tracker.NextStage()
 
 		// Fetch programming languages used in the repository
 		langs, err := client.GetLanguages(owner, repo)
 		if err != nil {
 			return fmt.Errorf("failed to get languages: %w", err)
 		}
+		tracker.NextStage()
 
 		// Fetch commits from the last 365 days
 		commits, err := client.GetCommits(owner, repo, 365)
 		if err != nil {
 			return fmt.Errorf("failed to get commits: %w", err)
 		}
+		tracker.NextStage()
 
 		// Calculate repository health score
 		score := analyzer.CalculateHealth(repoInfo, commits)
