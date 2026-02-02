@@ -1,14 +1,8 @@
-# Custom Analysis Plugins Implementation
+# TODO: Fix Issues in cmd/plugins.go
 
-## Steps to Complete
-
-- [x] Create internal/plugins/ package with plugin interfaces
-- [x] Define Plugin interface in internal/plugins/plugin.go
-- [x] Implement plugin loader in internal/plugins/loader.go
-- [x] Integrate plugin results into analyzer QualityDashboard
-- [x] Add cmd/plugins.go command for plugin management
-- [x] Update internal/config/settings.go for plugin settings
-- [x] Enhance internal/ui/settings.go with plugin submenu
-- [ ] Test plugin loading and execution
-- [ ] Verify integration with existing analyzer output
-- [ ] Ensure UI updates work correctly
+- [x] Remove unused "strings" import from the import block in cmd/plugins.go
+- [x] Update directory validation in pluginsDirCmd to check if path exists but is not a directory using os.Stat and FileInfo.IsDir()
+- [x] Change config.SaveSettings(settings) to settings.SaveSettings() in pluginsDirCmd for consistency
+- [x] Fix config.LoadSettings() calls to handle the error return value
+- [x] Verify the file compiles without errors
+- [ ] Test the plugins commands to ensure they work correctly

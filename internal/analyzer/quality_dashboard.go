@@ -3,6 +3,7 @@ package analyzer
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/agnivo988/Repo-lyzer/internal/plugins"
@@ -90,13 +91,7 @@ func GenerateQualityDashboard(
 }
 
 func calculateOverallScore(health, security, maturity, busFactor int, pluginResults []*plugins.PluginResult) int {
-	// Base weighted scoring: Health(25%), Security(25%), Maturity(20%), Bus Factor(10%)
 	busFactorScore := normalizeBusFactor(busFactor)
-
-	baseScore := float64(health)*0.25 +
-		float64(security)*0.25 +
-		float64(maturity)*0.20 +
-		float64(busFactorScore)*0.10
 
 	// Plugin contribution (up to 20% of total score)
 	pluginScore := 0.0
@@ -109,8 +104,25 @@ func calculateOverallScore(health, security, maturity, busFactor int, pluginResu
 		}
 	}
 
-	// Normalize plugin score contribution
-	if totalPluginWeight > 0 {
+	var baseScore float64
+
+	// If no plugins or all plugin weights are zero, renormalize base weights to 100%
+	if totalPluginWeight == 0 {
+		// Renormalize: Health(25%), Security(25%), Maturity(20%), Bus Factor(10%) -> 100%
+		// Scale factors: 25->31.25%, 25->31.25%, 20->25%, 10->12.5%
+		baseScore = float64(health)*0.3125 +
+			float64(security)*0.3125 +
+			float64(maturity)*0.25 +
+			float64(busFactorScore)*0.125
+	} else {
+		// With plugins: Base weighted scoring at 80% total: Health(20%), Security(20%), Maturity(16%), Bus Factor(8%), Plugins(20%)
+		// Original ratios preserved: 25:25:20:10 scaled to 80%
+		baseScore = float64(health)*0.20 +
+			float64(security)*0.20 +
+			float64(maturity)*0.16 +
+			float64(busFactorScore)*0.08
+
+		// Normalize plugin score contribution
 		pluginScore = (pluginScore / totalPluginWeight) * 0.20 // 20% max contribution
 	}
 
@@ -338,9 +350,17 @@ func generateDashboardRecommendations(
 }
 
 func countRecentCommits(commits []github.Commit) int {
-	// This is a simplified version - in practice you'd check commit dates
-	// For now, we'll assume all commits in the slice are recent
-	return len(commits)
+	// Filter commits from the past 90 days
+	ninetyDaysAgo := time.Now().AddDate(0, 0, -90)
+	count := 0
+
+	for _, commit := range commits {
+		if commit.Commit.Author.Date.After(ninetyDaysAgo) {
+			count++
+		}
+	}
+
+	return count
 }
 
 // GetRiskLevelColor returns color styling for risk level

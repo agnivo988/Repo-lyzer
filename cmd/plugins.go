@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/agnivo988/Repo-lyzer/internal/config"
 	"github.com/agnivo988/Repo-lyzer/internal/plugins"
@@ -21,10 +20,13 @@ var pluginsListCmd = &cobra.Command{
 	Short: "List all available and loaded plugins",
 	Long:  `List all plugins found in the plugin directory and their current status.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		settings := config.LoadSettings()
+		settings, err := config.LoadSettings()
+		if err != nil {
+			return fmt.Errorf("failed to load settings: %w", err)
+		}
 
 		loader := plugins.NewLoader()
-		err := loader.LoadPlugins(settings.PluginDirectory)
+		err = loader.LoadPlugins(settings.PluginDirectory)
 		if err != nil {
 			return fmt.Errorf("failed to load plugins: %w", err)
 		}
@@ -57,10 +59,13 @@ var pluginsEnableCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pluginName := args[0]
-		settings := config.LoadSettings()
+		settings, err := config.LoadSettings()
+		if err != nil {
+			return fmt.Errorf("failed to load settings: %w", err)
+		}
 
 		loader := plugins.NewLoader()
-		err := loader.LoadPlugins(settings.PluginDirectory)
+		err = loader.LoadPlugins(settings.PluginDirectory)
 		if err != nil {
 			return fmt.Errorf("failed to load plugins: %w", err)
 		}
@@ -92,7 +97,10 @@ var pluginsDisableCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pluginName := args[0]
-		settings := config.LoadSettings()
+		settings, err := config.LoadSettings()
+		if err != nil {
+			return fmt.Errorf("failed to load settings: %w", err)
+		}
 
 		if !contains(settings.EnabledPlugins, pluginName) {
 			fmt.Printf("Plugin '%s' is not currently enabled\n", pluginName)
@@ -123,7 +131,10 @@ var pluginsDirCmd = &cobra.Command{
 	Short: "Get or set the plugin directory",
 	Long:  `Get the current plugin directory or set a new one.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		settings := config.LoadSettings()
+		settings, err := config.LoadSettings()
+		if err != nil {
+			return fmt.Errorf("failed to load settings: %w", err)
+		}
 
 		if len(args) == 0 {
 			// Get current directory
@@ -134,13 +145,20 @@ var pluginsDirCmd = &cobra.Command{
 		// Set new directory
 		newDir := args[0]
 
-		// Check if directory exists
-		if _, err := os.Stat(newDir); os.IsNotExist(err) {
-			return fmt.Errorf("directory does not exist: %s", newDir)
+		// Check if directory exists and is actually a directory
+		info, err := os.Stat(newDir)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("directory does not exist: %s", newDir)
+			}
+			return fmt.Errorf("failed to access path: %w", err)
+		}
+		if !info.IsDir() {
+			return fmt.Errorf("path is not a directory: %s", newDir)
 		}
 
 		settings.PluginDirectory = newDir
-		err := config.SaveSettings(settings)
+		err = settings.SaveSettings()
 		if err != nil {
 			return fmt.Errorf("failed to save settings: %w", err)
 		}

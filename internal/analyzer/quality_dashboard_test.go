@@ -79,6 +79,7 @@ func TestGenerateQualityDashboard(t *testing.T) {
 		security,
 		nil, // code quality
 		nil, // dependencies
+		nil, // pluginResults
 	)
 
 	// Test overall score calculation
@@ -149,7 +150,7 @@ func TestCalculateOverallScore(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			score := calculateOverallScore(tt.health, tt.security, tt.maturity, tt.busFactor)
+			score := calculateOverallScore(tt.health, tt.security, tt.maturity, tt.busFactor, nil)
 			if score < tt.expectMin || score > tt.expectMax {
 				t.Errorf("Expected score between %d-%d, got %d", tt.expectMin, tt.expectMax, score)
 			}
@@ -218,7 +219,7 @@ func TestIdentifyProblemHotspots(t *testing.T) {
 		CriticalCount: 2,
 	}
 
-	hotspots := identifyProblemHotspots(50, 20, 1, commits, security)
+	hotspots := identifyProblemHotspots(50, 20, 1, commits, security, nil)
 
 	// Should identify security and bus factor hotspots
 	if len(hotspots) < 2 {
@@ -261,6 +262,7 @@ func TestGenerateRecommendations(t *testing.T) {
 		commits,
 		contributors,
 		security,
+		nil,
 		nil,
 	)
 

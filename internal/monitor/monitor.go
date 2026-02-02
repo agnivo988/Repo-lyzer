@@ -17,12 +17,13 @@ import (
 
 // MonitorState represents the current state of a monitored repository
 type MonitorState struct {
-	Owner         string    `json:"owner"`
-	Repo          string    `json:"repo"`
-	LastCommitSHA string    `json:"last_commit_sha"`
-	LastIssueID   int       `json:"last_issue_id"`
-	LastPRID      int       `json:"last_pr_id"`
-	LastUpdated   time.Time `json:"last_updated"`
+	Owner               string    `json:"owner"`
+	Repo                string    `json:"repo"`
+	LastCommitSHA       string    `json:"last_commit_sha"`
+	LastIssueID         int       `json:"last_issue_id"`
+	LastPRID            int       `json:"last_pr_id"`
+	LastContributorCount int      `json:"last_contributor_count"`
+	LastUpdated         time.Time `json:"last_updated"`
 }
 
 // Monitor manages real-time monitoring of a GitHub repository
@@ -228,11 +229,10 @@ func (m *Monitor) checkIssues() []Notification {
 		return notifs
 	}
 
-	// Check if issue count changed (since we can't track individual issue IDs from the minimal Issue struct)
 	currentIssueCount := len(issues)
 
 	m.stateMutex.RLock()
-	lastIssueCount := m.state.LastIssueID // Re-using this field to store issue count for now
+	lastIssueCount := m.state.LastIssueID
 	m.stateMutex.RUnlock()
 
 	if currentIssueCount != lastIssueCount {
