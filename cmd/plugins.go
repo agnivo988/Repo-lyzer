@@ -116,7 +116,7 @@ var pluginsDisableCmd = &cobra.Command{
 		}
 		settings.EnabledPlugins = newEnabled
 
-		err := settings.SaveSettings()
+		err = settings.SaveSettings()
 		if err != nil {
 			return fmt.Errorf("failed to save settings: %w", err)
 		}
@@ -146,12 +146,12 @@ var pluginsDirCmd = &cobra.Command{
 		newDir := args[0]
 
 		// Check if directory exists and is actually a directory
-		info, err := os.Stat(newDir)
-		if err != nil {
-			if os.IsNotExist(err) {
+		info, statErr := os.Stat(newDir)
+		if statErr != nil {
+			if os.IsNotExist(statErr) {
 				return fmt.Errorf("directory does not exist: %s", newDir)
 			}
-			return fmt.Errorf("failed to access path: %w", err)
+			return fmt.Errorf("failed to access path: %w", statErr)
 		}
 		if !info.IsDir() {
 			return fmt.Errorf("path is not a directory: %s", newDir)

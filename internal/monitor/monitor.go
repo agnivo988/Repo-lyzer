@@ -21,25 +21,28 @@ type MonitorState struct {
 	Repo                string    `json:"repo"`
 	LastCommitSHA       string    `json:"last_commit_sha"`
 	LastIssueID         int       `json:"last_issue_id"`
+	LastIssueCount      int       `json:"last_issue_count"`
 	LastPRID            int       `json:"last_pr_id"`
+	LastPRCount         int       `json:"last_pr_count"`
 	LastContributorCount int      `json:"last_contributor_count"`
 	LastUpdated         time.Time `json:"last_updated"`
 }
 
 // Monitor manages real-time monitoring of a GitHub repository
 type Monitor struct {
-	client          *github.Client
-	cache           *cache.Cache
-	owner           string
-	repo            string
-	interval        time.Duration
-	state           *MonitorState
-	stateMutex      sync.RWMutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	wg              sync.WaitGroup
-	notifications   chan Notification
-	prevContribCount int
+	client                    *github.Client
+	cache                     *cache.Cache
+	owner                     string
+	repo                      string
+	interval                  time.Duration
+	state                     *MonitorState
+	stateMutex                sync.RWMutex
+	ctx                       context.Context
+	cancel                    context.CancelFunc
+	wg                        sync.WaitGroup
+	notifications             chan Notification
+	notificationsCloseOnce    sync.Once
+	prevContribCount          int
 }
 
 // Notification represents a monitoring notification
@@ -53,6 +56,11 @@ type Notification struct {
 
 // NewMonitor creates a new repository monitor
 func NewMonitor(owner, repo string, interval time.Duration) (*Monitor, error) {
+	// Validate interval parameter
+	if interval <= 0 {
+		return nil, fmt.Errorf("invalid interval: must be > 0")
+	}
+
 	client := github.NewClient()
 	cache, err := cache.NewCache()
 	if err != nil {
@@ -110,13 +118,17 @@ func (m *Monitor) handleSignals() {
 
 	<-sigChan
 	fmt.Println("\n🛑 Stopping monitoring...")
-	m.Stop()
+	// Call cancel directly instead of Stop to avoid deadlock (Stop calls wg.Wait())
+	m.cancel()
 }
 
 // Stop stops the monitoring process
 func (m *Monitor) Stop() {
 	m.cancel()
-	close(m.notifications)
+	// Use sync.Once to safely close the notifications channel
+	m.notificationsCloseOnce.Do(func() {
+		close(m.notifications)
+	})
 	m.wg.Wait()
 }
 
@@ -229,8 +241,15 @@ func (m *Monitor) checkIssues() []Notification {
 		return notifs
 	}
 
+	// Get current count
+	currentIssueCount := len(issues)
+
 	// Check if the number of issues has changed
-	if len(issues) != m.state.LastIssueID {
+	m.stateMutex.RLock()
+	lastIssueCount := m.state.LastIssueCount
+	m.stateMutex.RUnlock()
+
+	if currentIssueCount != lastIssueCount {
 		notification := Notification{
 			Type:      "issue",
 			Title:     "Issues Update",
@@ -238,8 +257,11 @@ func (m *Monitor) checkIssues() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
-		m.state.LastIssueID = len(issues)
+		notifs = append(notifs, notification)
+
+		m.stateMutex.Lock()
+		m.state.LastIssueCount = currentIssueCount
+		m.stateMutex.Unlock()
 	}
 
 	return notifs
@@ -249,9 +271,8 @@ func (m *Monitor) checkIssues() []Notification {
 func (m *Monitor) checkPullRequests() []Notification {
 	var notifs []Notification
 
-	// For now, we'll use the same issues endpoint since PRs are a type of issue
-	// In a full implementation, we'd filter for pull requests specifically
-	prs, err := m.client.GetIssues(m.owner, m.repo, "open")
+	// Use dedicated GetPullRequests API method to avoid duplicate API calls
+	prs, err := m.client.GetPullRequests(m.owner, m.repo, "open")
 	if err != nil {
 		log.Printf("Failed to get pull requests: %v", err)
 		return notifs
@@ -261,21 +282,21 @@ func (m *Monitor) checkPullRequests() []Notification {
 	currentPRCount := len(prs)
 
 	m.stateMutex.RLock()
-	lastPRCount := m.state.LastPRID // Re-using this field to store PR count for now
+	lastPRCount := m.state.LastPRCount
 	m.stateMutex.RUnlock()
 
 	if currentPRCount != lastPRCount {
 		notification := Notification{
 			Type:      "pr",
 			Title:     "Pull Requests Update",
-			Message:   fmt.Sprintf("Repository has %d open pull requests/issues", currentPRCount),
+			Message:   fmt.Sprintf("Repository has %d open pull requests", currentPRCount),
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
 		notifs = append(notifs, notification)
 
 		m.stateMutex.Lock()
-		m.state.LastPRID = currentPRCount
+		m.state.LastPRCount = currentPRCount
 		m.stateMutex.Unlock()
 	}
 
@@ -292,8 +313,15 @@ func (m *Monitor) checkContributors() []Notification {
 		return notifs
 	}
 
+	// Get current count
+	currentCount := len(contributors)
+
 	// Check if the contributor count has changed
-	if len(contributors) != m.state.LastContributorCount {
+	m.stateMutex.RLock()
+	lastContributorCount := m.state.LastContributorCount
+	m.stateMutex.RUnlock()
+
+	if currentCount != lastContributorCount {
 		notification := Notification{
 			Type:      "contributor",
 			Title:     "Contributor Update",
@@ -301,8 +329,11 @@ func (m *Monitor) checkContributors() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
-		m.state.LastContributorCount = len(contributors)
+		notifs = append(notifs, notification)
+
+		m.stateMutex.Lock()
+		m.state.LastContributorCount = currentCount
+		m.stateMutex.Unlock()
 	}
 
 	return notifs
@@ -339,9 +370,20 @@ func (m *Monitor) loadState() {
 	defer m.stateMutex.Unlock()
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	if _, found := m.cache.Get(key); found {
-		// In a full implementation, we'd deserialize the state
-		// For now, just initialize with current time
+	cachedEntry, found := m.cache.Get(key)
+	if found {
+		// Deserialize the cached state
+		var cachedState MonitorState
+		err := json.Unmarshal(cachedEntry.Analysis, &cachedState)
+		if err != nil {
+			log.Printf("Failed to unmarshal cached state: %v, using fresh state", err)
+			m.state.LastUpdated = time.Now()
+			return
+		}
+		// Restore the cached state
+		m.state = &cachedState
+	} else {
+		// Cache miss, initialize with current time
 		m.state.LastUpdated = time.Now()
 	}
 }
