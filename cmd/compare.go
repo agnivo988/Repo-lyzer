@@ -21,6 +21,7 @@ import (
 // Parameters:
 //   - r1: First repository in owner/repo format
 //   - r2: Second repository in owner/repo format
+//
 // Returns an error if the comparison fails.
 func RunCompare(r1, r2 string) error {
 	compareCmd.SetArgs([]string{r1, r2})
@@ -29,8 +30,28 @@ func RunCompare(r1, r2 string) error {
 
 var compareCmd = &cobra.Command{
 	Use:   "compare owner1/repo1 owner2/repo2",
-	Short: "Compare two GitHub repositories",
-	Args:  cobra.ExactArgs(2),
+	Short: "Compare two GitHub repositories side-by-side",
+	Long: `Compare two GitHub repositories and display a side-by-side comparison
+of their key metrics and health indicators.
+
+Comparison includes:
+  • Stars, Forks, and Open Issues
+  • Commit activity (past year)
+  • Contributor count and engagement
+  • Bus Factor and risk assessment  
+  • Repository maturity scores
+  • Verdict on which repository is more mature/stable
+
+Examples:
+  # Compare popular frameworks
+  repo-lyzer compare facebook/react vuejs/vue
+
+  # Compare similar tools
+  repo-lyzer compare golang/go rust-lang/rust
+
+  # Compare forks
+  repo-lyzer compare original/repo fork/repo`,
+	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		// Parse repo names

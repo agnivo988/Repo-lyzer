@@ -12,13 +12,23 @@ var monitorCmd = &cobra.Command{
 	Use:   "monitor owner/repo",
 	Short: "Monitor a GitHub repository in real-time",
 	Long: `Monitor a GitHub repository for real-time updates including:
-- New commits
-- Issues and pull requests
-- Contributor changes
-- Repository health metrics
+  • New commits
+  • Issues and pull requests
+  • Contributor changes
+  • Repository health metrics
 
 The monitoring runs continuously with configurable intervals and provides
-notifications within the interactive TUI.`,
+notifications within the interactive TUI.
+
+Examples:
+  # Monitor with default 5-minute interval
+  repo-lyzer monitor kubernetes/kubernetes
+
+  # Monitor with custom 10-minute interval
+  repo-lyzer monitor golang/go --interval 10m
+
+  # Monitor critical production repo every minute
+  repo-lyzer monitor company/production-api --interval 1m`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Validate the repository URL format

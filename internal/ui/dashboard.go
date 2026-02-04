@@ -129,11 +129,12 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "p":
 			if m.showExport {
 				return m, func() tea.Msg {
-					_, err := ExportPDF(m.data, "analysis.pdf")
+					// Use enhanced PDF export with default configuration
+					filename, err := ExportEnhancedPDFWithDefaults(m.data)
 					if err != nil {
 						return exportMsg{err, ""}
 					}
-					return exportMsg{nil, "✓ Exported to analysis.pdf"}
+					return exportMsg{nil, fmt.Sprintf("✓ Enhanced PDF exported to %s", filename)}
 				}
 			}
 
