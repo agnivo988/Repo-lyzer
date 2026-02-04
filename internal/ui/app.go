@@ -14,9 +14,9 @@ import (
 	"github.com/agnivo988/Repo-lyzer/internal/cache"
 	"github.com/agnivo988/Repo-lyzer/internal/config"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
-	"github.com/charmbracelet/lipgloss"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/spinner"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type sessionState int
@@ -50,8 +50,6 @@ type SwitchToInputMsg struct{}
 
 type ErrorMsg error
 
-
-
 // StatusMsg represents a status message with error indication
 type StatusMsg struct {
 	Message string
@@ -66,18 +64,18 @@ type MainModel struct {
 	state sessionState
 
 	// Sub-models for different UI states
-	menu             MenuModel
-	input            InputModel
-	loading          LoadingModel
-	compareInput     CompareInputModel
-	compareLoading   CompareLoadingModel
-	compareResult    CompareResultModel
-	settings         SettingsModel
-	help             HelpModel
-	history          HistoryModel
-	favorites        *FavoritesModel
-	cloneInput       CloneInputModel
-	cloning          CloningModel
+	menu           MenuModel
+	input          InputModel
+	loading        LoadingModel
+	compareInput   CompareInputModel
+	compareLoading CompareLoadingModel
+	compareResult  CompareResultModel
+	settings       SettingsModel
+	help           HelpModel
+	history        HistoryModel
+	favorites      *FavoritesModel
+	cloneInput     CloneInputModel
+	cloning        CloningModel
 
 	// Shared models
 	dashboard DashboardModel
@@ -91,25 +89,23 @@ type MainModel struct {
 	appConfig    *config.AppSettings
 
 	// Additional fields used in Update method
-	spinner       spinner.Model
-	historyCursor int
+	spinner         spinner.Model
+	historyCursor   int
 	favoritesCursor int
-	animTick      int
-	err           interface{}
-	analysisType  string
-	compareStep   int
-	compareInput1 string
-	compareInput2 string
-	inTokenInput  bool
-	tokenInput    string
-	settingsOption string
-	helpContent   string
-	repoInput     string
-	progress      *ProgressTracker
-	cacheStatus   string
+	animTick        int
+	err             interface{}
+	analysisType    string
+	compareStep     int
+	compareInput1   string
+	compareInput2   string
+	inTokenInput    bool
+	tokenInput      string
+	settingsOption  string
+	helpContent     string
+	repoInput       string
+	progress        *ProgressTracker
+	cacheStatus     string
 }
-
-
 
 // NewMainModel creates a new MainModel with initialized sub-models
 func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
@@ -117,24 +113,24 @@ func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return MainModel{
-		state:           stateMenu,
-		menu:            NewMenuModel(),
-		input:           NewInputModel(),
-		loading:         NewLoadingModel(),
-		compareInput:    NewCompareInputModel(),
-		compareLoading:  NewCompareLoadingModel(),
-		compareResult:   NewCompareResultModel(),
-		settings:        NewSettingsModel(config),
-		help:            NewHelpModel(),
-		history:         NewHistoryModel(),
-		favorites:       NewFavoritesModel(),
-		cloneInput:      NewCloneInputModel(),
-		cloning:         NewCloningModel(),
-		dashboard:       NewDashboardModel(),
-		tree:            NewTreeModel(nil),
-		cache:           cache,
-		appConfig:       config,
-		spinner:         s,
+		state:          stateMenu,
+		menu:           NewMenuModel(),
+		input:          NewInputModel(),
+		loading:        NewLoadingModel(),
+		compareInput:   NewCompareInputModel(),
+		compareLoading: NewCompareLoadingModel(),
+		compareResult:  NewCompareResultModel(),
+		settings:       NewSettingsModel(),
+		help:           NewHelpModel(),
+		history:        NewHistoryModel(),
+		favorites:      NewFavoritesModel(),
+		cloneInput:     NewCloneInputModel(),
+		cloning:        NewCloningModel(),
+		dashboard:      NewDashboardModel(),
+		tree:           NewTreeModel(nil),
+		cache:          cache,
+		appConfig:      config,
+		spinner:        s,
 	}
 }
 
@@ -830,6 +826,9 @@ func (m MainModel) analyzeRepo(repoName string) tea.Cmd {
 			security != nil && security.CriticalCount > 0,
 		)
 
+		// Analyze Hotspots
+		hotspots, _ := analyzer.AnalyzeHotspots(repo, commits, fileTree, client)
+
 		// Generate quality dashboard
 		qualityDashboard := analyzer.GenerateQualityDashboard(
 			repo,
@@ -842,7 +841,7 @@ func (m MainModel) analyzeRepo(repoName string) tea.Cmd {
 			security,
 			nil, // codeQuality - not implemented yet
 			deps,
-			nil, // pluginResults - not loaded yet
+			hotspots,
 		)
 
 		result := AnalysisResult{
@@ -1007,7 +1006,7 @@ func (m MainModel) compareResultView() string {
 		content = lipgloss.JoinVertical(
 			lipgloss.Left,
 			content,
-			"\n" + ErrorStyle.Render(fmt.Sprintf("Status: %v", m.err)),
+			"\n"+ErrorStyle.Render(fmt.Sprintf("Status: %v", m.err)),
 		)
 	}
 
