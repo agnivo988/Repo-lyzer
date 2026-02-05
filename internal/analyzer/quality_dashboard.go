@@ -115,12 +115,12 @@ func calculateOverallScore(health, security, maturity, busFactor int, pluginResu
 			float64(maturity)*0.25 +
 			float64(busFactorScore)*0.125
 	} else {
-		// With plugins: Base weighted scoring at 80% total: Health(20%), Security(20%), Maturity(16%), Bus Factor(8%), Plugins(20%)
+		// With plugins: Base weighted scoring at 80% total: Health(25%), Security(25%), Maturity(20%), Bus Factor(10%), Plugins(20%)
 		// Original ratios preserved: 25:25:20:10 scaled to 80%
-		baseScore = float64(health)*0.20 +
-			float64(security)*0.20 +
-			float64(maturity)*0.16 +
-			float64(busFactorScore)*0.08
+		baseScore = float64(health)*0.25 +
+			float64(security)*0.25 +
+			float64(maturity)*0.20 +
+			float64(busFactorScore)*0.10
 
 		// Normalize plugin score contribution
 		pluginScore = (pluginScore / totalPluginWeight) * 0.20 // 20% max contribution

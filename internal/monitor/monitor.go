@@ -40,6 +40,7 @@ type Monitor struct {
 	wg              sync.WaitGroup
 	notifications   chan Notification
 	prevContribCount int
+	stopOnce        sync.Once
 }
 
 // Notification represents a monitoring notification
@@ -110,14 +111,19 @@ func (m *Monitor) handleSignals() {
 
 	<-sigChan
 	fmt.Println("\n🛑 Stopping monitoring...")
-	m.Stop()
+	// Cancel the context to signal all goroutines to stop
+	m.cancel()
 }
 
 // Stop stops the monitoring process
+// Safe for concurrent/multiple calls due to sync.Once
 func (m *Monitor) Stop() {
-	m.cancel()
-	close(m.notifications)
-	m.wg.Wait()
+	m.stopOnce.Do(func() {
+		m.cancel()
+		// Wait for all goroutines to complete before closing the channel
+		m.wg.Wait()
+		close(m.notifications)
+	})
 }
 
 // monitorLoop runs the main monitoring loop
@@ -229,8 +235,15 @@ func (m *Monitor) checkIssues() []Notification {
 		return notifs
 	}
 
+	// Get the last issue count with proper mutex protection
+	m.stateMutex.RLock()
+	lastIssueCount := m.state.LastIssueID
+	m.stateMutex.RUnlock()
+
+	currentIssueCount := len(issues)
+
 	// Check if the number of issues has changed
-	if len(issues) != m.state.LastIssueID {
+	if currentIssueCount != lastIssueCount {
 		notification := Notification{
 			Type:      "issue",
 			Title:     "Issues Update",
@@ -238,8 +251,13 @@ func (m *Monitor) checkIssues() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
-		m.state.LastIssueID = len(issues)
+		notifs = append(notifs, notification)
+
+		// Update state under mutex protection
+		m.stateMutex.Lock()
+		m.state.LastIssueID = currentIssueCount
+		m.state.LastUpdated = time.Now()
+		m.stateMutex.Unlock()
 	}
 
 	return notifs
@@ -249,26 +267,32 @@ func (m *Monitor) checkIssues() []Notification {
 func (m *Monitor) checkPullRequests() []Notification {
 	var notifs []Notification
 
-	// For now, we'll use the same issues endpoint since PRs are a type of issue
-	// In a full implementation, we'd filter for pull requests specifically
-	prs, err := m.client.GetIssues(m.owner, m.repo, "open")
+	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
 	if err != nil {
-		log.Printf("Failed to get pull requests: %v", err)
+		log.Printf("Failed to get issues: %v", err)
 		return notifs
+	}
+
+	// Filter issues to get only pull requests
+	var prs []github.Issue
+	for _, issue := range issues {
+		if issue.PullRequest != nil {
+			prs = append(prs, issue)
+		}
 	}
 
 	// Check if PR count changed
 	currentPRCount := len(prs)
 
 	m.stateMutex.RLock()
-	lastPRCount := m.state.LastPRID // Re-using this field to store PR count for now
+	lastPRCount := m.state.LastPRID
 	m.stateMutex.RUnlock()
 
 	if currentPRCount != lastPRCount {
 		notification := Notification{
 			Type:      "pr",
 			Title:     "Pull Requests Update",
-			Message:   fmt.Sprintf("Repository has %d open pull requests/issues", currentPRCount),
+			Message:   fmt.Sprintf("Repository has %d open pull requests", currentPRCount),
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
@@ -276,6 +300,7 @@ func (m *Monitor) checkPullRequests() []Notification {
 
 		m.stateMutex.Lock()
 		m.state.LastPRID = currentPRCount
+		m.state.LastUpdated = time.Now()
 		m.stateMutex.Unlock()
 	}
 
@@ -292,8 +317,15 @@ func (m *Monitor) checkContributors() []Notification {
 		return notifs
 	}
 
+	// Get the last contributor count with proper mutex protection
+	m.stateMutex.RLock()
+	lastContributorCount := m.state.LastContributorCount
+	m.stateMutex.RUnlock()
+
+	currentCount := len(contributors)
+
 	// Check if the contributor count has changed
-	if len(contributors) != m.state.LastContributorCount {
+	if currentCount != lastContributorCount {
 		notification := Notification{
 			Type:      "contributor",
 			Title:     "Contributor Update",
@@ -301,8 +333,13 @@ func (m *Monitor) checkContributors() []Notification {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
-		m.state.LastContributorCount = len(contributors)
+		notifs = append(notifs, notification)
+
+		// Update state under mutex protection
+		m.stateMutex.Lock()
+		m.state.LastContributorCount = currentCount
+		m.state.LastUpdated = time.Now()
+		m.stateMutex.Unlock()
 	}
 
 	return notifs
@@ -339,9 +376,26 @@ func (m *Monitor) loadState() {
 	defer m.stateMutex.Unlock()
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	if _, found := m.cache.Get(key); found {
-		// In a full implementation, we'd deserialize the state
-		// For now, just initialize with current time
+	val, found := m.cache.Get(key)
+	if found {
+		// Deserialize the cached state
+		if jsonData, ok := val.([]byte); ok {
+			var cachedState MonitorState
+			err := json.Unmarshal(jsonData, &cachedState)
+			if err != nil {
+				log.Printf("Warning: failed to deserialize cached state: %v", err)
+				// Fall back to initializing with current time
+				m.state.LastUpdated = time.Now()
+			} else {
+				// Successfully loaded cached state
+				m.state = &cachedState
+			}
+		} else {
+			log.Printf("Warning: cached value has unexpected type, expected []byte")
+			m.state.LastUpdated = time.Now()
+		}
+	} else {
+		// No cached state found, initialize with current time
 		m.state.LastUpdated = time.Now()
 	}
 }

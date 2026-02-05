@@ -1,7 +1,8 @@
 package github
 
 type Issue struct {
-	State string `json:"state"`
+	State       string `json:"state"`
+	PullRequest *struct{} `json:"pull_request,omitempty"`
 }
 
 func (c *Client) GetIssues(owner, repo string, state string) ([]Issue, error) {
