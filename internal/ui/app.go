@@ -95,7 +95,7 @@ type MainModel struct {
 	historyCursor int
 	favoritesCursor int
 	animTick      int
-	err           interface{}
+	err           error
 	analysisType  string
 	compareStep   int
 	compareInput1 string
@@ -304,8 +304,12 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.progress = nil
 			m.cacheStatus = "fresh"
 			// Save to history
-			history, _ := LoadHistory()
-			m.history.Entries = history.Entries
+			history, err := LoadHistory()
+			if err != nil {
+				log.Printf("Warning: failed to load history: %v", err)
+			} else if history != nil {
+				m.history.Entries = history.Entries
+			}
 			m.history.AddEntry(result)
 			m.history.Save()
 		}
@@ -316,8 +320,12 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.progress = nil
 			m.cacheStatus = "cached"
 			// Save to history
-			history, _ := LoadHistory()
-			m.history.Entries = history.Entries
+			history, err := LoadHistory()
+			if err != nil {
+				log.Printf("Warning: failed to load history: %v", err)
+			} else if history != nil {
+				m.history.Entries = history.Entries
+			}
 			m.history.AddEntry(cachedResult.Result)
 			m.history.Save()
 		}
@@ -573,7 +581,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.err = fmt.Errorf("✓ Cloned to: %s", result.path)
 				m.state = stateMenu
-				m.input.input = ""
+				m.cloneInput.input = ""
 			}
 		}
 
@@ -1043,10 +1051,26 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		if err != nil {
 			return fmt.Errorf("failed to fetch %s: %w", repo1Name, err)
 		}
-		commits1, _ := client.GetCommits(parts1[0], parts1[1], 365)
-		contributors1, _ := client.GetContributorsWithAvatars(parts1[0], parts1[1], 15)
-		languages1, _ := client.GetLanguages(parts1[0], parts1[1])
-		fileTree1, _ := client.GetFileTree(parts1[0], parts1[1], repo1.DefaultBranch)
+		commits1, err := client.GetCommits(parts1[0], parts1[1], 365)
+		if err != nil {
+			log.Printf("Warning: failed to fetch commits for %s: %v", repo1Name, err)
+			commits1 = []github.Commit{}
+		}
+		contributors1, err := client.GetContributorsWithAvatars(parts1[0], parts1[1], 15)
+		if err != nil {
+			log.Printf("Warning: failed to fetch contributors for %s: %v", repo1Name, err)
+			contributors1 = []github.Contributor{}
+		}
+		languages1, err := client.GetLanguages(parts1[0], parts1[1])
+		if err != nil {
+			log.Printf("Warning: failed to fetch languages for %s: %v", repo1Name, err)
+			languages1 = map[string]int{}
+		}
+		fileTree1, err := client.GetFileTree(parts1[0], parts1[1], repo1.DefaultBranch)
+		if err != nil {
+			log.Printf("Warning: failed to fetch file tree for %s: %v", repo1Name, err)
+			fileTree1 = nil
+		}
 		score1 := analyzer.CalculateHealth(repo1, commits1)
 		busFactor1, busRisk1 := analyzer.BusFactor(contributors1)
 		maturityScore1, maturityLevel1 := analyzer.RepoMaturityScore(repo1, len(commits1), len(contributors1), false)
@@ -1069,10 +1093,26 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		if err != nil {
 			return fmt.Errorf("failed to fetch %s: %w", repo2Name, err)
 		}
-		commits2, _ := client.GetCommits(parts2[0], parts2[1], 365)
-		contributors2, _ := client.GetContributorsWithAvatars(parts2[0], parts2[1], 15)
-		languages2, _ := client.GetLanguages(parts2[0], parts2[1])
-		fileTree2, _ := client.GetFileTree(parts2[0], parts2[1], repo2.DefaultBranch)
+		commits2, err := client.GetCommits(parts2[0], parts2[1], 365)
+		if err != nil {
+			log.Printf("Warning: failed to fetch commits for %s: %v", repo2Name, err)
+			commits2 = []github.Commit{}
+		}
+		contributors2, err := client.GetContributorsWithAvatars(parts2[0], parts2[1], 15)
+		if err != nil {
+			log.Printf("Warning: failed to fetch contributors for %s: %v", repo2Name, err)
+			contributors2 = []github.Contributor{}
+		}
+		languages2, err := client.GetLanguages(parts2[0], parts2[1])
+		if err != nil {
+			log.Printf("Warning: failed to fetch languages for %s: %v", repo2Name, err)
+			languages2 = map[string]int{}
+		}
+		fileTree2, err := client.GetFileTree(parts2[0], parts2[1], repo2.DefaultBranch)
+		if err != nil {
+			log.Printf("Warning: failed to fetch file tree for %s: %v", repo2Name, err)
+			fileTree2 = nil
+		}
 		score2 := analyzer.CalculateHealth(repo2, commits2)
 		busFactor2, busRisk2 := analyzer.BusFactor(contributors2)
 		maturityScore2, maturityLevel2 := analyzer.RepoMaturityScore(repo2, len(commits2), len(contributors2), false)

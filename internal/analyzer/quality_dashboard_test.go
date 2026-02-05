@@ -8,14 +8,6 @@ import (
 )
 
 func TestGenerateQualityDashboard(t *testing.T) {
-	// Mock repository data
-	repo := &github.Repo{
-		FullName:    "test/repo",
-		Description: "Test repository",
-		Stars:       100,
-		Forks:       20,
-		OpenIssues:  5,
-	}
 
 	// Mock commits
 	commits := []github.Commit{
@@ -69,7 +61,6 @@ func TestGenerateQualityDashboard(t *testing.T) {
 	}
 
 	dashboard := GenerateQualityDashboard(
-		repo,
 		commits,
 		contributors,
 		85, // health score
@@ -77,7 +68,6 @@ func TestGenerateQualityDashboard(t *testing.T) {
 		"Mature",
 		75, // maturity score
 		security,
-		nil, // code quality
 		nil, // dependencies
 		nil, // pluginResults
 	)

@@ -39,7 +39,6 @@ type DashboardMetrics struct {
 
 // GenerateQualityDashboard creates a comprehensive quality and risk summary
 func GenerateQualityDashboard(
-	repo *github.Repo,
 	commits []github.Commit,
 	contributors []github.Contributor,
 	healthScore int,
@@ -47,7 +46,6 @@ func GenerateQualityDashboard(
 	maturityLevel string,
 	maturityScore int,
 	security *SecurityScanResult,
-	codeQuality *CodeQualityMetrics,
 	dependencies *DependencyAnalysis,
 	pluginResults []*plugins.PluginResult,
 ) *QualityDashboard {
@@ -106,23 +104,23 @@ func calculateOverallScore(health, security, maturity, busFactor int, pluginResu
 
 	var baseScore float64
 
-	// If no plugins or all plugin weights are zero, renormalize base weights to 100%
+	// If no plugins or all plugin weights are zero, use base weights at 100%
 	if totalPluginWeight == 0 {
-		// Renormalize: Health(25%), Security(25%), Maturity(20%), Bus Factor(10%) -> 100%
-		// Scale factors: 25->31.25%, 25->31.25%, 20->25%, 10->12.5%
-		baseScore = float64(health)*0.3125 +
-			float64(security)*0.3125 +
-			float64(maturity)*0.25 +
-			float64(busFactorScore)*0.125
+		// Base weights: Health(25%), Security(25%), Maturity(20%), Bus Factor(10%)
+		baseScore = float64(health)*0.25 +
+			float64(security)*0.25 +
+			float64(maturity)*0.20 +
+			float64(busFactorScore)*0.10
 	} else {
-		// With plugins: Base weighted scoring at 80% total: Health(20%), Security(20%), Maturity(16%), Bus Factor(8%), Plugins(20%)
-		// Original ratios preserved: 25:25:20:10 scaled to 80%
-		baseScore = float64(health)*0.20 +
-			float64(security)*0.20 +
-			float64(maturity)*0.16 +
-			float64(busFactorScore)*0.08
+		// With plugins: Base weighted scoring applies same base weights
+		// Weights: Health(25%), Security(25%), Maturity(20%), Bus Factor(10%), Plugins(20%)
+		// Total when both present: 25+25+20+10+20 = 100%
+		baseScore = float64(health)*0.25 +
+			float64(security)*0.25 +
+			float64(maturity)*0.20 +
+			float64(busFactorScore)*0.10
 
-		// Normalize plugin score contribution
+		// Normalize plugin score contribution to fit within allocated 20% weight
 		pluginScore = (pluginScore / totalPluginWeight) * 0.20 // 20% max contribution
 	}
 
@@ -339,6 +337,16 @@ func generateDashboardRecommendations(
 	// General recommendations
 	if len(contributors) < 3 {
 		recommendations = append(recommendations, "🌟 Promote the project to attract more contributors")
+	}
+
+	// Plugin-driven recommendations: integrate meaningful plugin recommendations when available
+	for _, result := range pluginResults {
+		if result != nil && (result.RiskLevel == "High" || result.RiskLevel == "Critical") {
+			if len(result.Recommendations) > 0 {
+				// Append plugin recommendations with category context
+				recommendations = append(recommendations, fmt.Sprintf("⚠️ %s: %s", result.Category, result.Recommendations[0]))
+			}
+		}
 	}
 
 	// Limit to top 5 recommendations
