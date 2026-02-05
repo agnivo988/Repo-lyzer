@@ -15,11 +15,27 @@ import (
 // cacheCmd defines the "cache" command group for cache management operations.
 // It provides subcommands for clearing cached data and managing cache settings.
 // Usage example:
-//   repo-lyzer cache clear
+//
+//	repo-lyzer cache clear
 var cacheCmd = &cobra.Command{
 	Use:   "cache",
 	Short: "Manage cached analysis data",
-	Long:  "Manage cached repository analysis data, including clearing stale or corrupted cache entries.",
+	Long: `Manage cached repository analysis data for faster subsequent analyses.
+
+Repo-lyzer caches analysis results locally to speed up re-analysis and enable 
+offline viewing. Cache management helps maintain data freshness and disk space.
+
+Available subcommands:
+  • clear  - Remove all cached data
+  • list   - View cached repositories (use interactive menu)
+
+Examples:
+  # Clear all cached data
+  repo-lyzer cache clear
+  
+  # View cached repositories (opens interactive TUI)
+  repo-lyzer
+  # Then press 'c' to view cache`,
 }
 
 // clearCmd defines the "cache clear" subcommand.

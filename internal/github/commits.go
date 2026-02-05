@@ -14,6 +14,19 @@ type Commit struct {
 	} `json:"commit"`
 }
 
+type CommitFile struct {
+	Filename  string `json:"filename"`
+	Additions int    `json:"additions"`
+	Deletions int    `json:"deletions"`
+	Changes   int    `json:"changes"`
+	Status    string `json:"status"`
+}
+
+type CommitDetail struct {
+	SHA   string       `json:"sha"`
+	Files []CommitFile `json:"files"`
+}
+
 func (c *Client) GetCommits(owner, repo string, days int) ([]Commit, error) {
 	var allCommits []Commit
 	since := time.Now().AddDate(0, 0, -days).Format(time.RFC3339)
@@ -44,4 +57,14 @@ func (c *Client) GetCommits(owner, repo string, days int) ([]Commit, error) {
 	}
 
 	return allCommits, nil
+}
+
+func (c *Client) GetCommit(owner, repo, sha string) (*CommitDetail, error) {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/commits/%s", owner, repo, sha)
+	var commit CommitDetail
+	err := c.get(url, &commit)
+	if err != nil {
+		return nil, err
+	}
+	return &commit, nil
 }
