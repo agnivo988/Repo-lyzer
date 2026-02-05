@@ -24,6 +24,8 @@ You can help Repo-lyzer by:
 
 ### Prerequisites
 
+- **Star the Repo-lyzer Repository**
+
 Make sure you have the following installed:
 
 - **Go 1.21+**  

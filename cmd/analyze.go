@@ -21,6 +21,7 @@ import (
 // Parameters:
 //   - owner: GitHub username or organization name
 //   - repo: Repository name
+//
 // Returns an error if the analysis fails.
 func RunAnalyze(owner, repo string) error {
 	args := []string{owner + "/" + repo}
@@ -127,7 +128,9 @@ func runDryRun(repoArg string) error {
 // analyzeCmd defines the "analyze" command for the CLI.
 // It analyzes a single GitHub repository and prints various metrics and reports.
 // Usage example:
-//   repo-lyzer analyze octocat/Hello-World
+//
+//	repo-lyzer analyze octocat/Hello-World
+//
 // This will fetch repository data, calculate health scores, bus factor, maturity,
 // and display comprehensive analysis results including languages, commit activity,
 // contributor information, and a recruiter summary.
@@ -199,6 +202,12 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get commits: %w", err)
 		}
 
+		// Fetch file tree for hotspot analysis
+		fileTree, err := client.GetFileTree(owner, repo, repoInfo.DefaultBranch)
+		if err != nil {
+			return fmt.Errorf("failed to get file tree: %w", err)
+		}
+
 		// Calculate repository health score
 		score := analyzer.CalculateHealth(repoInfo, commits)
 
@@ -261,6 +270,14 @@ var analyzeCmd = &cobra.Command{
 		output.PrintHealth(score)
 		output.PrintGitHubAPIStatus(client)
 		output.PrintRecruiterSummary(recruiterSummary)
+
+		// Analyze and print hotspots
+		hotspots, err := analyzer.AnalyzeHotspots(repoInfo, commits, fileTree, client)
+		if err == nil {
+			output.PrintHotspots(hotspots)
+		} else {
+			fmt.Printf("\n⚠️ Could not analyze hotspots: %v\n", err)
+		}
 
 		// Display analysis time
 		fmt.Printf("\n⏱️  Analysis completed in %.2f seconds\n", duration.Seconds())

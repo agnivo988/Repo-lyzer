@@ -4,6 +4,7 @@ import "time"
 
 type Repo struct {
 	Name          string    `json:"name"`
+	Owner         User      `json:"owner"`
 	FullName      string    `json:"full_name"`
 	Stars         int       `json:"stargazers_count"`
 	Forks         int       `json:"forks_count"`

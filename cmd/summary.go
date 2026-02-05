@@ -12,11 +12,32 @@ import (
 // summaryCmd defines the "summary" command for the CLI.
 // It provides a quick 6-line summary of a GitHub repository.
 // Usage example:
-//   repo-lyzer summary octocat/Hello-World
+//
+//	repo-lyzer summary octocat/Hello-World
 var summaryCmd = &cobra.Command{
 	Use:   "summary owner/repo",
 	Short: "Display a quick 6-line repository summary",
-	Args:  cobra.ExactArgs(1),
+	Long: `Display a quick 6-line summary of a GitHub repository for fast evaluation.
+
+Perfect for recruiters and developers who need a rapid assessment of a repository 
+without opening the full interactive dashboard.
+
+Summary includes:
+  • Commits in last 30 days
+  • Top programming language
+  • Total contributors
+  • Repository health score (0-100)
+  • Last commit timestamp
+
+Examples:
+  # Quick check on a repository
+  repo-lyzer summary golang/go
+
+  # Evaluate multiple repositories quickly
+  repo-lyzer summary facebook/react
+  repo-lyzer summary vuejs/vue
+  repo-lyzer summary angular/angular`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Validate the repository URL format
 		owner, repo, err := validateRepoURL(args[0])

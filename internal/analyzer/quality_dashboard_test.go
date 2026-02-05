@@ -69,7 +69,7 @@ func TestGenerateQualityDashboard(t *testing.T) {
 		75, // maturity score
 		security,
 		nil, // dependencies
-		nil, // pluginResults
+		nil, // hotspots
 	)
 
 	// Test overall score calculation
