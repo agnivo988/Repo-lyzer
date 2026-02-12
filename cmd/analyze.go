@@ -196,6 +196,9 @@ var analyzeCmd = &cobra.Command{
 			}
 		}
 		tracker.NextStage()
+		completed, total := tracker.GetProgress()
+		percentage := (completed * 100) / total
+		fmt.Printf("\r🔍 Analyzing %s... %d%%", args[0], percentage)
 
 		// Fetch programming languages used in the repository
 		langs, err := client.GetLanguages(owner, repo)
@@ -203,6 +206,9 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get languages: %w", err)
 		}
 		tracker.NextStage()
+		completed, total := tracker.GetProgress()
+		percentage := (completed * 100) / total
+		fmt.Printf("\r🔍 Analyzing %s... %d%%", args[0], percentage)
 
 		// Fetch commits from the last 365 days
 		commits, err := client.GetCommits(owner, repo, 365)
@@ -210,6 +216,9 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get commits: %w", err)
 		}
 		tracker.NextStage()
+		completed, total := tracker.GetProgress()
+		percentage := (completed * 100) / total
+		fmt.Printf("\r🔍 Analyzing %s... %d%%", args[0], percentage)
 
 		// Fetch file tree for hotspot analysis
 		fileTree, err := client.GetFileTree(owner, repo, repoInfo.DefaultBranch)
@@ -271,6 +280,9 @@ var analyzeCmd = &cobra.Command{
 			busFactor,
 			busRisk,
 		)
+
+		// Finalize progress display
+		fmt.Println()
 
 		// Output the analysis results
 		output.PrintRepo(repoInfo)
