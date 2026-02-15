@@ -13,34 +13,39 @@ import (
 
 	"github.com/agnivo988/Repo-lyzer/internal/cache"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
+	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // MonitorState represents the current state of a monitored repository
 type MonitorState struct {
-	Owner               string    `json:"owner"`
-	Repo                string    `json:"repo"`
-	LastCommitSHA       string    `json:"last_commit_sha"`
-	LastIssueID         int       `json:"last_issue_id"`
-	LastPRID            int       `json:"last_pr_id"`
-	LastContributorCount int      `json:"last_contributor_count"`
-	LastUpdated         time.Time `json:"last_updated"`
+	Owner                string    `json:"owner"`
+	Repo                 string    `json:"repo"`
+	LastCommitSHA        string    `json:"last_commit_sha"`
+	LastIssueID          int       `json:"last_issue_id"`
+	LastPRID             int       `json:"last_pr_id"`
+	LastContributorCount int       `json:"last_contributor_count"`
+	LastUpdated          time.Time `json:"last_updated"`
 }
 
 // Monitor manages real-time monitoring of a GitHub repository
 type Monitor struct {
-	client          *github.Client
-	cache           *cache.Cache
-	owner           string
-	repo            string
-	interval        time.Duration
-	state           *MonitorState
-	stateMutex      sync.RWMutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	wg              sync.WaitGroup
-	notifications   chan Notification
-	prevContribCount int
-	stopOnce        sync.Once
+	client        *github.Client
+	cache         *cache.Cache
+	owner         string
+	repo          string
+	interval      time.Duration
+	state         *MonitorState
+	stateMutex    sync.RWMutex
+	ctx           context.Context
+	cancel        context.CancelFunc
+	wg            sync.WaitGroup
+	consumerWg    sync.WaitGroup
+	notifications chan Notification
+	stopOnce      sync.Once
+	spinner       spinner.Model
+	spinnerActive bool
+	spinnerMutex  sync.Mutex
 }
 
 // Notification represents a monitoring notification
@@ -62,6 +67,11 @@ func NewMonitor(owner, repo string, interval time.Duration) (*Monitor, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// Initialize spinner
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+
 	return &Monitor{
 		client:        client,
 		cache:         cache,
@@ -72,7 +82,42 @@ func NewMonitor(owner, repo string, interval time.Duration) (*Monitor, error) {
 		ctx:           ctx,
 		cancel:        cancel,
 		notifications: make(chan Notification, 100),
+		spinner:       s,
+		spinnerActive: false,
 	}, nil
+}
+
+// StartProgress initializes and starts the progress indicator
+func (m *Monitor) StartProgress() {
+	m.spinnerMutex.Lock()
+	defer m.spinnerMutex.Unlock()
+
+	if !m.spinnerActive {
+		m.spinnerActive = true
+		fmt.Printf("\n🔍 Starting monitoring for %s/%s\n", m.owner, m.repo)
+		m.updateSpinnerFrame()
+	}
+}
+
+// StopProgress stops the progress indicator
+func (m *Monitor) StopProgress() {
+	m.spinnerMutex.Lock()
+	defer m.spinnerMutex.Unlock()
+
+	if m.spinnerActive {
+		m.spinnerActive = false
+		fmt.Println("\n✅ Monitoring stopped")
+	}
+}
+
+// updateSpinnerFrame displays the current spinner frame
+func (m *Monitor) updateSpinnerFrame() {
+	if m.spinnerActive {
+		frame := m.spinner.View()
+		fmt.Printf("\r%s Monitoring in progress... (Last updated: %s)", 
+			frame, 
+			m.state.LastUpdated.Format("15:04:05"))
+	}
 }
 
 // Start begins the monitoring process and spawns goroutines
@@ -81,15 +126,18 @@ func (m *Monitor) Start() error {
 	// Load previous state
 	m.loadState()
 
-	// Start notification handler
-	m.wg.Add(1)
+	// Initialize and start progress indicator
+	m.StartProgress()
+
+	// Start notification handler (consumer)
+	m.consumerWg.Add(1)
 	go m.handleNotifications()
 
-	// Start monitoring loop
+	// Start monitoring loop (producer)
 	m.wg.Add(1)
 	go m.monitorLoop()
 
-	// Start signal handler in a separate goroutine
+	// Start signal handler in a separate goroutine (producer)
 	m.wg.Add(1)
 	go m.handleSignals()
 
@@ -109,26 +157,47 @@ func (m *Monitor) handleSignals() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sigChan)
 
-	<-sigChan
-	fmt.Println("\n🛑 Stopping monitoring...")
-	// Cancel the context to signal all goroutines to stop
-	m.cancel()
+	select {
+	case <-sigChan:
+		fmt.Println("\n🛑 Stopping monitoring...")
+		// Cancel the context to signal all goroutines to stop
+		m.cancel()
+		// Stop the progress indicator
+		m.StopProgress()
+	case <-m.ctx.Done():
+		// Context was cancelled elsewhere, just return
+		return
+	}
 }
 
 // Stop stops the monitoring process
 // Safe for concurrent/multiple calls due to sync.Once
 func (m *Monitor) Stop() {
 	m.stopOnce.Do(func() {
+		// Signal all goroutines to stop
 		m.cancel()
-		// Wait for all goroutines to complete before closing the channel
+		
+		// Wait for producers to finish
 		m.wg.Wait()
+		
+		// Close notifications channel after producers finish
 		close(m.notifications)
+		
+		// Wait for consumer to drain and exit
+		m.consumerWg.Wait()
+		
+		// Stop progress indicator
+		m.StopProgress()
 	})
 }
 
 // monitorLoop runs the main monitoring loop
 func (m *Monitor) monitorLoop() {
 	defer m.wg.Done()
+	defer func() {
+		// Stop progress when monitoring loop completes
+		m.StopProgress()
+	}()
 
 	ticker := time.NewTicker(m.interval)
 	defer ticker.Stop()
@@ -142,6 +211,12 @@ func (m *Monitor) monitorLoop() {
 			return
 		case <-ticker.C:
 			m.checkForUpdates()
+			// Update progress indicator after each check
+			if m.spinnerActive {
+				m.spinnerMutex.Lock()
+				m.updateSpinnerFrame()
+				m.spinnerMutex.Unlock()
+			}
 		}
 	}
 }
@@ -347,7 +422,7 @@ func (m *Monitor) checkContributors() []Notification {
 
 // handleNotifications processes incoming notifications
 func (m *Monitor) handleNotifications() {
-	defer m.wg.Done()
+	defer m.consumerWg.Done()
 	for notification := range m.notifications {
 		m.displayNotification(notification)
 	}
@@ -367,7 +442,7 @@ func (m *Monitor) displayNotification(n Notification) {
 		icon = "ℹ️"
 	}
 
-	fmt.Printf("[%s] %s %s: %s\n", timestamp, icon, n.Title, n.Message)
+	fmt.Printf("\n[%s] %s %s: %s", timestamp, icon, n.Title, n.Message)
 }
 
 // loadState loads the monitoring state from cache
@@ -376,12 +451,12 @@ func (m *Monitor) loadState() {
 	defer m.stateMutex.Unlock()
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	val, found := m.cache.Get(key)
+	entry, found := m.cache.Get(key)
 	if found {
-		// Deserialize the cached state
-		if jsonData, ok := val.([]byte); ok {
+		// entry is a *CacheEntry, access its Analysis field
+		if entry != nil {
 			var cachedState MonitorState
-			err := json.Unmarshal(jsonData, &cachedState)
+			err := json.Unmarshal(entry.Analysis, &cachedState)
 			if err != nil {
 				log.Printf("Warning: failed to deserialize cached state: %v", err)
 				// Fall back to initializing with current time
@@ -391,7 +466,7 @@ func (m *Monitor) loadState() {
 				m.state = &cachedState
 			}
 		} else {
-			log.Printf("Warning: cached value has unexpected type, expected []byte")
+			log.Printf("Warning: cached entry is nil")
 			m.state.LastUpdated = time.Now()
 		}
 	} else {

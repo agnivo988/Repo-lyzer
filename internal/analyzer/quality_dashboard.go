@@ -100,6 +100,9 @@ func calculateOverallScore(health, security, maturity, busFactor int, pluginResu
 	totalPluginWeight := 0.0
 
 	for _, result := range pluginResults {
+		if result == nil {
+			continue
+		}
 		if result.Weight > 0 {
 			pluginScore += float64(result.Score) * result.Weight
 			totalPluginWeight += result.Weight
@@ -271,6 +274,9 @@ func identifyProblemHotspots(
 
 	// Plugin hotspots
 	for _, result := range pluginResults {
+		if result == nil {
+			continue
+		}
 		if result.RiskLevel == "High" || result.RiskLevel == "Critical" {
 			severity := "High"
 			if result.RiskLevel == "Critical" {
