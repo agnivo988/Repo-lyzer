@@ -2,7 +2,9 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -142,4 +144,67 @@ func buildTopLanguages(langs map[string]int, limit int) []compactLanguage {
 	}
 
 	return top
+}
+
+// SaveCompactJSON writes the compact analysis summary to a file.
+func SaveCompactJSON(filePath string, cfg CompactConfig) error {
+	if cfg.Repo == nil {
+		cfg.Repo = &github.Repo{}
+	}
+
+	// Ensure directory exists
+	dir := filepath.Dir(filePath)
+	if dir != "." && dir != "" {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory: %w", err)
+		}
+	}
+
+	topLangs := buildTopLanguages(cfg.Languages, 3)
+	primaryLanguage := cfg.Repo.Language
+	if primaryLanguage == "" && len(topLangs) > 0 {
+		primaryLanguage = topLangs[0].Name
+	}
+
+	summary := compactAnalysis{
+		Repository: compactRepository{
+			FullName:        cfg.Repo.FullName,
+			Description:     cfg.Repo.Description,
+			URL:             cfg.Repo.HTMLURL,
+			PrimaryLanguage: primaryLanguage,
+			Stars:           cfg.Repo.Stars,
+			Forks:           cfg.Repo.Forks,
+			OpenIssues:      cfg.Repo.OpenIssues,
+		},
+		Metrics: compactMetrics{
+			HealthScore:     cfg.HealthScore,
+			BusFactor:       cfg.BusFactor,
+			BusRisk:         cfg.BusRisk,
+			MaturityScore:   cfg.MaturityScore,
+			MaturityLevel:   cfg.MaturityLevel,
+			CommitsLastYear: cfg.CommitsLastYear,
+			Contributors:    cfg.Contributors,
+		},
+		Metadata: compactMetadata{
+			DurationSeconds: cfg.Duration.Seconds(),
+			TopLanguages:    topLangs,
+		},
+	}
+
+	// Create the file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	// Write JSON to file
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(summary); err != nil {
+		return fmt.Errorf("failed to encode JSON: %w", err)
+	}
+
+	return nil
 }

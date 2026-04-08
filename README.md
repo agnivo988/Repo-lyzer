@@ -197,6 +197,22 @@ repo-lyzer analyze --summary microsoft/vscode
 repo-lyzer analyze golang/go
 ```
 
+### Save Analysis to File
+Save the full analysis JSON to a file:
+```bash
+repo-lyzer analyze golang/go --save analysis.json
+```
+
+This will create/overwrite the file with valid JSON and print the file path:
+```
+✅ Analysis saved to: analysis.json
+```
+
+Combine with `--compact` to save to file AND print to stdout:
+```bash
+repo-lyzer analyze golang/go --save analysis.json --compact
+```
+
 ### Compare Repositories
 Available via interactive menu.
 

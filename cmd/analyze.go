@@ -142,7 +142,7 @@ var analyzeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		compact, _ := cmd.Flags().GetBool("compact")
-		summary, _ := cmd.Flags().GetBool("summary")
+		savePath, _ := cmd.Flags().GetString("save")
 
 		if dryRun {
 			return runDryRun(args[0])
@@ -262,19 +262,34 @@ var analyzeCmd = &cobra.Command{
 		// Track analysis duration
 		duration := time.Since(startTime)
 
+		// Prepare compact config for JSON output
+		compactConfig := output.CompactConfig{
+			Repo:            repoInfo,
+			HealthScore:     score,
+			BusFactor:       busFactor,
+			BusRisk:         busRisk,
+			MaturityScore:   maturityScore,
+			MaturityLevel:   maturityLevel,
+			CommitsLastYear: len(commits),
+			Contributors:    len(contributors),
+			Duration:        duration,
+			Languages:       langs,
+		}
+
+		// Handle --save flag (write to file)
+		if savePath != "" {
+			if err := output.SaveCompactJSON(savePath, compactConfig); err != nil {
+				return fmt.Errorf("failed to save analysis: %w", err)
+			}
+			fmt.Printf("✅ Analysis saved to: %s\n", savePath)
+			// If only --save (no --compact), don't print JSON to stdout
+			if !compact {
+				return nil
+			}
+		}
+
 		if compact {
-			return output.PrintCompactJSON(output.CompactConfig{
-				Repo:            repoInfo,
-				HealthScore:     score,
-				BusFactor:       busFactor,
-				BusRisk:         busRisk,
-				MaturityScore:   maturityScore,
-				MaturityLevel:   maturityLevel,
-				CommitsLastYear: len(commits),
-				Contributors:    len(contributors),
-				Duration:        duration,
-				Languages:       langs,
-			})
+			return output.PrintCompactJSON(compactConfig)
 		}
 
 		// Analyze commit activity per day
@@ -473,5 +488,5 @@ func init() {
 	rootCmd.AddCommand(analyzeCmd)
 	analyzeCmd.Flags().Bool("dry-run", false, "Validate repository URL and show what metrics would be calculated without making API calls")
 	analyzeCmd.Flags().Bool("compact", false, "Output compact JSON summary for machine consumption")
-	analyzeCmd.Flags().Bool("summary", false, "Display a quick 5-line repository summary")
+	analyzeCmd.Flags().String("save", "", "Save full analysis JSON to specified file path")
 }
