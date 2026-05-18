@@ -33,20 +33,22 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
 // CacheEntry represents a cached analysis result with metadata.
-// Each entry contains the full analysis data along with timing information
-// for TTL-based expiration.
+// Each entry contains the full analysis data along with timing and
+// upstream-state information that enables incremental (skip-if-unchanged)
+// analysis.
 type CacheEntry struct {
-	RepoName  string          `json:"repo_name"`  // Repository identifier (owner/repo)
-	CachedAt  time.Time       `json:"cached_at"`  // When the entry was cached
-	ExpiresAt time.Time       `json:"expires_at"` // When the entry expires
-	Analysis  json.RawMessage `json:"analysis"`   // Serialized AnalysisResult
+	RepoName     string          `json:"repo_name"`      // Repository identifier (owner/repo)
+	CachedAt     time.Time       `json:"cached_at"`      // When the entry was cached
+	ExpiresAt    time.Time       `json:"expires_at"`     // When the entry expires
+	RepoPushedAt string          `json:"repo_pushed_at"` // GitHub pushed_at at cache time (RFC3339)
+	ETag         string          `json:"etag,omitempty"` // GitHub API ETag for conditional requests
+	Analysis     json.RawMessage `json:"analysis"`       // Serialized AnalysisResult
 }
-
-
 
 // CacheIndex stores metadata about all cached repositories.
 // This index enables quick lookups without reading individual cache files.
@@ -58,10 +60,12 @@ type CacheIndex struct {
 // CacheIndexEntry is a lightweight summary of a cached repository.
 // It contains enough information to check validity without loading the full entry.
 type CacheIndexEntry struct {
-	RepoName  string    `json:"repo_name"`
-	CachedAt  time.Time `json:"cached_at"`
-	ExpiresAt time.Time `json:"expires_at"`
-	FileSize  int64     `json:"file_size"` // Size in bytes for cache management
+	RepoName     string    `json:"repo_name"`
+	CachedAt     time.Time `json:"cached_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	RepoPushedAt string    `json:"repo_pushed_at"` // GitHub pushed_at at cache time
+	ETag         string    `json:"etag,omitempty"` // GitHub API ETag
+	FileSize     int64     `json:"file_size"`      // Size in bytes for cache management
 }
 
 // CacheConfig holds user-configurable cache settings.
@@ -75,9 +79,10 @@ type CacheConfig struct {
 // Cache manages the local cache for analysis results.
 // It provides thread-safe operations for storing and retrieving cached data.
 type Cache struct {
-	cacheDir string      // Base directory for cache files
-	config   CacheConfig // Current configuration
-	index    *CacheIndex // In-memory index of cached repos
+	mu       sync.RWMutex // Protects index and config from concurrent access
+	cacheDir string       // Base directory for cache files
+	config   CacheConfig  // Current configuration
+	index    *CacheIndex  // In-memory index of cached repos
 }
 
 // DefaultConfig returns the default cache configuration.
@@ -185,46 +190,95 @@ func (c *Cache) SaveConfig() error {
 	return os.WriteFile(configPath, data, 0644)
 }
 
-// Get retrieves a cached analysis if available and not expired
+// Get retrieves a cached analysis if available and not expired.
 func (c *Cache) Get(repoName string) (*CacheEntry, bool) {
-	if !c.config.Enabled {
+	c.mu.RLock()
+	enabled := c.config.Enabled
+	entry, exists := c.index.Entries[repoName]
+	c.mu.RUnlock()
+
+	if !enabled {
 		return nil, false
 	}
-
-	entry, exists := c.index.Entries[repoName]
 	if !exists {
 		return nil, false
 	}
-
-	// Check if expired
 	if time.Now().After(entry.ExpiresAt) {
 		return nil, false
 	}
 
-	// Load full entry from file
-	filename := repoToFilename(repoName)
-	filePath := filepath.Join(c.cacheDir, "repos", filename)
+	return c.loadEntryFromDisk(repoName)
+}
 
+// GetIfUnchanged retrieves a cached analysis only when the upstream repository
+// has not been pushed to since the entry was cached. Pass the current value of
+// the repository's pushed_at field (RFC3339 string from the GitHub API).
+//
+// This enables incremental analysis: if pushed_at has not changed the caller
+// can skip all API calls and use the cached result directly.
+//
+//	entry, ok := cache.GetIfUnchanged("owner/repo", repo.PushedAt)
+//	if ok {
+//	    // repo unchanged since last analysis - use entry.Analysis
+//	}
+func (c *Cache) GetIfUnchanged(repoName, currentPushedAt string) (*CacheEntry, bool) {
+	c.mu.RLock()
+	enabled := c.config.Enabled
+	entry, exists := c.index.Entries[repoName]
+	c.mu.RUnlock()
+
+	if !enabled || !exists {
+		return nil, false
+	}
+	if time.Now().After(entry.ExpiresAt) {
+		return nil, false
+	}
+	// Key check: skip re-analysis when the repo has not changed
+	if entry.RepoPushedAt == "" || entry.RepoPushedAt != currentPushedAt {
+		return nil, false
+	}
+
+	return c.loadEntryFromDisk(repoName)
+}
+
+// loadEntryFromDisk reads a cache entry JSON file and deserialises it.
+func (c *Cache) loadEntryFromDisk(repoName string) (*CacheEntry, bool) {
+	filePath := filepath.Join(c.cacheDir, "repos", repoToFilename(repoName))
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, false
 	}
-
-	var cacheEntry CacheEntry
-	if err := json.Unmarshal(data, &cacheEntry); err != nil {
+	var e CacheEntry
+	if err := json.Unmarshal(data, &e); err != nil {
 		return nil, false
 	}
-
-	return &cacheEntry, true
+	return &e, true
 }
 
-// Set stores an analysis result in the cache
+// Set stores an analysis result in the cache without upstream metadata.
+// Use SetWithMeta when the repository's pushed_at and ETag are available,
+// as that enables incremental analysis via GetIfUnchanged.
 func (c *Cache) Set(repoName string, analysis interface{}) error {
-	if !c.config.Enabled || !c.config.AutoCache {
+	return c.SetWithMeta(repoName, analysis, "", "")
+}
+
+// SetWithMeta stores an analysis result together with the repository's
+// current pushed_at timestamp and optional ETag from the GitHub API.
+// Storing this metadata allows GetIfUnchanged to avoid redundant re-analysis
+// when the repository has not changed since the last cache write.
+//
+//	err := cache.SetWithMeta("owner/repo", result, repo.PushedAt, etag)
+func (c *Cache) SetWithMeta(repoName string, analysis interface{}, pushedAt, etag string) error {
+	c.mu.RLock()
+	enabled := c.config.Enabled
+	autoCache := c.config.AutoCache
+	ttl := c.config.TTL
+	c.mu.RUnlock()
+
+	if !enabled || !autoCache {
 		return nil
 	}
 
-	// Serialize analysis
 	analysisData, err := json.Marshal(analysis)
 	if err != nil {
 		return err
@@ -232,38 +286,39 @@ func (c *Cache) Set(repoName string, analysis interface{}) error {
 
 	now := time.Now()
 	entry := CacheEntry{
-		RepoName:  repoName,
-		CachedAt:  now,
-		ExpiresAt: now.Add(c.config.TTL),
-		Analysis:  analysisData,
+		RepoName:     repoName,
+		CachedAt:     now,
+		ExpiresAt:    now.Add(ttl),
+		RepoPushedAt: pushedAt,
+		ETag:         etag,
+		Analysis:     analysisData,
 	}
 
-	// Save to file
-	filename := repoToFilename(repoName)
-	filePath := filepath.Join(c.cacheDir, "repos", filename)
-
+	filePath := filepath.Join(c.cacheDir, "repos", repoToFilename(repoName))
 	data, err := json.MarshalIndent(entry, "", "  ")
 	if err != nil {
 		return err
 	}
-
 	if err := os.WriteFile(filePath, data, 0644); err != nil {
 		return err
 	}
 
-	// Update index
 	fileInfo, _ := os.Stat(filePath)
 	fileSize := int64(0)
 	if fileInfo != nil {
 		fileSize = fileInfo.Size()
 	}
 
+	c.mu.Lock()
 	c.index.Entries[repoName] = CacheIndexEntry{
-		RepoName:  repoName,
-		CachedAt:  now,
-		ExpiresAt: now.Add(c.config.TTL),
-		FileSize:  fileSize,
+		RepoName:     repoName,
+		CachedAt:     now,
+		ExpiresAt:    now.Add(ttl),
+		RepoPushedAt: pushedAt,
+		ETag:         etag,
+		FileSize:     fileSize,
 	}
+	c.mu.Unlock()
 
 	return c.saveIndex()
 }
@@ -296,8 +351,11 @@ func (c *Cache) Clear() error {
 	return c.saveIndex()
 }
 
-// GetStats returns cache statistics
+// GetStats returns cache statistics.
 func (c *Cache) GetStats() CacheStats {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	var totalSize int64
 	validCount := 0
 	expiredCount := 0
@@ -339,18 +397,22 @@ func (c *Cache) GetCachedRepos() []CacheIndexEntry {
 	return repos
 }
 
-// IsExpired checks if a cached entry is expired
+// IsExpired checks if a cached entry is expired.
 func (c *Cache) IsExpired(repoName string) bool {
+	c.mu.RLock()
 	entry, exists := c.index.Entries[repoName]
+	c.mu.RUnlock()
 	if !exists {
 		return true
 	}
 	return time.Now().After(entry.ExpiresAt)
 }
 
-// HasCache checks if a repo is in cache (expired or not)
+// HasCache checks if a repo is in cache (expired or not).
 func (c *Cache) HasCache(repoName string) bool {
+	c.mu.RLock()
 	_, exists := c.index.Entries[repoName]
+	c.mu.RUnlock()
 	return exists
 }
 
@@ -377,19 +439,38 @@ func (c *Cache) SetAutoCache(enabled bool) {
 	c.SaveConfig()
 }
 
-// CleanExpired removes all expired entries
+// CleanExpired removes all expired entries and returns the number removed.
+// It collects expired keys first, then deletes files in a single pass and
+// saves the index once, avoiding the O(n) saveIndex calls of a naive loop.
 func (c *Cache) CleanExpired() int {
-	removed := 0
 	now := time.Now()
 
+	c.mu.RLock()
+	var expired []string
 	for repoName, entry := range c.index.Entries {
 		if now.After(entry.ExpiresAt) {
-			c.Delete(repoName)
-			removed++
+			expired = append(expired, repoName)
 		}
 	}
+	c.mu.RUnlock()
 
-	return removed
+	if len(expired) == 0 {
+		return 0
+	}
+
+	reposDir := filepath.Join(c.cacheDir, "repos")
+	for _, repoName := range expired {
+		os.Remove(filepath.Join(reposDir, repoToFilename(repoName)))
+	}
+
+	c.mu.Lock()
+	for _, repoName := range expired {
+		delete(c.index.Entries, repoName)
+	}
+	c.mu.Unlock()
+
+	c.saveIndex()
+	return len(expired)
 }
 
 // FormatTTL returns a human-readable TTL string
