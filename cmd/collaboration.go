@@ -13,6 +13,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Avoid excessive GitHub API usage (1 review request per PR)
+const maxPRsForReviewFetch = 50
+
 // collaborationCmd defines the "collaboration" command for the CLI.
 // It analyzes how contributors collaborate within a repository.
 var collaborationCmd = &cobra.Command{
@@ -56,42 +59,88 @@ func runCollaboration(repoArg string) error {
 
 	// Fetch contributors
 	overallProgress.StartStep("👥 Fetching contributor information")
+
 	contributors, err := client.GetContributors(owner, repo)
 	if err != nil {
 		overallProgress.Finish()
 		return fmt.Errorf("failed to get contributors: %w", err)
 	}
-	overallProgress.CompleteStep(fmt.Sprintf("Contributors fetched (%d)", len(contributors)))
+
+	overallProgress.CompleteStep(
+		fmt.Sprintf("Contributors fetched (%d)", len(contributors)),
+	)
 
 	// Fetch pull requests
 	overallProgress.StartStep("📝 Fetching pull requests")
+
 	prs, err := client.GetPullRequests(owner, repo, "all")
 	if err != nil {
 		overallProgress.Finish()
 		return fmt.Errorf("failed to get pull requests: %w", err)
 	}
-	overallProgress.CompleteStep(fmt.Sprintf("Pull requests fetched (%d)", len(prs)))
 
-	// Fetch reviews for each PR
+	overallProgress.CompleteStep(
+		fmt.Sprintf("Pull requests fetched (%d)", len(prs)),
+	)
+
+	// Fetch reviews for pull requests
 	overallProgress.StartStep("👀 Fetching PR reviews")
+
 	reviews := make(map[int][]github.Review)
-	for i, pr := range prs {
-		if i >= 50 { // Limit to avoid rate limiting
-			break
-		}
-		prReviews, err := client.GetPullRequestReviews(owner, repo, pr.Number)
+
+	fetchLimit := len(prs)
+	if fetchLimit > maxPRsForReviewFetch {
+		fetchLimit = maxPRsForReviewFetch
+
+		fmt.Printf(
+			"⚠️  Limiting review fetch to %d PRs to avoid GitHub API rate limiting\n",
+			maxPRsForReviewFetch,
+		)
+	}
+
+	reviewErrors := 0
+
+	for _, pr := range prs[:fetchLimit] {
+		prReviews, err := client.GetPullRequestReviews(
+			owner,
+			repo,
+			pr.Number,
+		)
+
 		if err != nil {
-			continue // Continue even if one fails
+			reviewErrors++
+			continue
 		}
+
 		if len(prReviews) > 0 {
 			reviews[pr.Number] = prReviews
 		}
 	}
-	overallProgress.CompleteStep(fmt.Sprintf("Reviews fetched for %d PRs", len(reviews)))
+
+	if reviewErrors > 0 {
+		fmt.Printf(
+			"⚠️  Failed to fetch reviews for %d PRs\n",
+			reviewErrors,
+		)
+	}
+
+	overallProgress.CompleteStep(
+		fmt.Sprintf(
+			"Reviews fetched for %d PRs (%d errors)",
+			len(reviews),
+			reviewErrors,
+		),
+	)
 
 	// Analyze collaboration
 	overallProgress.StartStep("📊 Analyzing collaboration patterns")
-	metrics := analyzer.AnalyzeCollaboration(contributors, prs, reviews)
+
+	metrics := analyzer.AnalyzeCollaboration(
+		contributors,
+		prs,
+		reviews,
+	)
+
 	overallProgress.CompleteStep("Collaboration analysis complete")
 
 	// Mark analysis as complete
@@ -103,6 +152,7 @@ func runCollaboration(repoArg string) error {
 
 	// Track analysis duration
 	duration := time.Since(startTime)
+
 	fmt.Printf("\n⏱️  Analysis completed in %v\n", duration)
 
 	return nil
