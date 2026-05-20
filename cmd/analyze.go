@@ -42,7 +42,10 @@ func validateRepoURL(repoArg string) (owner, repo string, err error) {
 
 	parts := strings.Split(repoArg, "/")
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("repository must be in 'owner/repo' format (found %d parts separated by '/')", len(parts))
+		return "", "", fmt.Errorf(
+			"repository must be in 'owner/repo' format (found %d parts separated by '/')",
+			len(parts),
+		)
 	}
 
 	owner, repo = parts[0], parts[1]
@@ -74,8 +77,14 @@ func validateRepoURL(repoArg string) (owner, repo string, err error) {
 
 	// Check for valid characters (alphanumeric, hyphens)
 	for _, char := range owner {
-		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '-') {
-			return "", "", fmt.Errorf("owner name contains invalid character '%c' (only alphanumeric characters and hyphens allowed)", char)
+		if !((char >= 'a' && char <= 'z') ||
+			(char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') ||
+			char == '-') {
+			return "", "", fmt.Errorf(
+				"owner name contains invalid character '%c' (only alphanumeric characters and hyphens allowed)",
+				char,
+			)
 		}
 	}
 
@@ -150,7 +159,8 @@ var analyzeCmd = &cobra.Command{
 		}
 
 		if summary {
-			return runSummary(args[0])
+			summaryCmd.SetArgs(args)
+			return summaryCmd.RunE(summaryCmd, args)
 		}
 
 		// Validate the repository URL format
@@ -166,33 +176,54 @@ var analyzeCmd = &cobra.Command{
 		client := github.NewClient()
 
 		// Create overall progress tracker for all analysis steps
-		// Estimated steps: repo info, languages, commits, file tree, health,
-		// contributors, bus factor, maturity, hotspots = 9 steps
 		overallProgress := progress.NewOverallProgress(9)
 
 		// Fetch repository information
 		overallProgress.StartStep("🔍 Fetching repository information")
+
 		repoInfo, err := client.GetRepo(owner, repo)
 		if err != nil {
 			overallProgress.Finish()
+
 			// Check if it's a private repo error and no token is set
-			if strings.Contains(err.Error(), "repository not found") && !client.HasToken() {
-				fmt.Print("This appears to be a private repository. Please enter your GitHub access token: ")
+			if strings.Contains(err.Error(), "repository not found") &&
+				!client.HasToken() {
+
+				fmt.Print(
+					"This appears to be a private repository. Please enter your GitHub access token: ",
+				)
+
 				scanner := bufio.NewScanner(os.Stdin)
+
 				if scanner.Scan() {
 					token := strings.TrimSpace(scanner.Text())
+
 					if token != "" {
 						client.SetToken(token)
+
 						// Retry fetching the repo with the token
 						overallProgress = progress.NewOverallProgress(9)
-						overallProgress.StartStep("🔍 Fetching repository information")
+
+						overallProgress.StartStep(
+							"🔍 Fetching repository information",
+						)
+
 						repoInfo, err = client.GetRepo(owner, repo)
-						overallProgress.CompleteStep("Repository information fetched")
+
+						overallProgress.CompleteStep(
+							"Repository information fetched",
+						)
+
 						if err != nil {
-							return fmt.Errorf("failed to access repository even with token: %w", err)
+							return fmt.Errorf(
+								"failed to access repository even with token: %w",
+								err,
+							)
 						}
 					} else {
-						return fmt.Errorf("no token provided, cannot access private repository")
+						return fmt.Errorf(
+							"no token provided, cannot access private repository",
+						)
 					}
 				} else {
 					return fmt.Errorf("failed to read token input")
@@ -201,37 +232,51 @@ var analyzeCmd = &cobra.Command{
 				return err
 			}
 		}
+
 		overallProgress.CompleteStep("Repository information fetched")
 
 		// Fetch programming languages used in the repository
 		overallProgress.StartStep("📚 Fetching programming languages")
+
 		langs, err := client.GetLanguages(owner, repo)
 		if err != nil {
 			overallProgress.Finish()
 			return fmt.Errorf("failed to get languages: %w", err)
 		}
+
 		overallProgress.CompleteStep("Languages fetched")
 
 		// Fetch commits from the last 365 days
 		overallProgress.StartStep("📝 Analyzing commit history (365d)")
+
 		commits, err := client.GetCommits(owner, repo, 365)
 		if err != nil {
 			overallProgress.Finish()
 			return fmt.Errorf("failed to get commits: %w", err)
 		}
-		overallProgress.CompleteStep(fmt.Sprintf("Commit history analyzed (%d commits)", len(commits)))
+
+		overallProgress.CompleteStep(
+			fmt.Sprintf("Commit history analyzed (%d commits)", len(commits)),
+		)
 
 		// Fetch file tree for hotspot analysis
 		overallProgress.StartStep("📁 Scanning repository structure")
-		fileTree, err := client.GetFileTree(owner, repo, repoInfo.DefaultBranch)
+
+		fileTree, err := client.GetFileTree(
+			owner,
+			repo,
+			repoInfo.DefaultBranch,
+		)
+
 		if err != nil {
 			overallProgress.Finish()
 			return fmt.Errorf("failed to get file tree: %w", err)
 		}
+
 		overallProgress.CompleteStep("File structure scanned")
+
 		// Incremental analysis support
 		if incremental {
-
 			currentHashes := make(map[string]string)
 
 			for _, file := range fileTree {
@@ -248,32 +293,46 @@ var analyzeCmd = &cobra.Command{
 
 		// Calculate repository health score
 		overallProgress.StartStep("💪 Computing repository health")
+
 		score := analyzer.CalculateHealth(repoInfo, commits)
+
 		overallProgress.CompleteStep("Health score computed")
 
 		// Fetch contributors
 		overallProgress.StartStep("👥 Fetching contributor information")
-		contributors, err := client.GetContributorsWithAvatars(owner, repo, 15)
+
+		contributors, err := client.GetContributorsWithAvatars(
+			owner,
+			repo,
+			15,
+		)
+
 		if err != nil {
 			overallProgress.Finish()
 			return err
 		}
-		overallProgress.CompleteStep(fmt.Sprintf("Contributors fetched (%d)", len(contributors)))
+
+		overallProgress.CompleteStep(
+			fmt.Sprintf("Contributors fetched (%d)", len(contributors)),
+		)
 
 		// Calculate bus factor and risk level
 		overallProgress.StartStep("⚠️  Analyzing bus factor and risk")
+
 		busFactor, busRisk := analyzer.BusFactor(contributors)
+
 		overallProgress.CompleteStep("Bus factor analysis complete")
 
 		// Calculate repository maturity score and level
 		overallProgress.StartStep("📈 Calculating repository maturity")
-		maturityScore, maturityLevel :=
-			analyzer.RepoMaturityScore(
-				repoInfo,
-				len(commits),
-				len(contributors),
-				false, // Assuming no releases check for simplicity
-			)
+
+		maturityScore, maturityLevel := analyzer.RepoMaturityScore(
+			repoInfo,
+			len(commits),
+			len(contributors),
+			false,
+		)
+
 		overallProgress.CompleteStep("Maturity score calculated")
 
 		// Track analysis duration
@@ -320,7 +379,14 @@ var analyzeCmd = &cobra.Command{
 
 		// Analyze and print hotspots
 		overallProgress.StartStep("🔥 Identifying code hotspots")
-		hotspots, err := analyzer.AnalyzeHotspots(repoInfo, commits, fileTree, client)
+
+		hotspots, err := analyzer.AnalyzeHotspots(
+			repoInfo,
+			commits,
+			fileTree,
+			client,
+		)
+
 		if err == nil {
 			overallProgress.CompleteStep("Code hotspots identified")
 			output.PrintHotspots(hotspots)
@@ -336,96 +402,10 @@ var analyzeCmd = &cobra.Command{
 	},
 }
 
-// runSummary performs a quick summary analysis of a repository
-func runSummary(repoArg string) error {
-	// Validate the repository URL format
-	owner, repo, err := validateRepoURL(repoArg)
-	if err != nil {
-		return fmt.Errorf("invalid repository URL: %w", err)
-	}
-
-	// Initialize GitHub client
-	client := github.NewClient()
-
-	// Create overall progress tracker for summary analysis steps
-	// Steps: repo info, commits 30d, languages, contributors, commits 365d = 5 steps
-	overallProgress := progress.NewOverallProgress(5)
-
-	// Fetch repository information
-	overallProgress.StartStep("🔍 Fetching repository information")
-	repoInfo, err := client.GetRepo(owner, repo)
-	if err != nil {
-		overallProgress.Finish()
-		return fmt.Errorf("failed to get repository: %w", err)
-	}
-	overallProgress.CompleteStep("Repository information fetched")
-
-	// Fetch commits from the last 30 days
-	overallProgress.StartStep("📝 Analyzing recent commits (30d)")
-	commits30d, err := client.GetCommits(owner, repo, 30)
-	if err != nil {
-		overallProgress.Finish()
-		return fmt.Errorf("failed to get commits: %w", err)
-	}
-	overallProgress.CompleteStep(fmt.Sprintf("Recent commits analyzed (%d)", len(commits30d)))
-
-	// Fetch programming languages
-	overallProgress.StartStep("📚 Fetching programming languages")
-	langs, err := client.GetLanguages(owner, repo)
-	if err != nil {
-		overallProgress.Finish()
-		return fmt.Errorf("failed to get languages: %w", err)
-	}
-	overallProgress.CompleteStep("Languages fetched")
-
-	// Fetch contributors
-	overallProgress.StartStep("👥 Fetching contributor information")
-	contributors, err := client.GetContributors(owner, repo)
-	if err != nil {
-		overallProgress.Finish()
-		return fmt.Errorf("failed to get contributors: %w", err)
-	}
-	overallProgress.CompleteStep(fmt.Sprintf("Contributors fetched (%d)", len(contributors)))
-
-	// Fetch commits for health calculation (last 365 days)
-	overallProgress.StartStep("📝 Analyzing full year history")
-	commitsYear, err := client.GetCommits(owner, repo, 365)
-	if err != nil {
-		overallProgress.Finish()
-		return fmt.Errorf("failed to get yearly commits: %w", err)
-	}
-	overallProgress.CompleteStep("Full year history analyzed")
-
-	// Mark analysis as complete
-	overallProgress.Finish()
-
-	// Calculate health score
-	score := analyzer.CalculateHealth(repoInfo, commitsYear)
-
-	// Get top language
-	topLang := getTopLanguage(langs)
-	if topLang == "" && repoInfo.Language != "" {
-		topLang = repoInfo.Language
-	}
-	if topLang == "" {
-		topLang = "Unknown"
-	}
-
-	// Format last commit date
-	lastCommit := formatTimeAgo(repoInfo.PushedAt)
-
-	// Print the 5-line summary
-	fmt.Printf("📊 Repository Summary: %s\n", repoInfo.FullName)
-	fmt.Printf("   Commits (30d): %d\n", len(commits30d))
-	fmt.Printf("   Top Language: %s\n", topLang)
-	fmt.Printf("   Contributors: %d\n", len(contributors))
-	fmt.Printf("   Health Score: %d/100\n", score)
-	fmt.Printf("   Last Commit: %s\n", lastCommit)
-
-	return nil
-}
-
-// getTopLanguage returns the language with the most bytes of code
+// getTopLanguage and formatTimeAgo are shared helpers used by both
+// analyzeCmd (--summary flag) and summaryCmd.
+//
+// getTopLanguage returns the language with the most bytes of code.
 func getTopLanguage(langs map[string]int) string {
 	if len(langs) == 0 {
 		return ""
@@ -460,27 +440,32 @@ func formatTimeAgo(t time.Time) string {
 			return "1 year ago"
 		}
 		return fmt.Sprintf("%d years ago", years)
+
 	case days > 30:
 		months := days / 30
 		if months == 1 {
 			return "1 month ago"
 		}
 		return fmt.Sprintf("%d months ago", months)
+
 	case days > 0:
 		if days == 1 {
 			return "1 day ago"
 		}
 		return fmt.Sprintf("%d days ago", days)
+
 	case hours > 0:
 		if hours == 1 {
 			return "1 hour ago"
 		}
 		return fmt.Sprintf("%d hours ago", hours)
+
 	case minutes > 0:
 		if minutes == 1 {
 			return "1 minute ago"
 		}
 		return fmt.Sprintf("%d minutes ago", minutes)
+
 	default:
 		return "just now"
 	}
