@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
@@ -57,6 +58,7 @@ Examples:
 		} else {
 			prs, err = client.GetPullRequests(owner, repo, state)
 		}
+
 		if err != nil {
 			if !jsonOutput {
 				overallProgress.Finish()
@@ -88,27 +90,39 @@ Examples:
 			err     error
 		}
 
-		workers := 10 // Concurrent workers
+		workers := 10
 		semaphore := make(chan struct{}, workers)
 		results := make(chan prResult, len(prs))
 
+		var wg sync.WaitGroup
+
 		// Launch goroutines for each PR
 		for i, pr := range prs {
-			go func(prNumber, index int) {
-				semaphore <- struct{}{}        // Acquire
-				defer func() { <-semaphore }() // Release
+			wg.Add(1)
 
-				// Fetch detailed PR info (includes additions, deletions, changed_files)
+			go func(prNumber, index int) {
+				defer wg.Done()
+
+				semaphore <- struct{}{}
+				defer func() { <-semaphore }()
+
+				// Fetch detailed PR info
 				prDetails, err := client.GetPullRequestDetails(owner, repo, prNumber)
 				if err != nil {
-					results <- prResult{index: index, err: fmt.Errorf("PR #%d details: %w", prNumber, err)}
+					results <- prResult{
+						index: index,
+						err:   fmt.Errorf("PR #%d details: %w", prNumber, err),
+					}
 					return
 				}
 
 				// Fetch reviews
 				prReviews, err := client.GetPullRequestReviews(owner, repo, prNumber)
 				if err != nil {
-					results <- prResult{index: index, err: fmt.Errorf("PR #%d reviews: %w", prNumber, err)}
+					results <- prResult{
+						index: index,
+						err:   fmt.Errorf("PR #%d reviews: %w", prNumber, err),
+					}
 					return
 				}
 
@@ -120,20 +134,40 @@ Examples:
 			}(pr.Number, i)
 		}
 
+		// Close results channel after all goroutines complete
+		go func() {
+			wg.Wait()
+			close(results)
+		}()
+
 		// Collect results
 		updatedPRs := make([]*github.PullRequest, len(prs))
 		reviews := make(map[int][]github.Review)
+
 		errorCount := 0
+		i := 0
 
-		for i := 0; i < len(prs); i++ {
-			result := <-results
-
+		for result := range results {
 			if !jsonOutput {
-				percentage := (i + 1) * 100 / len(prs)
-				overallProgress.UpdateStep(fmt.Sprintf("🔄 Fetching PR details and reviews [%d/%d - %d%%]", i+1, len(prs), percentage))
+				i++
+				percentage := i * 100 / len(prs)
+
+				overallProgress.UpdateStep(
+					fmt.Sprintf(
+						"🔄 Fetching PR details and reviews [%d/%d - %d%%]",
+						i,
+						len(prs),
+						percentage,
+					),
+				)
 			}
 
 			if result.err != nil {
+				errorCount++
+				continue
+			}
+
+			if result.pr == nil {
 				errorCount++
 				continue
 			}
@@ -151,7 +185,9 @@ Examples:
 		}
 
 		if !jsonOutput {
-			overallProgress.CompleteStep(fmt.Sprintf("PR details fetched (%d errors)", errorCount))
+			overallProgress.CompleteStep(
+				fmt.Sprintf("PR details fetched (%d errors)", errorCount),
+			)
 		}
 
 		if len(finalPRs) == 0 {
@@ -168,7 +204,9 @@ Examples:
 		if !jsonOutput {
 			overallProgress.StartStep("📊 Analyzing pull request metrics")
 		}
+
 		analytics := analyzer.AnalyzePullRequests(prs, reviews)
+
 		if !jsonOutput {
 			overallProgress.CompleteStep("Pull request analysis complete")
 			overallProgress.Finish()
@@ -191,7 +229,22 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(analyzePRCmd)
-	analyzePRCmd.Flags().String("state", "all", "Filter PRs by state: open, closed, or all")
-	analyzePRCmd.Flags().Int("limit", 100, "Limit number of PRs to analyze (0 = no limit, use with caution)")
-	analyzePRCmd.Flags().Bool("json", false, "Output results as JSON")
+
+	analyzePRCmd.Flags().String(
+		"state",
+		"all",
+		"Filter PRs by state: open, closed, or all",
+	)
+
+	analyzePRCmd.Flags().Int(
+		"limit",
+		100,
+		"Limit number of PRs to analyze (0 = no limit, use with caution)",
+	)
+
+	analyzePRCmd.Flags().Bool(
+		"json",
+		false,
+		"Output results as JSON",
+	)
 }
