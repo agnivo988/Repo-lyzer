@@ -27,7 +27,12 @@ func (c *Client) GetIssues(owner, repo string, state string) ([]Issue, error) {
 		if err := c.get(url, &batch); err != nil {
 			return nil, err
 		}
-		all = append(all, batch...)
+		for _, issue := range batch {
+    if issue.PullRequest != nil {
+        continue
+    }
+    all = append(all, issue)
+}
 		if len(batch) < perPage {
 			break
 		}
