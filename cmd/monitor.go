@@ -52,7 +52,7 @@ Examples:
 
 		// Check if dashboard mode is requested
 		useDashboard, _ := cmd.Flags().GetBool("dashboard")
-		
+
 		if useDashboard {
 			// Use TUI dashboard
 			cache, err := cache.NewCache()

@@ -12,6 +12,9 @@ type Commit struct {
 			Date time.Time `json:"date"`
 		} `json:"author"`
 	} `json:"commit"`
+	Author *struct {
+		Login string `json:"login"`
+	} `json:"author"`
 }
 
 type CommitFile struct {

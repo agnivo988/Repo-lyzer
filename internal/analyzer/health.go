@@ -1,6 +1,10 @@
 package analyzer
 
-import "github.com/agnivo988/Repo-lyzer/internal/github"
+import (
+	"time"
+
+	"github.com/agnivo988/Repo-lyzer/internal/github"
+)
 
 func CalculateHealth(repo *github.Repo, commits []github.Commit) int {
 	score := 50
@@ -18,8 +22,25 @@ func CalculateHealth(repo *github.Repo, commits []github.Commit) int {
 		score += 10
 	}
 
+	if !repo.PushedAt.IsZero() {
+		since := time.Since(repo.PushedAt)
+		switch {
+		case since <= 30*24*time.Hour:
+			score += 10
+		case since <= 90*24*time.Hour:
+			score += 5
+		case since > 365*24*time.Hour:
+			score -= 10
+		case since > 180*24*time.Hour:
+			score -= 5
+		}
+	}
+
 	if score > 100 {
 		score = 100
+	}
+	if score < 0 {
+		score = 0
 	}
 	return score
 }

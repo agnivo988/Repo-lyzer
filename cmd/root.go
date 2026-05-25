@@ -7,6 +7,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// version is the current release version.
+// It defaults to "dev" for local builds and is overridden at release time via:
+//
+//	go build -ldflags="-X github.com/agnivo988/Repo-lyzer/cmd.version=v1.0.7"
+var version = "dev"
+
 var rootCmd = &cobra.Command{
 	Use:   "repo-lyzer",
 	Short: "Analyze GitHub repositories from the terminal",
@@ -54,7 +60,7 @@ Examples:
   repo-lyzer cache list
 
 Documentation: https://github.com/agnivo988/Repo-lyzer`,
-	Version: "v1.0.0",
+	Version: version,
 }
 
 // Execute is used for cobra commands

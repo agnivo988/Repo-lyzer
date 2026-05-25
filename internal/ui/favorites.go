@@ -13,11 +13,11 @@ import (
 )
 
 type Favorite struct {
-	RepoName  string    `json:"repo_name"`
-	UseCount  int       `json:"use_count"`
-	LastUsed  time.Time `json:"last_used"`
-	AddedAt   time.Time `json:"added_at"`
-	Notes     string    `json:"notes"`
+	RepoName string    `json:"repo_name"`
+	UseCount int       `json:"use_count"`
+	LastUsed time.Time `json:"last_used"`
+	AddedAt  time.Time `json:"added_at"`
+	Notes    string    `json:"notes"`
 }
 
 type FavoriteItem = Favorite

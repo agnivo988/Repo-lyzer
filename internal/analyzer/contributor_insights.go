@@ -54,6 +54,8 @@ func AnalyzeContributors(contributors []github.Contributor) *ContributorInsights
 		}
 	}
 
+	contributors = sortContributorsByCommitsDesc(contributors)
+
 	insights := &ContributorInsights{
 		TotalContributors: len(contributors),
 	}

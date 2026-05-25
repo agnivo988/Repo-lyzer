@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/cache"
 	"github.com/agnivo988/Repo-lyzer/internal/config"
+	"github.com/agnivo988/Repo-lyzer/internal/contribution"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -883,6 +885,45 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err != nil {
 			return fmt.Errorf("failed to get file tree: %w", err)
 		}
+
+		// Build current file hash map for incremental analysis
+		currentHashes := make(map[string]string)
+
+		for _, file := range fileTree {
+			// Skip directories
+			if file.Type != "blob" {
+				continue
+			}
+
+			// Store filepath -> SHA mapping
+			currentHashes[file.Path] = file.Sha
+		}
+
+		// Compare with cached incremental metadata
+		changedFiles := []string{}
+
+		if entry, found := m.cache.Get(repoName); found {
+			if entry.IncrementalMetadata != nil {
+
+				for path, hash := range currentHashes {
+					cachedHash, exists := entry.IncrementalMetadata[path]
+
+					// File is new or modified
+					if !exists || cachedHash != hash {
+						changedFiles = append(changedFiles, path)
+					}
+				}
+
+				fmt.Printf("🔄 Incremental analysis enabled\n")
+				fmt.Printf("📂 Changed files detected: %d\n", len(changedFiles))
+
+				// No changes detected
+				if len(changedFiles) == 0 {
+					fmt.Println("✅ No repository changes detected. Using cached analysis.")
+				}
+			}
+		}
+
 		tracker.NextStage()
 
 		// Stage 5: Compute metrics
@@ -951,6 +992,43 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			hotspots,
 		)
 
+		// Fetch issues and PRs
+		issues, issuesErr := client.GetIssues(parts[0], parts[1], "open")
+		if issuesErr != nil {
+			issues = []github.Issue{}
+		}
+
+		prs, prsErr := client.GetPullRequests(parts[0], parts[1], "open")
+		if prsErr != nil {
+			prs = []github.PullRequest{}
+		}
+
+		hasLockFile := deps != nil && deps.HasLockFile
+		maintainerAnalysis := analyzer.AnalyzeMaintainerDashboard(
+			repo,
+			prs,
+			issues,
+			score,
+			busFactor,
+			hasLockFile,
+			contributors,
+		)
+
+		// Fetch README content and calculate contribution score
+		hasContributing := contribution.CheckContributingFile(fileTree)
+		readmeContent := ""
+		readmePath := contribution.FindReadmePath(fileTree)
+		if readmePath != "" {
+			readmeBase64, err := client.GetFileContent(parts[0], parts[1], readmePath)
+			if err == nil {
+				decoded, err := base64.StdEncoding.DecodeString(readmeBase64)
+				if err == nil {
+					readmeContent = string(decoded)
+				}
+			}
+		}
+		contribScore := contribution.Calculate(hasContributing, readmeContent, issues, commits, contributors)
+
 		result := AnalysisResult{
 			Repo:                repo,
 			Commits:             commits,
@@ -968,6 +1046,10 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			ContributorActivity: analyzer.AnalyzeContributorActivity(commits),
 			RiskAlerts:          riskAlerts,
 			QualityDashboard:    qualityDashboard,
+			Issues:              issues,
+			PRs:                 prs,
+			MaintainerAnalysis:  maintainerAnalysis,
+			ContributionScore:   contribScore,
 		}
 
 		// Save to cache

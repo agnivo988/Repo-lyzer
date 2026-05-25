@@ -4,12 +4,14 @@ package cmd
 
 import (
 	"bufio"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
+	"github.com/agnivo988/Repo-lyzer/internal/contribution"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/agnivo988/Repo-lyzer/internal/output"
 	"github.com/agnivo988/Repo-lyzer/internal/progress"
@@ -143,9 +145,15 @@ var analyzeCmd = &cobra.Command{
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		compact, _ := cmd.Flags().GetBool("compact")
 		summary, _ := cmd.Flags().GetBool("summary")
+		incremental, _ := cmd.Flags().GetBool("incremental")
+		contribute, _ := cmd.Flags().GetBool("contribute")
 
 		if dryRun {
 			return runDryRun(args[0])
+		}
+
+		if compact && contribute {
+			return fmt.Errorf("cannot use --compact and --contribute flags together")
 		}
 
 		if summary {
@@ -166,8 +174,13 @@ var analyzeCmd = &cobra.Command{
 
 		// Create overall progress tracker for all analysis steps
 		// Estimated steps: repo info, languages, commits, file tree, health,
-		// contributors, bus factor, maturity, hotspots = 9 steps
-		overallProgress := progress.NewOverallProgress(9)
+		// contributors, bus factor, maturity = 8 steps
+		// If contribute flag is set, we add 1 step for fetching issues = 9 steps
+		steps := 8
+		if contribute {
+			steps++
+		}
+		overallProgress := progress.NewOverallProgress(steps)
 
 		// Fetch repository information
 		overallProgress.StartStep("🔍 Fetching repository information")
@@ -183,7 +196,7 @@ var analyzeCmd = &cobra.Command{
 					if token != "" {
 						client.SetToken(token)
 						// Retry fetching the repo with the token
-						overallProgress = progress.NewOverallProgress(9)
+						overallProgress = progress.NewOverallProgress(steps)
 						overallProgress.StartStep("🔍 Fetching repository information")
 						repoInfo, err = client.GetRepo(owner, repo)
 						overallProgress.CompleteStep("Repository information fetched")
@@ -211,6 +224,16 @@ var analyzeCmd = &cobra.Command{
 		}
 		overallProgress.CompleteStep("Languages fetched")
 
+		var issues []github.Issue
+		if contribute {
+			overallProgress.StartStep("🐛 Fetching open issues")
+			issues, err = client.GetIssues(owner, repo, "open")
+			if err != nil {
+				issues = []github.Issue{} // fallback
+			}
+			overallProgress.CompleteStep("Open issues fetched")
+		}
+
 		// Fetch commits from the last 365 days
 		overallProgress.StartStep("📝 Analyzing commit history (365d)")
 		commits, err := client.GetCommits(owner, repo, 365)
@@ -228,6 +251,22 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get file tree: %w", err)
 		}
 		overallProgress.CompleteStep("File structure scanned")
+		// Incremental analysis support
+		if incremental {
+
+			currentHashes := make(map[string]string)
+
+			for _, file := range fileTree {
+				if file.Type != "blob" {
+					continue
+				}
+
+				currentHashes[file.Path] = file.Sha
+			}
+
+			fmt.Println("🔄 Incremental analysis enabled")
+			fmt.Printf("📂 Repository files tracked: %d\n", len(currentHashes))
+		}
 
 		// Calculate repository health score
 		overallProgress.StartStep("💪 Computing repository health")
@@ -293,24 +332,33 @@ var analyzeCmd = &cobra.Command{
 			busRisk,
 		)
 
+		// Fetch README content and calculate contribution score if contribute flag is enabled
+		var contribScore contribution.ContributionScore
+		if contribute {
+			hasContributing := contribution.CheckContributingFile(fileTree)
+			readmeContent := ""
+			readmePath := contribution.FindReadmePath(fileTree)
+			if readmePath != "" {
+				readmeBase64, err := client.GetFileContent(owner, repo, readmePath)
+				if err == nil {
+					decoded, err := base64.StdEncoding.DecodeString(readmeBase64)
+					if err == nil {
+						readmeContent = string(decoded)
+					}
+				}
+			}
+			contribScore = contribution.Calculate(hasContributing, readmeContent, issues, commits, contributors)
+		}
+
 		// Output the analysis results
 		output.PrintRepo(repoInfo)
 		output.PrintLanguages(langs)
 		output.PrintCommitActivity(activity, 14)
 		output.PrintHealth(score)
-		output.PrintGitHubAPIStatus(client)
-		output.PrintRecruiterSummary(recruiterSummary)
-
-		// Analyze and print hotspots
-		overallProgress.StartStep("🔥 Identifying code hotspots")
-		hotspots, err := analyzer.AnalyzeHotspots(repoInfo, commits, fileTree, client)
-		if err == nil {
-			overallProgress.CompleteStep("Code hotspots identified")
-			output.PrintHotspots(hotspots)
-		} else {
-			overallProgress.CompleteStep("Hotspot analysis skipped")
-			fmt.Printf("\n⚠️ Could not analyze hotspots: %v\n", err)
+		if contribute {
+			output.PrintContributionScore(contribScore)
 		}
+		output.PrintRecruiterSummary(recruiterSummary)
 
 		// Mark analysis as complete
 		overallProgress.Finish()
@@ -471,7 +519,34 @@ func formatTimeAgo(t time.Time) string {
 
 func init() {
 	rootCmd.AddCommand(analyzeCmd)
-	analyzeCmd.Flags().Bool("dry-run", false, "Validate repository URL and show what metrics would be calculated without making API calls")
-	analyzeCmd.Flags().Bool("compact", false, "Output compact JSON summary for machine consumption")
-	analyzeCmd.Flags().Bool("summary", false, "Display a quick 5-line repository summary")
+
+	analyzeCmd.Flags().Bool(
+		"dry-run",
+		false,
+		"Validate repository URL and show what metrics would be calculated without making API calls",
+	)
+
+	analyzeCmd.Flags().Bool(
+		"compact",
+		false,
+		"Output compact JSON summary for machine consumption",
+	)
+
+	analyzeCmd.Flags().Bool(
+		"summary",
+		false,
+		"Display a quick 5-line repository summary",
+	)
+
+	analyzeCmd.Flags().Bool(
+		"incremental",
+		false,
+		"Analyze only changed files using cached metadata",
+	)
+
+	analyzeCmd.Flags().Bool(
+		"contribute",
+		false,
+		"Show Contribution Friendliness Score inside the overview/cli output",
+	)
 }

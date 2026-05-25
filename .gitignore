@@ -17,3 +17,6 @@ repo-lyzer
 
 # Go workspace file
 go.work
+
+# Local session memory files (Copilot/assistant notes)
+/memories/

@@ -259,7 +259,7 @@ func (m MenuModel) View() string {
 	if m.inSubmenu {
 		return m.submenuView(logoView)
 	}
-// Menu items with keyboard shortcuts
+	// Menu items with keyboard shortcuts
 	shortcuts := []string{"a", "f", "c", "h", "d", "n", "m", "s", "?", "q"}
 	var menuItems []string
 

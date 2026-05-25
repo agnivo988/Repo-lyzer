@@ -30,13 +30,13 @@ type MonitorDashboardModel struct {
 // NewMonitorDashboardModel creates a new monitor dashboard model
 func NewMonitorDashboardModel(owner, repo string, interval time.Duration) MonitorDashboardModel {
 	return MonitorDashboardModel{
-		owner:        owner,
-		repo:         repo,
-		repoName:     fmt.Sprintf("%s/%s", owner, repo),
-		interval:     interval,
+		owner:         owner,
+		repo:          repo,
+		repoName:      fmt.Sprintf("%s/%s", owner, repo),
+		interval:      interval,
 		notifications: []monitor.Notification{},
-		autoScroll:   true,
-		monitorRunID: 1,
+		autoScroll:    true,
+		monitorRunID:  1,
 	}
 }
 
@@ -137,15 +137,15 @@ func (m MonitorDashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.notifications = append([]monitor.Notification{msg.notification}, m.notifications...)
-		
+
 		// Keep only last 50 notifications
 		if len(m.notifications) > 50 {
 			m.notifications = m.notifications[:50]
 		}
-		
+
 		// Add to global notifications
 		AddMonitorNotification(m.repoName, msg.notification.Message)
-		
+
 		// Auto-scroll to top if enabled
 		if m.autoScroll {
 			m.scrollOffset = 0
@@ -211,26 +211,26 @@ func (m MonitorDashboardModel) ViewWithSize(width, height int) string {
 	m.height = height
 
 	header := TitleStyle.Render(fmt.Sprintf("👀 MONITORING: %s", m.repoName))
-	
+
 	// Status bar
 	statusParts := []string{
 		fmt.Sprintf("Interval: %v", m.interval),
 		fmt.Sprintf("Notifications: %d", len(m.notifications)),
 	}
-	
+
 	if m.autoScroll {
 		statusParts = append(statusParts, "Auto-scroll: ON")
 	} else {
 		statusParts = append(statusParts, "Auto-scroll: OFF")
 	}
-	
+
 	statusBar := SubtleStyle.Render(strings.Join(statusParts, " • "))
 
 	// Error display
 	if m.err != nil {
 		errorBox := ErrorStyle.Render(fmt.Sprintf("Error: %v", m.err))
 		footer := SubtleStyle.Render("\nr: retry • q/ESC: back to menu")
-		
+
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
 			header,
@@ -252,7 +252,7 @@ func (m MonitorDashboardModel) ViewWithSize(width, height int) string {
 	if len(m.notifications) == 0 {
 		waitingMsg := SubtleStyle.Render("Waiting for updates...\n\nMonitoring for:\n• New commits\n• Issues and pull requests\n• Contributor changes\n• Repository health metrics")
 		footer := SubtleStyle.Render("\na: toggle auto-scroll • c: clear • r: refresh • q/ESC: back")
-		
+
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
 			header,
@@ -281,7 +281,7 @@ func (m MonitorDashboardModel) ViewWithSize(width, height int) string {
 
 	for i := start; i < end; i++ {
 		notif := m.notifications[i]
-		
+
 		// Icon based on severity
 		var icon string
 		var style lipgloss.Style
@@ -309,7 +309,7 @@ func (m MonitorDashboardModel) ViewWithSize(width, height int) string {
 	}
 
 	listContent := strings.Join(items, "\n")
-	
+
 	// Scroll indicator
 	scrollInfo := ""
 	if len(m.notifications) > visibleLines {

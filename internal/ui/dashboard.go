@@ -27,6 +27,7 @@ const (
 	viewDependencies
 	viewSecurity
 	viewRecruiter
+	viewMaintainer
 	viewAPIStatus
 )
 
@@ -193,6 +194,8 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.currentView = viewDependencies
 		case "0":
 			m.currentView = viewSecurity
+		case "u":
+			m.currentView = viewMaintainer
 
 		case "right", "l":
 			if !m.showHelp && !m.showExport {
@@ -255,6 +258,8 @@ func (m DashboardModel) View() string {
 		content = m.securityView()
 	case viewRecruiter:
 		content = m.recruiterView()
+	case viewMaintainer:
+		content = m.maintainerView()
 	case viewAPIStatus:
 		content = m.apiStatusView()
 	}
@@ -297,7 +302,7 @@ func (m DashboardModel) View() string {
 }
 
 func (m DashboardModel) renderTabs() string {
-	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "API"}
+	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "Maintainer", "API"}
 
 	var renderedTabs []string
 
@@ -349,13 +354,55 @@ func (m DashboardModel) overviewView() string {
 	))
 	riskPanel := m.riskAlertsView()
 
+	contrib := m.data.ContributionScore
+	var contribDetails string
+	if contrib.Level != "" {
+		contribDetails = fmt.Sprintf("Score: %.1f/10 (%s)\n\n", contrib.Score, contrib.Level)
+		if len(contrib.Strengths) > 0 {
+			contribDetails += "Strengths:\n"
+			for _, s := range contrib.Strengths {
+				if len(s) > 30 {
+					s = s[:27] + "..."
+				}
+				contribDetails += "  ✓ " + s + "\n"
+			}
+		}
+		if len(contrib.Weaknesses) > 0 {
+			if len(contrib.Strengths) > 0 {
+				contribDetails += "\n"
+			}
+			contribDetails += "Weaknesses:\n"
+			for _, w := range contrib.Weaknesses {
+				if len(w) > 30 {
+					w = w[:27] + "..."
+				}
+				contribDetails += "  ✗ " + w + "\n"
+			}
+		}
+	}
+
+	var bottomPanel string
+	if contrib.Level != "" {
+		contribBox := CardStyle.Render(lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.NewStyle().Bold(true).Render("🤝 Contribution Friendliness"),
+			"\n"+contribDetails,
+		))
+		if riskPanel == "" {
+			bottomPanel = contribBox
+		} else {
+			bottomPanel = lipgloss.JoinHorizontal(lipgloss.Top, riskPanel, contribBox)
+		}
+	} else {
+		bottomPanel = riskPanel
+	}
+
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader),
 		"\n",
 		lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
 		"\n",
-		riskPanel,
+		bottomPanel,
 	)
 
 }
@@ -894,3 +941,102 @@ ACTIONS
 		lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(help)),
 	)
 }
+
+func (m DashboardModel) maintainerView() string {
+	header := TitleStyle.Render(" 🛠️ Maintainer Dashboard: Suggestions & Insights ")
+
+	analysis := m.data.MaintainerAnalysis
+	if analysis == nil {
+		// Calculate dynamically as fallback
+		hasLockFile := m.data.Dependencies != nil && m.data.Dependencies.HasLockFile
+		analysis = analyzer.AnalyzeMaintainerDashboard(
+			m.data.Repo,
+			m.data.PRs,
+			m.data.Issues,
+			m.data.HealthScore,
+			m.data.BusFactor,
+			hasLockFile,
+			m.data.Contributors,
+		)
+	}
+
+	// Calculate panel width
+	w := 50
+	if m.width > 100 {
+		w = (m.width / 2) - 4
+	}
+
+	// 1. Suggested Next Actions Panel
+	actionsContent := lipgloss.NewStyle().Bold(true).Render("📋 Suggested Next Actions") + "\n\n"
+	if len(analysis.SuggestedActions) == 0 {
+		actionsContent += SuccessStyle.Render("✓ No actions required! Repository is in great health.")
+	} else {
+		for i, action := range analysis.SuggestedActions {
+			priorityColor := "#f1fa8c" // Yellow/Medium
+			if action.Priority == "High" {
+				priorityColor = "#ff5555" // Red
+			} else if action.Priority == "Low" {
+				priorityColor = "#bd93f9" // Purple
+			}
+			prioStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(priorityColor)).Bold(true)
+			actionsContent += fmt.Sprintf("%d. [%s] %s\n   %s\n\n",
+				i+1, prioStyle.Render(action.Priority), lipgloss.NewStyle().Bold(true).Render(action.Title), SubtleStyle.Render(action.Description))
+		}
+	}
+	actionsBox := CardStyle.Copy().Width(w).Render(actionsContent)
+
+	// 2. PRs Stuck in Review Panel
+	prsContent := lipgloss.NewStyle().Bold(true).Render("⏳ Stuck Pull Requests") + "\n\n"
+	if len(analysis.PRsStuck) == 0 {
+		prsContent += SuccessStyle.Render("✓ No stuck PRs in review!")
+	} else {
+		for _, pr := range analysis.PRsStuck {
+			prsContent += fmt.Sprintf("• #%d: %s\n  Author: %s • Days: %d • Reason: %s\n\n",
+				pr.Number, lipgloss.NewStyle().Bold(true).Render(pr.Title), pr.Author, pr.DaysOpen, ErrorStyle.Render(pr.Reason))
+		}
+	}
+	prsBox := CardStyle.Copy().Width(w).Render(prsContent)
+
+	// 3. Issue Candidates Panel
+	issuesContent := lipgloss.NewStyle().Bold(true).Render("🗑️ Issue Candidates (Close/Label)") + "\n\n"
+	if len(analysis.IssueCandidates) == 0 {
+		issuesContent += SuccessStyle.Render("✓ All issues active and labeled!")
+	} else {
+		for _, issue := range analysis.IssueCandidates {
+			issuesContent += fmt.Sprintf("• #%d: %s\n  Comments: %d • Open: %d days • Reason: %s\n\n",
+				issue.Number, lipgloss.NewStyle().Bold(true).Render(issue.Title), issue.Comments, issue.DaysOpen, ErrorStyle.Render(issue.Reason))
+		}
+	}
+	issuesBox := CardStyle.Copy().Width(w).Render(issuesContent)
+
+	// 4. Contributors Deserving Appreciation
+	contribsContent := lipgloss.NewStyle().Bold(true).Render("🏆 Contributor Appreciation") + "\n\n"
+	if len(analysis.ContributorsToAppreciate) == 0 {
+		contribsContent += SubtleStyle.Render("No active contributors to display.")
+	} else {
+		for _, c := range analysis.ContributorsToAppreciate {
+			contribsContent += fmt.Sprintf("👑 %-15s - %d commits (%s)\n",
+				c.Login, c.Commits, lipgloss.NewStyle().Foreground(lipgloss.Color("#50fa7b")).Render(c.Contribution))
+		}
+	}
+	contribsBox := CardStyle.Copy().Width(w).Render(contribsContent)
+
+	// Layout columns
+	leftCol := lipgloss.JoinVertical(lipgloss.Left, actionsBox, issuesBox)
+	rightCol := lipgloss.JoinVertical(lipgloss.Left, prsBox, contribsBox)
+
+	var panels string
+	if m.width > 100 {
+		panels = lipgloss.JoinHorizontal(lipgloss.Top, leftCol, rightCol)
+	} else {
+		panels = lipgloss.JoinVertical(lipgloss.Left, actionsBox, prsBox, issuesBox, contribsBox)
+	}
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		"\n",
+		panels,
+	)
+}
+

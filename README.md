@@ -9,6 +9,7 @@
 
 ## Features
 - **Deep Analytics** – Repository health, maturity scores, and bus factor.
+- **Contribution Friendliness** – Assess how easy it is to contribute to a repository using weighted metrics (`--contribute` flag).
 - **Interactive TUI** – Fully navigable keyboard-driven menu system.
 - **Visual Data** – Language breakdown bars and horizontal commit graphs.
 - **File Explorer** – Browse repository structures directly in the dashboard.
@@ -31,6 +32,9 @@ repo-lyzer summary golang/go
 
 # Run full interactive analysis
 repo-lyzer analyze microsoft/vscode
+
+# Run analysis with contribution scoring enabled
+repo-lyzer analyze microsoft/vscode --contribute
 ```
 
 ---

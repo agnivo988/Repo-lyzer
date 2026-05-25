@@ -14,7 +14,9 @@ import (
 // It analyzes a GitHub repository and generates a comprehensive certificate
 // showing the repository's overall score and potential uses.
 // Usage example:
-//   repo-lyzer certificate octocat/Hello-World
+//
+//	repo-lyzer certificate octocat/Hello-World
+//
 // This will perform full analysis and display a formatted certificate.
 var certificateCmd = &cobra.Command{
 	Use:   "certificate owner/repo",

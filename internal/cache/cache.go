@@ -40,13 +40,12 @@ import (
 // Each entry contains the full analysis data along with timing information
 // for TTL-based expiration.
 type CacheEntry struct {
-	RepoName  string          `json:"repo_name"`  // Repository identifier (owner/repo)
-	CachedAt  time.Time       `json:"cached_at"`  // When the entry was cached
-	ExpiresAt time.Time       `json:"expires_at"` // When the entry expires
-	Analysis  json.RawMessage `json:"analysis"`   // Serialized AnalysisResult
+	RepoName            string            `json:"repo_name"`  // Repository identifier (owner/repo)
+	CachedAt            time.Time         `json:"cached_at"`  // When the entry was cached
+	ExpiresAt           time.Time         `json:"expires_at"` // When the entry expires
+	Analysis            json.RawMessage   `json:"analysis"`   // Serialized AnalysisResult
+	IncrementalMetadata map[string]string `json:"incremental_metadata,omitempty"`
 }
-
-
 
 // CacheIndex stores metadata about all cached repositories.
 // This index enables quick lookups without reading individual cache files.
@@ -220,6 +219,11 @@ func (c *Cache) Get(repoName string) (*CacheEntry, bool) {
 
 // Set stores an analysis result in the cache
 func (c *Cache) Set(repoName string, analysis interface{}) error {
+	return c.SetWithTTL(repoName, analysis, c.config.TTL)
+}
+
+// SetWithTTL stores an analysis result in the cache with an explicit TTL.
+func (c *Cache) SetWithTTL(repoName string, analysis interface{}, ttl time.Duration) error {
 	if !c.config.Enabled || !c.config.AutoCache {
 		return nil
 	}
@@ -232,10 +236,11 @@ func (c *Cache) Set(repoName string, analysis interface{}) error {
 
 	now := time.Now()
 	entry := CacheEntry{
-		RepoName:  repoName,
-		CachedAt:  now,
-		ExpiresAt: now.Add(c.config.TTL),
-		Analysis:  analysisData,
+		RepoName:            repoName,
+		CachedAt:            now,
+		ExpiresAt:           now.Add(ttl),
+		Analysis:            analysisData,
+		IncrementalMetadata: make(map[string]string),
 	}
 
 	// Save to file
@@ -261,7 +266,7 @@ func (c *Cache) Set(repoName string, analysis interface{}) error {
 	c.index.Entries[repoName] = CacheIndexEntry{
 		RepoName:  repoName,
 		CachedAt:  now,
-		ExpiresAt: now.Add(c.config.TTL),
+		ExpiresAt: now.Add(ttl),
 		FileSize:  fileSize,
 	}
 

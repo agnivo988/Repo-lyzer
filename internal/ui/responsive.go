@@ -19,6 +19,7 @@ type ResponsiveLayout struct {
 // Parameters:
 //   - width: Terminal width in characters
 //   - height: Terminal height in characters
+//
 // Returns a pointer to the initialized ResponsiveLayout.
 func NewResponsiveLayout(width, height int) *ResponsiveLayout {
 	return &ResponsiveLayout{Width: width, Height: height}

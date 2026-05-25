@@ -15,11 +15,11 @@ import (
 
 // NotificationEntry represents a single notification
 type NotificationEntry struct {
-	Type      string    `json:"type"`       // "analysis", "export", "monitor"
+	Type      string    `json:"type"` // "analysis", "export", "monitor"
 	RepoName  string    `json:"repo_name"`
 	Message   string    `json:"message"`
 	Timestamp time.Time `json:"timestamp"`
-	Status    string    `json:"status"`     // "success", "error", "info"
+	Status    string    `json:"status"` // "success", "error", "info"
 	Details   string    `json:"details"`
 }
 
@@ -118,11 +118,11 @@ func (m NotificationsModel) ViewWithSize(width, height int) string {
 	m.height = height
 
 	header := TitleStyle.Render("🔔 NOTIFICATIONS")
-	
+
 	if len(m.notifications.Entries) == 0 {
 		emptyMsg := SubtleStyle.Render("No notifications yet.\n\nNotifications will appear here when you:\n• Analyze repositories\n• Export reports\n• Monitor repository changes")
 		footer := SubtleStyle.Render("\nq/ESC: back to menu")
-		
+
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
 			header,
@@ -146,7 +146,7 @@ func (m NotificationsModel) ViewWithSize(width, height int) string {
 
 	for i := start; i < end; i++ {
 		entry := m.notifications.Entries[i]
-		
+
 		// Icon based on type and status
 		var icon string
 		switch entry.Type {
@@ -192,7 +192,7 @@ func (m NotificationsModel) ViewWithSize(width, height int) string {
 	}
 
 	listContent := strings.Join(items, "\n")
-	
+
 	// Scroll indicator
 	scrollInfo := ""
 	if len(m.notifications.Entries) > visibleLines {
@@ -271,7 +271,7 @@ func (ns *NotificationStore) Save() error {
 func (ns *NotificationStore) AddNotification(notif NotificationEntry) {
 	notif.Timestamp = time.Now()
 	ns.Entries = append([]NotificationEntry{notif}, ns.Entries...)
-	
+
 	// Keep only last 100 notifications
 	if len(ns.Entries) > 100 {
 		ns.Entries = ns.Entries[:100]
@@ -308,7 +308,7 @@ func maxInt(a, b int) int {
 // AddAnalysisNotification is a helper to add analysis notifications
 func AddAnalysisNotification(repoName string, success bool) {
 	store, _ := LoadNotifications()
-	
+
 	status := "success"
 	message := "Repository analyzed successfully"
 	if !success {
@@ -328,7 +328,7 @@ func AddAnalysisNotification(repoName string, success bool) {
 // AddExportNotification is a helper to add export notifications
 func AddExportNotification(repoName, format string, success bool) {
 	store, _ := LoadNotifications()
-	
+
 	status := "success"
 	message := fmt.Sprintf("Exported to %s", format)
 	if !success {
@@ -348,7 +348,7 @@ func AddExportNotification(repoName, format string, success bool) {
 // AddMonitorNotification is a helper to add monitoring notifications
 func AddMonitorNotification(repoName, message string) {
 	store, _ := LoadNotifications()
-	
+
 	store.AddNotification(NotificationEntry{
 		Type:     "monitor",
 		RepoName: repoName,

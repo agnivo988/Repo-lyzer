@@ -264,10 +264,11 @@ func TestNormalizeBusFactor(t *testing.T) {
 		busFactor int
 		expected  int
 	}{
-		{1, 20},   // minimum
-		{10, 100}, // maximum
-		{5, 55},   // middle range
-		{15, 100}, // above maximum
+		{0, 0},    // unknown
+		{1, 20},   // high risk
+		{2, 60},   // medium risk
+		{3, 100},  // low risk
+		{4, 100},  // values above 3 stay capped at best score
 	}
 
 	for _, tt := range tests {

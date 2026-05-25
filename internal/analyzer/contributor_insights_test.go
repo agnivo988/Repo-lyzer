@@ -133,6 +133,22 @@ func TestContributorDetail_Classification(t *testing.T) {
 	}
 }
 
+func TestAnalyzeContributors_UnsortedOrder(t *testing.T) {
+	contributors := []github.Contributor{
+		{Login: "helper", Commits: 10},
+		{Login: "lead", Commits: 90},
+	}
+
+	insights := AnalyzeContributors(contributors)
+
+	if insights.TopContributor == nil || insights.TopContributor.Login != "lead" {
+		t.Fatalf("TopContributor = %+v, want lead with 90 commits", insights.TopContributor)
+	}
+	if insights.ConcentrationRisk != "Critical" {
+		t.Errorf("ConcentrationRisk = %s, want Critical", insights.ConcentrationRisk)
+	}
+}
+
 func TestCommitDistribution(t *testing.T) {
 	contributors := []github.Contributor{
 		{Login: "top", Commits: 50},
