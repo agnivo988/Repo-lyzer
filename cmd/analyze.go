@@ -34,70 +34,9 @@ func RunAnalyze(owner, repo string) error {
 
 // validateRepoURL validates the repository URL format and provides clear error messages
 func validateRepoURL(repoArg string) (owner, repo string, err error) {
-	if repoArg == "" {
-		return "", "", fmt.Errorf("repository URL cannot be empty")
-	}
-
-	if strings.Contains(repoArg, " ") {
-		return "", "", fmt.Errorf("repository URL cannot contain spaces")
-	}
-
-	parts := strings.Split(repoArg, "/")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("repository must be in 'owner/repo' format (found %d parts separated by '/')", len(parts))
-	}
-
-	owner, repo = parts[0], parts[1]
-
-	if owner == "" {
-		return "", "", fmt.Errorf("owner name cannot be empty")
-	}
-
-	if repo == "" {
-		return "", "", fmt.Errorf("repository name cannot be empty")
-	}
-
-	// Basic validation for GitHub username/repo name patterns
-	if len(owner) > 39 {
-		return "", "", fmt.Errorf("owner name is too long (maximum 39 characters)")
-	}
-
-	if len(owner) < 1 {
-		return "", "", fmt.Errorf("owner name is too short (minimum 1 character)")
-	}
-
-	if strings.HasPrefix(owner, "-") || strings.HasSuffix(owner, "-") {
-		return "", "", fmt.Errorf("owner name cannot start or end with a hyphen")
-	}
-
-	if strings.Contains(owner, "--") {
-		return "", "", fmt.Errorf("owner name cannot contain consecutive hyphens")
-	}
-
-	// Check for valid characters (alphanumeric, hyphens)
-	for _, char := range owner {
-		if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '-') {
-			return "", "", fmt.Errorf("owner name contains invalid character '%c' (only alphanumeric characters and hyphens allowed)", char)
-		}
-	}
-
-	if len(repo) > 100 {
-		return "", "", fmt.Errorf("repository name is too long (maximum 100 characters)")
-	}
-
-	if len(repo) < 1 {
-		return "", "", fmt.Errorf("repository name is too short (minimum 1 character)")
-	}
-
-	// Repository names can contain more characters than usernames
-	for _, char := range repo {
-		if char == ' ' || char == '\t' || char == '\n' || char == '\r' {
-			return "", "", fmt.Errorf("repository name cannot contain whitespace")
-		}
-	}
-
-	return owner, repo, nil
+	return github.ParseGitHubURL(repoArg)
 }
+
 
 // runDryRun performs a dry run of the analysis, validating the repository URL
 // and displaying what metrics would be calculated without making API calls.
@@ -387,9 +326,34 @@ func runSummary(repoArg string) error {
 	repoInfo, err := client.GetRepo(owner, repo)
 	if err != nil {
 		overallProgress.Finish()
-		return fmt.Errorf("failed to get repository: %w", err)
+		// Check if it's a private repo error and no token is set
+		if strings.Contains(err.Error(), "repository not found") && !client.HasToken() {
+			fmt.Print("This appears to be a private repository. Please enter your GitHub access token: ")
+			scanner := bufio.NewScanner(os.Stdin)
+			if scanner.Scan() {
+				token := strings.TrimSpace(scanner.Text())
+				if token != "" {
+					client.SetToken(token)
+					// Retry fetching the repo with the token
+					overallProgress = progress.NewOverallProgress(5)
+					overallProgress.StartStep("🔍 Fetching repository information")
+					repoInfo, err = client.GetRepo(owner, repo)
+					overallProgress.CompleteStep("Repository information fetched")
+					if err != nil {
+						return fmt.Errorf("failed to access repository even with token: %w", err)
+					}
+				} else {
+					return fmt.Errorf("no token provided, cannot access private repository")
+				}
+			} else {
+				return fmt.Errorf("failed to read token input")
+			}
+		} else {
+			return fmt.Errorf("failed to get repository: %w", err)
+		}
+	} else {
+		overallProgress.CompleteStep("Repository information fetched")
 	}
-	overallProgress.CompleteStep("Repository information fetched")
 
 	// Fetch commits from the last 30 days
 	overallProgress.StartStep("📝 Analyzing recent commits (30d)")

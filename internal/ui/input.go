@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/agnivo988/Repo-lyzer/internal/github"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -25,24 +26,28 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
-			cleanInput := sanitizeRepoInput(m.input)
-			if cleanInput != "" {
-				m.input = cleanInput
-				m.err = nil
-				return m, func() tea.Msg { return AnalyzeRepoMsg{repoName: cleanInput} }
+			owner, repo, err := github.ParseGitHubURL(m.input)
+			if err != nil {
+				m.err = err
 			} else {
-				m.err = fmt.Errorf("please enter a valid repository (owner/repo or GitHub URL)")
+				m.input = owner + "/" + repo
+				m.err = nil
+				return m, func() tea.Msg { return AnalyzeRepoMsg{repoName: m.input} }
 			}
 		case tea.KeyBackspace:
 			if len(m.input) > 0 {
 				m.input = m.input[:len(m.input)-1]
+				m.err = nil
 			}
 		case tea.KeyRunes:
 			m.input += string(msg.Runes)
+			m.err = nil
 		case tea.KeyEsc:
+			m.err = nil
 			return m, func() tea.Msg { return BackToMenuMsg{} }
 		case tea.KeyCtrlU:
 			m.input = ""
+			m.err = nil
 		case tea.KeyCtrlW:
 			m.input = strings.TrimRight(m.input, " ")
 			if idx := strings.LastIndex(m.input, " "); idx >= 0 {
@@ -50,6 +55,7 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.input = ""
 			}
+			m.err = nil
 		}
 	}
 	return m, nil

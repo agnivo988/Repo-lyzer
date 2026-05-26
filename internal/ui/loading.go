@@ -76,9 +76,10 @@ func (m LoadingModel) View(width, height int) string {
 			statusView += prefix + stage.Name + "\n"
 		}
 
-		// Add elapsed time
+		// Add progress bar and elapsed time
+		bar := m.progress.GetProgressBar(30)
 		elapsed := m.progress.GetElapsedTime()
-		statusView += fmt.Sprintf("\n⏱️  %ds elapsed", int(elapsed.Seconds()))
+		statusView += fmt.Sprintf("\n%s\n\n⏱️  %ds elapsed", bar, int(elapsed.Seconds()))
 	}
 
 	statusView += "\n\n" + SubtleStyle.Render("Press ESC to cancel")

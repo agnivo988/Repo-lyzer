@@ -3,6 +3,8 @@ package ui
 import (
 	"fmt"
 
+	"github.com/agnivo988/Repo-lyzer/internal/cache"
+	"github.com/agnivo988/Repo-lyzer/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -11,6 +13,8 @@ type SettingsModel struct {
 	inTokenInput   bool
 	tokenInput     string
 	settingsOption string
+	cache          *cache.Cache
+	appConfig      *config.AppSettings
 }
 
 func NewSettingsModel() SettingsModel {
@@ -139,29 +143,62 @@ Keybindings:
 `, CurrentTheme.Name)
 	case "cache":
 		title = "💾 Cache Settings"
-		content = `
-Status: Enabled
-Auto-cache: On
-TTL: 24h
-Max Size: 100 MB
+		status := "Disabled"
+		autoCache := "Off"
+		ttlStr := "24h"
+		maxSize := "100 MB"
+		totalRepos := 0
+		validRepos := 0
+		expiredRepos := 0
+		cacheSize := 0.0
+
+		if m.cache != nil {
+			cfg := m.cache.GetConfig()
+			if cfg.Enabled {
+				status = "Enabled"
+			}
+			if cfg.AutoCache {
+				autoCache = "On"
+			}
+			ttlStr = cache.FormatTTL(cfg.TTL)
+			maxSize = fmt.Sprintf("%d MB", cfg.MaxSize)
+
+			stats := m.cache.GetStats()
+			totalRepos = stats.TotalRepos
+			validRepos = stats.ValidRepos
+			expiredRepos = stats.ExpiredRepos
+			cacheSize = stats.TotalSizeMB
+		}
+
+		content = fmt.Sprintf(`
+Status: %s
+Auto-cache: %s
+TTL: %s
+Max Size: %s
 
 Statistics:
-  • Total repos cached: 0
-  • Valid (not expired): 0
-  • Expired: 0
-  • Cache size: 0.0 MB
+  • Total repos cached: %d
+  • Valid (not expired): %d
+  • Expired: %d
+  • Cache size: %.2f MB
 
 Keybindings:
   • Press 'e' to toggle caching
   • Press 'a' to toggle auto-cache
   • Press 'c' to clear all cache
   • Press 'x' to clean expired entries
-`
+`, status, autoCache, ttlStr, maxSize, totalRepos, validRepos, expiredRepos, cacheSize)
 	case "export":
 		title = "📤 Export Options"
-		content = `
-Current export format: JSON
-Export directory: ~/Downloads/
+		formatStr := "JSON"
+		exportDir := "~/Downloads/"
+		if m.appConfig != nil {
+			formatStr = m.appConfig.DefaultExportFormat.DisplayName()
+			exportDir = m.appConfig.ExportDirectory
+		}
+		content = fmt.Sprintf(`
+Current export format: %s
+Export directory: %s
 
 Available formats:
   [1] JSON
@@ -172,7 +209,7 @@ Available formats:
 
 Keybindings:
   • Press 'f' to cycle through formats
-`
+`, formatStr, exportDir)
 	case "token":
 		title = "🔑 GitHub Token"
 
@@ -185,10 +222,14 @@ Enter GitHub Personal Access Token:
 Press Enter to save, ESC to cancel.
 `, m.tokenInput)
 		} else {
-			content = `
+			status := "❌ Not configured"
+			if m.appConfig != nil && m.appConfig.HasGitHubToken() {
+				status = fmt.Sprintf("✅ Configured (%s)", m.appConfig.GetMaskedToken())
+			}
+			content = fmt.Sprintf(`
 GitHub API Token Configuration:
 
-Status: ❌ Not configured
+Status: %s
 
 Benefits of using a token:
   • Higher API rate limits (5000 vs 60 requests/hour)
@@ -198,7 +239,7 @@ Benefits of using a token:
 Keybindings:
   • Press 'i' to input a new token
   • Press 'c' to clear saved token
-`
+`, status)
 		}
 	case "reset":
 		title = "🔄 Reset to Defaults"

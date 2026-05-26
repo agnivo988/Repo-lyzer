@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 
+	"github.com/agnivo988/Repo-lyzer/internal/github"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -37,11 +38,25 @@ func (m CompareInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			if m.step == 0 && m.repo1 != "" {
-				m.step = 1
-			} else if m.step == 1 && m.repo2 != "" {
-				return m, func() tea.Msg {
-					return CompareReposMsg{Repo1: m.repo1, Repo2: m.repo2}
+			if m.step == 0 {
+				owner, repo, err := github.ParseGitHubURL(m.repo1)
+				if err != nil {
+					m.err = err
+				} else {
+					m.repo1 = owner + "/" + repo
+					m.err = nil
+					m.step = 1
+				}
+			} else if m.step == 1 {
+				owner, repo, err := github.ParseGitHubURL(m.repo2)
+				if err != nil {
+					m.err = err
+				} else {
+					m.repo2 = owner + "/" + repo
+					m.err = nil
+					return m, func() tea.Msg {
+						return CompareReposMsg{Repo1: m.repo1, Repo2: m.repo2}
+					}
 				}
 			}
 		case "esc":
@@ -54,12 +69,14 @@ func (m CompareInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if m.step == 1 && len(m.repo2) > 0 {
 				m.repo2 = m.repo2[:len(m.repo2)-1]
 			}
+			m.err = nil
 		case "ctrl+u":
 			if m.step == 0 {
 				m.repo1 = ""
 			} else {
 				m.repo2 = ""
 			}
+			m.err = nil
 		default:
 			if len(msg.String()) == 1 {
 				if m.step == 0 {
@@ -67,6 +84,7 @@ func (m CompareInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				} else {
 					m.repo2 += msg.String()
 				}
+				m.err = nil
 			}
 		}
 	}

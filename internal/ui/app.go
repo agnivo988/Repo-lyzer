@@ -115,6 +115,10 @@ type MainModel struct {
 	progress        *ProgressTracker
 	cacheStatus     string
 	initialCmd      tea.Cmd
+
+	// Rate limiting / duplicate request prevention (#266)
+	analysisInProgress bool
+	lastAnalysisTime   time.Time
 }
 
 // NewMainModel creates a new MainModel with initialized sub-models
@@ -122,26 +126,31 @@ func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	token := ""
+	if config != nil {
+		token = config.GitHubToken
+	}
 	return MainModel{
-		state:          stateMenu,
-		menu:           NewMenuModel(),
-		input:          NewInputModel(),
-		loading:        NewLoadingModel(),
-		compareInput:   NewCompareInputModel(),
-		compareLoading: NewCompareLoadingModel(),
-		compareResult:  NewCompareResultModel(),
-		settings:       NewSettingsModel(),
-		help:           NewHelpModel(),
-		history:        NewHistoryModel(),
-		favorites:      NewFavoritesModel(),
-		cloneInput:     NewCloneInputModel(),
-		cloning:        NewCloningModel(),
-		notifications:  NewNotificationsModel(),
-		dashboard:      NewDashboardModel(),
-		tree:           NewTreeModel(nil),
-		cache:          cache,
-		appConfig:      config,
-		spinner:        s,
+		state:            stateMenu,
+		menu:             NewMenuModel(),
+		input:            NewInputModel(),
+		loading:          NewLoadingModel(),
+		compareInput:     NewCompareInputModel(),
+		compareLoading:   NewCompareLoadingModel(),
+		compareResult:    NewCompareResultModel(),
+		settings:         NewSettingsModel(),
+		help:             NewHelpModel(),
+		history:          NewHistoryModel(),
+		favorites:        NewFavoritesModel(),
+		cloneInput:       NewCloneInputModel(),
+		cloning:          NewCloningModel(),
+		notifications:    NewNotificationsModel(),
+		monitorDashboard: NewMonitorDashboardModel("", "", 5*time.Minute, token),
+		dashboard:        NewDashboardModel(),
+		tree:             NewTreeModel(nil),
+		cache:            cache,
+		appConfig:        config,
+		spinner:          s,
 	}
 }
 
@@ -157,15 +166,39 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
-		// Update sub-models with window size
 		m.menu.width = msg.Width
 		m.menu.height = msg.Height
+
+		// Propagate window size to sub-models
+		if d, _ := m.dashboard.Update(msg); d != nil {
+			m.dashboard = d.(DashboardModel)
+		}
+		m.help, _ = m.help.Update(msg)
+		if h, _ := m.history.Update(msg); h != nil {
+			m.history = h.(HistoryModel)
+		}
+		if f, _ := m.favorites.Update(msg); f != nil {
+			m.favorites = f.(FavoritesModel)
+		}
+		if c, _ := m.cloning.Update(msg); c != nil {
+			m.cloning = c.(CloningModel)
+		}
+		if ci, _ := m.cloneInput.Update(msg); ci != nil {
+			m.cloneInput = ci.(CloneInputModel)
+		}
+		if n, _ := m.notifications.Update(msg); n != nil {
+			m.notifications = n.(NotificationsModel)
+		}
+		if md, _ := m.monitorDashboard.Update(msg); md != nil {
+			m.monitorDashboard = md.(MonitorDashboardModel)
+		}
 
 	case BackToMenuMsg:
 		if m.analysisCancel != nil {
 			m.analysisCancel()
 			m.analysisCancel = nil
 		}
+		m.analysisInProgress = false
 		m.state = stateMenu
 		return m, nil
 
@@ -207,6 +240,21 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = stateMonitorDashboard
 			case 7: // Settings
 				m.state = stateSettings
+				switch m.menu.submenuCursor {
+				case 0:
+					m.settingsOption = "theme"
+				case 1:
+					m.settingsOption = "cache"
+				case 2:
+					m.settingsOption = "export"
+				case 3:
+					m.settingsOption = "token"
+				case 4:
+					m.settingsOption = "reset"
+				default:
+					m.settingsOption = ""
+				}
+				m.settings.settingsOption = m.settingsOption
 			case 8: // Help
 				m.state = stateHelp
 			case 9: // Exit
@@ -219,6 +267,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case stateInput:
 		newInput, cmd := m.input.Update(msg)
 		m.input = newInput.(InputModel)
+		if m.input.err == nil {
+			m.err = nil
+		}
 		if cmd != nil {
 			cmds = append(cmds, cmd)
 		}
@@ -226,18 +277,18 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Handle messages from input model
 		switch msg := msg.(type) {
 		case AnalyzeRepoMsg:
-			m.state = stateLoading
-			m.loading.SetRepoName(msg.repoName)
-			ctx, cancel := context.WithCancel(context.Background())
-			m.analysisCancel = cancel
-			cmds = append(cmds, m.analyzeRepo(ctx, msg.repoName), TickProgressCmd())
+			cmds = append(cmds, m.startAnalysis(msg.repoName))
 		case BackToMenuMsg:
 			m.state = stateMenu
+			m.err = nil
 		}
 
 	case stateCompareInput:
 		newCompareInput, cmd := m.compareInput.Update(msg)
 		m.compareInput = newCompareInput.(CompareInputModel)
+		if m.compareInput.err == nil {
+			m.err = nil
+		}
 		if cmd != nil {
 			cmds = append(cmds, cmd)
 		}
@@ -246,10 +297,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case CompareReposMsg:
 			m.state = stateCompareLoading
+			m.compareLoading.SetRepos(msg.Repo1, msg.Repo2)
 			cmds = append(cmds, m.compareRepos(msg.Repo1, msg.Repo2), TickProgressCmd())
 		case BackToMenuMsg:
 			m.state = stateMenu
+			m.err = nil
 		}
+
 
 	case stateCompareLoading:
 		var cmd tea.Cmd
@@ -323,12 +377,16 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if result, ok := msg.(AnalysisResult); ok {
+			if m.appConfig != nil {
+				m.dashboard.SetToken(m.appConfig.GitHubToken)
+			}
 			m.dashboard.SetData(result)
 			m.dashboard.SetCacheStatus("fresh")
 			m.state = stateDashboard
 			m.progress = nil
 			m.cacheStatus = "fresh"
 			m.analysisCancel = nil
+			m.analysisInProgress = false
 			// Save to history
 			history, _ := LoadHistory()
 			m.history.Entries = history.Entries
@@ -336,12 +394,16 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.history.Save()
 		}
 		if cachedResult, ok := msg.(CachedAnalysisResult); ok {
+			if m.appConfig != nil {
+				m.dashboard.SetToken(m.appConfig.GitHubToken)
+			}
 			m.dashboard.SetData(cachedResult.Result)
 			m.dashboard.SetCacheStatus("cached")
 			m.state = stateDashboard
 			m.progress = nil
 			m.cacheStatus = "cached"
 			m.analysisCancel = nil
+			m.analysisInProgress = false
 			// Save to history
 			history, _ := LoadHistory()
 			m.history.Entries = history.Entries
@@ -350,6 +412,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if err, ok := msg.(error); ok {
 			m.progress = nil
+			m.analysisInProgress = false
 			if errors.Is(err, context.Canceled) {
 				m.err = nil
 				m.state = stateMenu
@@ -385,11 +448,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.err = fmt.Errorf("Failed to save favorites: %v", err)
 					} else {
 						m.input.input = repoName
-						m.state = stateLoading
-						m.loading.SetRepoName(repoName)
-						ctx, cancel := context.WithCancel(context.Background())
-						m.analysisCancel = cancel
-						cmds = append(cmds, m.analyzeRepo(ctx, repoName), TickProgressCmd())
+						cmds = append(cmds, m.startAnalysis(repoName))
 					}
 				}
 			case "d":
@@ -430,11 +489,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if len(m.history.Entries) > 0 {
 					repoName := m.history.Entries[m.historyCursor].RepoName
 					m.input.input = repoName
-					m.state = stateLoading
-					m.loading.SetRepoName(repoName)
-					ctx, cancel := context.WithCancel(context.Background())
-					m.analysisCancel = cancel
-					cmds = append(cmds, m.analyzeRepo(ctx, repoName), TickProgressCmd())
+					cmds = append(cmds, m.startAnalysis(repoName))
 				}
 			case "d":
 				// Delete selected entry
@@ -657,11 +712,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if key.String() == "." {
 				if m.dashboard.data.Repo != nil {
 					m.input.input = m.dashboard.data.Repo.FullName
-					m.state = stateLoading
-					m.loading.SetRepoName(m.input.input)
-					ctx, cancel := context.WithCancel(context.Background())
-					m.analysisCancel = cancel
-					cmds = append(cmds, m.analyzeRepo(ctx, m.input.input), TickProgressCmd())
+					cmds = append(cmds, m.startAnalysis(m.input.input))
 					return m, tea.Batch(cmds...)
 				}
 			}
@@ -722,31 +773,83 @@ func (m MainModel) View() string {
 	case stateMenu:
 		return m.menu.View()
 	case stateInput:
-		return m.input.View()
+		m.input.err = m.err
+		box := m.input.View()
+		if m.windowWidth == 0 {
+			return box
+		}
+		return lipgloss.Place(
+			m.windowWidth,
+			m.windowHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			box,
+		)
 	case stateLoading:
 		return m.loading.View(m.windowWidth, m.windowHeight)
 	case stateCompareInput:
-		return m.compareInput.View()
+		m.compareInput.err = m.err
+		box := m.compareInput.View()
+		if m.windowWidth == 0 {
+			return box
+		}
+		return lipgloss.Place(
+			m.windowWidth,
+			m.windowHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			box,
+		)
 	case stateCompareLoading:
 		return m.compareLoading.View(m.windowWidth, m.windowHeight)
 	case stateCompareResult:
 		return m.compareResult.View(m.windowWidth, m.windowHeight)
 	case stateSettings:
-		return m.settings.View()
+		m.settings.settingsOption = m.settingsOption
+		m.settings.inTokenInput = m.inTokenInput
+		m.settings.tokenInput = m.tokenInput
+		m.settings.appConfig = m.appConfig
+		m.settings.cache = m.cache
+		box := m.settings.View()
+		if m.err != nil {
+			statusStr := m.err.Error()
+			if strings.HasPrefix(statusStr, "✓") || strings.HasPrefix(statusStr, "Theme") || strings.HasPrefix(statusStr, "Cache") || strings.HasPrefix(statusStr, "GitHub token") || strings.HasPrefix(statusStr, "Removed") {
+				box += "\n\n" + SuccessStyle.Render(statusStr)
+			} else {
+				box += "\n\n" + ErrorStyle.Render(statusStr)
+			}
+		}
+		if m.windowWidth == 0 {
+			return box
+		}
+		return lipgloss.Place(
+			m.windowWidth,
+			m.windowHeight,
+			lipgloss.Center,
+			lipgloss.Center,
+			box,
+		)
 	case stateHelp:
 		return m.help.View(m.windowWidth, m.windowHeight)
 	case stateHistory:
-		return m.history.View()
+		return m.history.ViewWithSize(m.windowWidth, m.windowHeight)
 	case stateFavorites:
 		return m.favorites.View(m.windowWidth, m.windowHeight)
 	case stateCloneInput:
+		if errVal, ok := m.err.(error); ok {
+			m.cloneInput.err = errVal
+		} else if m.err != nil {
+			m.cloneInput.err = fmt.Errorf("%v", m.err)
+		} else {
+			m.cloneInput.err = nil
+		}
 		return m.cloneInput.View(m.windowWidth, m.windowHeight)
 	case stateCloning:
 		return m.cloning.View(m.windowWidth, m.windowHeight)
 	case stateNotifications:
-		return m.notifications.View()
+		return m.notifications.ViewWithSize(m.windowWidth, m.windowHeight)
 	case stateMonitorDashboard:
-		return m.monitorDashboard.View()
+		return m.monitorDashboard.ViewWithSize(m.windowWidth, m.windowHeight)
 	case stateDashboard:
 		return m.dashboard.View()
 	case stateTree:
@@ -791,10 +894,11 @@ type cloneResult struct {
 // cloneRepo clones a repository to the Desktop folder
 func (m MainModel) cloneRepo(repoName string) tea.Cmd {
 	return func() tea.Msg {
-		parts := strings.Split(repoName, "/")
-		if len(parts) != 2 {
-			return cloneResult{err: fmt.Errorf("invalid repository URL: must be in owner/repo format or a valid GitHub URL")}
+		owner, repo, err := github.ParseGitHubURL(repoName)
+		if err != nil {
+			return cloneResult{err: fmt.Errorf("invalid repository URL: %w", err)}
 		}
+		parts := []string{owner, repo}
 
 		// Get Desktop path
 		home, err := os.UserHomeDir()
@@ -824,16 +928,53 @@ func (m MainModel) cloneRepo(repoName string) tea.Cmd {
 	}
 }
 
-func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
+// startAnalysis initializes the progress tracker and switches state to loading.
+// It prevents duplicate requests and debounces rapid submissions (#266).
+func (m *MainModel) startAnalysis(repoName string) tea.Cmd {
+	// Prevent duplicate analysis while one is already in progress
+	if m.analysisInProgress {
+		return nil
+	}
+
+	// Debounce: reject if less than 2 seconds since last analysis started
+	if !m.lastAnalysisTime.IsZero() && time.Since(m.lastAnalysisTime) < 2*time.Second {
+		return nil
+	}
+
+	// Cancel any previous in-flight analysis
+	if m.analysisCancel != nil {
+		m.analysisCancel()
+	}
+
+	m.analysisInProgress = true
+	m.lastAnalysisTime = time.Now()
+	m.state = stateLoading
+	m.loading.SetRepoName(repoName)
+	ctx, cancel := context.WithCancel(context.Background())
+	m.analysisCancel = cancel
+
+	tracker := NewProgressTracker()
+	m.progress = tracker
+	m.loading.SetProgress(tracker)
+
+	return tea.Batch(m.analyzeRepo(ctx, repoName, tracker), TickProgressCmd())
+}
+
+func (m MainModel) analyzeRepo(ctx context.Context, repoName string, tracker *ProgressTracker) tea.Cmd {
 	return func() tea.Msg {
+		if tracker == nil {
+			tracker = NewProgressTracker()
+		}
+
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		parts := strings.Split(repoName, "/")
-		if len(parts) != 2 {
-			return fmt.Errorf("invalid repository URL: must be in owner/repo format or a valid GitHub URL")
+		owner, repoNameParsed, err := github.ParseGitHubURL(repoName)
+		if err != nil {
+			return fmt.Errorf("invalid repository URL: %w", err)
 		}
+		parts := []string{owner, repoNameParsed}
 
 		// Check cache first
 		if m.cache != nil {
@@ -851,10 +992,11 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			}
 		}
 
-		tracker := NewProgressTracker()
-
 		// Stage 1: Fetch repository
 		client := github.NewClient()
+		if m.appConfig != nil && m.appConfig.GitHubToken != "" {
+			client.SetToken(m.appConfig.GitHubToken)
+		}
 		client.SetContext(ctx)
 		repo, err := client.GetRepo(parts[0], parts[1])
 		if err != nil {
@@ -913,14 +1055,6 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 						changedFiles = append(changedFiles, path)
 					}
 				}
-
-				fmt.Printf("🔄 Incremental analysis enabled\n")
-				fmt.Printf("📂 Changed files detected: %d\n", len(changedFiles))
-
-				// No changes detected
-				if len(changedFiles) == 0 {
-					fmt.Println("✅ No repository changes detected. Using cached analysis.")
-				}
 			}
 		}
 
@@ -930,6 +1064,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		score := analyzer.CalculateHealth(repo, commits)
 		busFactor, busRisk := analyzer.BusFactor(contributors)
 		maturityScore, maturityLevel := analyzer.RepoMaturityScore(repo, len(commits), len(contributors), false)
+
+		tracker.NextStage()
 
 		// Stage 6: Analyze dependencies and contributor insights
 		deps, depsErr := analyzer.AnalyzeDependencies(client, parts[0], parts[1], repo.DefaultBranch, fileTree)
@@ -949,9 +1085,6 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		tracker.NextStage()
-
-		// Mark complete
 		tracker.NextStage()
 		commitsLast90Days := 0
 		cutoff := time.Now().AddDate(0, 0, -90)
@@ -992,6 +1125,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			hotspots,
 		)
 
+		tracker.NextStage()
+
 		// Fetch issues and PRs
 		issues, issuesErr := client.GetIssues(parts[0], parts[1], "open")
 		if issuesErr != nil {
@@ -1014,20 +1149,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			contributors,
 		)
 
-		// Fetch README content and calculate contribution score
-		hasContributing := contribution.CheckContributingFile(fileTree)
-		readmeContent := ""
-		readmePath := contribution.FindReadmePath(fileTree)
-		if readmePath != "" {
-			readmeBase64, err := client.GetFileContent(parts[0], parts[1], readmePath)
-			if err == nil {
-				decoded, err := base64.StdEncoding.DecodeString(readmeBase64)
-				if err == nil {
-					readmeContent = string(decoded)
-				}
-			}
-		}
-		contribScore := contribution.Calculate(hasContributing, readmeContent, issues, commits, contributors)
+		tracker.NextStage()
 
 		result := AnalysisResult{
 			Repo:                repo,
@@ -1066,6 +1188,9 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 
 func (m MainModel) checkOwnership() bool {
 	client := github.NewClient()
+	if m.appConfig != nil && m.appConfig.GitHubToken != "" {
+		client.SetToken(m.appConfig.GitHubToken)
+	}
 	user, err := client.GetUser()
 	if err != nil {
 		return false // If we can't get user, assume not owner
@@ -1217,17 +1342,21 @@ func (m MainModel) compareResultView() string {
 
 func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 	return func() tea.Msg {
-		parts1 := strings.Split(repo1Name, "/")
-		parts2 := strings.Split(repo2Name, "/")
-
-		if len(parts1) != 2 {
-			return fmt.Errorf("invalid repository URL: first repository must be in owner/repo format or a valid GitHub URL")
+		owner1, repo1NameParsed, err := github.ParseGitHubURL(repo1Name)
+		if err != nil {
+			return fmt.Errorf("invalid first repository URL: %w", err)
 		}
-		if len(parts2) != 2 {
-			return fmt.Errorf("invalid repository URL: second repository must be in owner/repo format or a valid GitHub URL")
+		owner2, repo2NameParsed, err := github.ParseGitHubURL(repo2Name)
+		if err != nil {
+			return fmt.Errorf("invalid second repository URL: %w", err)
 		}
+		parts1 := []string{owner1, repo1NameParsed}
+		parts2 := []string{owner2, repo2NameParsed}
 
 		client := github.NewClient()
+		if m.appConfig != nil && m.appConfig.GitHubToken != "" {
+			client.SetToken(m.appConfig.GitHubToken)
+		}
 
 		// Analyze first repo
 		repo1, err := client.GetRepo(parts1[0], parts1[1])
@@ -1304,6 +1433,10 @@ func (m *MainModel) SetStateNotifications() {
 // SetStateMonitorDashboard sets the initial state to monitor dashboard
 func (m *MainModel) SetStateMonitorDashboard(owner, repo string, interval time.Duration) {
 	m.state = stateMonitorDashboard
-	m.monitorDashboard = NewMonitorDashboardModel(owner, repo, interval)
+	token := ""
+	if m.appConfig != nil {
+		token = m.appConfig.GitHubToken
+	}
+	m.monitorDashboard = NewMonitorDashboardModel(owner, repo, interval, token)
 	m.initialCmd = m.monitorDashboard.Init()
 }

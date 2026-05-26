@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/agnivo988/Repo-lyzer/internal/github"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -23,12 +24,12 @@ func (m CloneInputModel) Update(msg tea.Msg) (CloneInputModel, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter:
 			if m.input != "" {
-				// Validate input format (owner/repo)
-				if strings.Contains(m.input, "/") && len(strings.Split(m.input, "/")) == 2 {
-					m.err = nil
-					return m, func() tea.Msg { return CloneRepoMsg{repoName: m.input} }
+				owner, repo, err := github.ParseGitHubURL(m.input)
+				if err != nil {
+					m.err = err
 				} else {
-					m.err = fmt.Errorf("invalid format: use owner/repo")
+					m.err = nil
+					return m, func() tea.Msg { return CloneRepoMsg{repoName: owner + "/" + repo} }
 				}
 			}
 		case tea.KeyBackspace:

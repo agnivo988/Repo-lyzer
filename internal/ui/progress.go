@@ -1,8 +1,10 @@
 package ui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
+	"sync"
 	"time"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // ProgressStage represents a step in the analysis process
@@ -14,15 +16,10 @@ type ProgressStage struct {
 
 // ProgressTracker manages multi-step analysis progress
 type ProgressTracker struct {
+	mu        sync.Mutex
 	stages    []ProgressStage
 	current   int
 	startTime time.Time
-}
-
-// ProgressUpdateMsg is sent to update progress
-type ProgressUpdateMsg struct {
-	StageIndex int
-	IsComplete bool
 }
 
 var SatelliteFrames = []string{
@@ -80,16 +77,14 @@ var SatelliteFrames = []string{
 func NewProgressTracker() *ProgressTracker {
 	return &ProgressTracker{
 		stages: []ProgressStage{
-			{Name: "🔗 Fetching repository data", IsComplete: false, IsActive: true},
-			{Name: "🔗 Connecting to GitHub API", IsComplete: false, IsActive: false},
-			{Name: "📝 Analyzing commits", IsComplete: false, IsActive: false},
-			{Name: "📝 Processing commit history", IsComplete: false, IsActive: false},
-			{Name: "👥 Analyzing contributors", IsComplete: false, IsActive: false},
-			{Name: "👥 Calculating contributor metrics", IsComplete: false, IsActive: false},
-			{Name: "🗣️  Analyzing languages", IsComplete: false, IsActive: false},
-			{Name: "🗣️  Processing language statistics", IsComplete: false, IsActive: false},
-			{Name: "📊 Computing metrics", IsComplete: false, IsActive: false},
-			{Name: "📊 Generating final report", IsComplete: false, IsActive: false},
+			{Name: "🔗 Fetching repository metadata", IsComplete: false, IsActive: true},
+			{Name: "📝 Fetching commit history", IsComplete: false, IsActive: false},
+			{Name: "👥 Fetching contributors & activity", IsComplete: false, IsActive: false},
+			{Name: "📂 Parsing directory structure & languages", IsComplete: false, IsActive: false},
+			{Name: "📊 Calculating repository health metrics", IsComplete: false, IsActive: false},
+			{Name: "🔍 Scanning dependencies & security", IsComplete: false, IsActive: false},
+			{Name: "📈 Identifying hotspots & anomalies", IsComplete: false, IsActive: false},
+			{Name: "📋 Gathering issues & pull requests", IsComplete: false, IsActive: false},
 			{Name: "✅ Analysis complete", IsComplete: false, IsActive: false},
 		},
 		current:   0,
@@ -99,6 +94,8 @@ func NewProgressTracker() *ProgressTracker {
 
 // NextStage moves to the next analysis stage
 func (pt *ProgressTracker) NextStage() {
+	pt.mu.Lock()
+	defer pt.mu.Unlock()
 	if pt.current < len(pt.stages) {
 		pt.stages[pt.current].IsComplete = true
 		pt.stages[pt.current].IsActive = false
@@ -111,6 +108,8 @@ func (pt *ProgressTracker) NextStage() {
 
 // GetCurrentStage returns the current stage information
 func (pt *ProgressTracker) GetCurrentStage() ProgressStage {
+	pt.mu.Lock()
+	defer pt.mu.Unlock()
 	if pt.current < len(pt.stages) {
 		return pt.stages[pt.current]
 	}
@@ -119,11 +118,17 @@ func (pt *ProgressTracker) GetCurrentStage() ProgressStage {
 
 // GetAllStages returns all stages with their status
 func (pt *ProgressTracker) GetAllStages() []ProgressStage {
-	return pt.stages
+	pt.mu.Lock()
+	defer pt.mu.Unlock()
+	stagesCopy := make([]ProgressStage, len(pt.stages))
+	copy(stagesCopy, pt.stages)
+	return stagesCopy
 }
 
 // GetProgress returns completed stages / total stages
 func (pt *ProgressTracker) GetProgress() (completed int, total int) {
+	pt.mu.Lock()
+	defer pt.mu.Unlock()
 	total = len(pt.stages)
 	for _, stage := range pt.stages {
 		if stage.IsComplete {

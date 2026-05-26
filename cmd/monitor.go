@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/cache"
 	"github.com/agnivo988/Repo-lyzer/internal/config"
+	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/agnivo988/Repo-lyzer/internal/monitor"
 	"github.com/agnivo988/Repo-lyzer/internal/ui"
 	tea "github.com/charmbracelet/bubbletea"
@@ -74,6 +78,36 @@ Examples:
 		}
 
 		// Create monitor instance (CLI mode)
+		// Check repository accessibility and prompt for token if private
+		client := github.NewClient()
+		_, err = client.GetRepo(owner, repo)
+		if err != nil {
+			// Check if it's a private repo error and no token is set
+			if strings.Contains(err.Error(), "repository not found") && !client.HasToken() {
+				fmt.Print("This appears to be a private repository. Please enter your GitHub access token: ")
+				scanner := bufio.NewScanner(os.Stdin)
+				if scanner.Scan() {
+					token := strings.TrimSpace(scanner.Text())
+					if token != "" {
+						client.SetToken(token)
+						// Retry fetching the repo with the token
+						_, err = client.GetRepo(owner, repo)
+						if err != nil {
+							return fmt.Errorf("failed to access repository even with token: %w", err)
+						}
+						// If successful, set env variable for the monitor to inherit
+						os.Setenv("GITHUB_TOKEN", token)
+					} else {
+						return fmt.Errorf("no token provided, cannot access private repository")
+					}
+				} else {
+					return fmt.Errorf("failed to read token input")
+				}
+			} else {
+				return fmt.Errorf("failed to access repository: %w", err)
+			}
+		}
+
 		mon, err := monitor.NewMonitor(owner, repo, interval)
 		if err != nil {
 			return fmt.Errorf("failed to create monitor: %w", err)

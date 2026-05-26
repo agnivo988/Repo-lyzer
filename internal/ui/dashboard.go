@@ -41,6 +41,7 @@ type DashboardModel struct {
 	currentView dashboardView
 	showHelp    bool
 	cacheStatus string // "fresh", "cached", or ""
+	token       string
 }
 
 func NewDashboardModel() DashboardModel {
@@ -57,6 +58,10 @@ func (m *DashboardModel) SetData(data AnalysisResult) {
 
 func (m *DashboardModel) SetCacheStatus(status string) {
 	m.cacheStatus = status
+}
+
+func (m *DashboardModel) SetToken(token string) {
+	m.token = token
 }
 
 type exportMsg struct {
@@ -778,6 +783,9 @@ func (m DashboardModel) apiStatusView() string {
 	header := TitleStyle.Render(" API Status ")
 
 	client := github.NewClient()
+	if m.token != "" {
+		client.SetToken(m.token)
+	}
 	rateLimit, err := client.GetRateLimit()
 
 	var rateLimitInfo string

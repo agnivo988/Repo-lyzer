@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -56,11 +57,13 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		// Parse repo names
-		r1 := strings.Split(args[0], "/")
-		r2 := strings.Split(args[1], "/")
-
-		if len(r1) != 2 || len(r2) != 2 {
-			return fmt.Errorf("repositories must be in owner/repo format")
+		owner1, repo1Name, err := validateRepoURL(args[0])
+		if err != nil {
+			return fmt.Errorf("invalid first repository URL: %w", err)
+		}
+		owner2, repo2Name, err := validateRepoURL(args[1])
+		if err != nil {
+			return fmt.Errorf("invalid second repository URL: %w", err)
 		}
 
 		client := github.NewClient()
@@ -69,52 +72,94 @@ Examples:
 		spinner := progress.NewSpinner()
 
 		// Fetch first repository
-		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", r1[0], r1[1]))
-		repo1, err := client.GetRepo(r1[0], r1[1])
+		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", owner1, repo1Name))
+		repo1, err := client.GetRepo(owner1, repo1Name)
 		if err != nil {
 			spinner.Stop()
-			return err
+			if strings.Contains(err.Error(), "repository not found") && !client.HasToken() {
+				fmt.Printf("The first repository %s/%s appears to be private. Please enter your GitHub access token: ", owner1, repo1Name)
+				scanner := bufio.NewScanner(os.Stdin)
+				if scanner.Scan() {
+					token := strings.TrimSpace(scanner.Text())
+					if token != "" {
+						client.SetToken(token)
+						spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", owner1, repo1Name))
+						repo1, err = client.GetRepo(owner1, repo1Name)
+						if err != nil {
+							spinner.Stop()
+							return fmt.Errorf("failed to access first repository even with token: %w", err)
+						}
+					} else {
+						return fmt.Errorf("no token provided, cannot access private repository")
+					}
+				} else {
+					return fmt.Errorf("failed to read token input")
+				}
+			} else {
+				return err
+			}
 		}
 
-		_, _ = client.GetLanguages(r1[0], r1[1])
-		commits1, _ := client.GetCommits(r1[0], r1[1], 14)
-		contributors1, err := client.GetContributorsWithAvatars(r1[0], r1[1], 15)
+		_, _ = client.GetLanguages(owner1, repo1Name)
+		commits1, _ := client.GetCommits(owner1, repo1Name, 14)
+		contributors1, err := client.GetContributorsWithAvatars(owner1, repo1Name, 15)
 		if err != nil {
 			spinner.Stop()
-			fmt.Printf("Error fetching contributors for %s/%s: %v\n", r1[0], r1[1], err)
+			fmt.Printf("Error fetching contributors for %s/%s: %v\n", owner1, repo1Name, err)
 			return err
 		}
-		_, _ = client.GetFileTree(r1[0], r1[1], repo1.DefaultBranch)
+		_, _ = client.GetFileTree(owner1, repo1Name, repo1.DefaultBranch)
 		bus1, risk1 := analyzer.BusFactor(contributors1)
 
 		maturityScore1, maturityLevel1 :=
 			analyzer.RepoMaturityScore(repo1, len(commits1), len(contributors1), false)
 
-		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", r1[0], r1[1]))
+		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", owner1, repo1Name))
 
 		// ---------- Fetch Repo 2 ----------
-		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", r2[0], r2[1]))
-		repo2, err := client.GetRepo(r2[0], r2[1])
+		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", owner2, repo2Name))
+		repo2, err := client.GetRepo(owner2, repo2Name)
 		if err != nil {
 			spinner.Stop()
-			return err
+			if strings.Contains(err.Error(), "repository not found") && !client.HasToken() {
+				fmt.Printf("The second repository %s/%s appears to be private. Please enter your GitHub access token: ", owner2, repo2Name)
+				scanner := bufio.NewScanner(os.Stdin)
+				if scanner.Scan() {
+					token := strings.TrimSpace(scanner.Text())
+					if token != "" {
+						client.SetToken(token)
+						spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", owner2, repo2Name))
+						repo2, err = client.GetRepo(owner2, repo2Name)
+						if err != nil {
+							spinner.Stop()
+							return fmt.Errorf("failed to access second repository even with token: %w", err)
+						}
+					} else {
+						return fmt.Errorf("no token provided, cannot access private repository")
+					}
+				} else {
+					return fmt.Errorf("failed to read token input")
+				}
+			} else {
+				return err
+			}
 		}
 
-		_, _ = client.GetLanguages(r2[0], r2[1])
-		commits2, _ := client.GetCommits(r2[0], r2[1], 14)
-		contributors2, err := client.GetContributorsWithAvatars(r2[0], r2[1], 15)
+		_, _ = client.GetLanguages(owner2, repo2Name)
+		commits2, _ := client.GetCommits(owner2, repo2Name, 14)
+		contributors2, err := client.GetContributorsWithAvatars(owner2, repo2Name, 15)
 		if err != nil {
 			spinner.Stop()
-			fmt.Printf("Error fetching contributors for %s/%s: %v\n", r2[0], r2[1], err)
+			fmt.Printf("Error fetching contributors for %s/%s: %v\n", owner2, repo2Name, err)
 			return err
 		}
-		_, _ = client.GetFileTree(r2[0], r2[1], repo2.DefaultBranch)
+		_, _ = client.GetFileTree(owner2, repo2Name, repo2.DefaultBranch)
 		bus2, risk2 := analyzer.BusFactor(contributors2)
 
 		maturityScore2, maturityLevel2 :=
 			analyzer.RepoMaturityScore(repo2, len(commits2), len(contributors2), false)
 
-		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", r2[0], r2[1]))
+		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", owner2, repo2Name))
 
 		// ---------- Output Table ----------
 		fmt.Println("\n📊 Repository Comparison")

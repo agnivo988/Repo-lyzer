@@ -330,3 +330,10 @@ func (m *Monitor) saveState() {
 		log.Printf("Failed to persist monitoring state for %s: %v", key, err)
 	}
 }
+
+// SetToken sets the GitHub token on the internal client
+func (m *Monitor) SetToken(token string) {
+	if m.client != nil {
+		m.client.SetToken(token)
+	}
+}

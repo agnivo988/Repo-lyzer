@@ -25,10 +25,11 @@ type MonitorDashboardModel struct {
 	scrollOffset  int
 	autoScroll    bool
 	monitorRunID  int
+	token         string
 }
 
 // NewMonitorDashboardModel creates a new monitor dashboard model
-func NewMonitorDashboardModel(owner, repo string, interval time.Duration) MonitorDashboardModel {
+func NewMonitorDashboardModel(owner, repo string, interval time.Duration, token string) MonitorDashboardModel {
 	return MonitorDashboardModel{
 		owner:         owner,
 		repo:          repo,
@@ -37,6 +38,7 @@ func NewMonitorDashboardModel(owner, repo string, interval time.Duration) Monito
 		notifications: []monitor.Notification{},
 		autoScroll:    true,
 		monitorRunID:  1,
+		token:         token,
 	}
 }
 
@@ -69,6 +71,9 @@ func (m MonitorDashboardModel) startMonitoring(runID int) tea.Cmd {
 		mon, err := monitor.NewMonitor(m.owner, m.repo, m.interval)
 		if err != nil {
 			return MonitorErrorMsg{err: err}
+		}
+		if m.token != "" {
+			mon.SetToken(m.token)
 		}
 
 		return monitorStartedMsg{
