@@ -977,12 +977,14 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			return err
 		}
 
-		// Generate quality dashboard
+		// Recompute detailed health using PRs and issues, then generate quality dashboard
+		detailedScore := analyzer.CalculateHealthDetailed(repo, commits, contributors, prs, issues)
+
 		qualityDashboard := analyzer.GenerateQualityDashboard(
 			repo,
 			commits,
 			contributors,
-			score,
+			detailedScore,
 			busFactor,
 			maturityLevel,
 			maturityScore,

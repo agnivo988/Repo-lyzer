@@ -298,6 +298,14 @@ var analyzeCmd = &cobra.Command{
 			)
 		overallProgress.CompleteStep("Maturity score calculated")
 
+		// Fetch pull requests (limited to recent) to improve health computation
+		overallProgress.StartStep("🔀 Fetching recent pull requests")
+		prs, _ := client.GetPullRequestsWithLimit(owner, repo, "all", 200)
+		overallProgress.CompleteStep(fmt.Sprintf("Pull requests fetched (%d)", len(prs)))
+
+		// Recompute a detailed repository health score using contributors/prs/issues
+		detailedScore := analyzer.CalculateHealthDetailed(repoInfo, commits, contributors, prs, issues)
+
 		// Track analysis duration
 		duration := time.Since(startTime)
 
@@ -354,7 +362,9 @@ var analyzeCmd = &cobra.Command{
 		output.PrintRepo(repoInfo)
 		output.PrintLanguages(langs)
 		output.PrintCommitActivity(activity, 14)
-		output.PrintHealth(score)
+		// show the improved detailed score when available
+		output.PrintHealth(detailedScore)
+		output.PrintContributorInsights(contributors)
 		if contribute {
 			output.PrintContributionScore(contribScore)
 		}
