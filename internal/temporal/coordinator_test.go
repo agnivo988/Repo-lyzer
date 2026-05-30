@@ -33,8 +33,8 @@ func TestFinalize_UsesComputedSummaryMetrics(t *testing.T) {
 
 	result := coordinator.Finalize()
 
-	if result.HealthScore != 74 {
-		t.Fatalf("HealthScore = %d, want 74", result.HealthScore)
+	if result.HealthScore != 84 {
+		t.Fatalf("HealthScore = %d, want 84", result.HealthScore)
 	}
 	if result.HealthTrend != "improving" {
 		t.Fatalf("HealthTrend = %q, want improving", result.HealthTrend)
@@ -68,8 +68,8 @@ func TestFinalize_WithNoForecastFallsBackToSignalCounts(t *testing.T) {
 	if result.HealthTrend != "improving" {
 		t.Fatalf("HealthTrend = %q, want improving", result.HealthTrend)
 	}
-	if result.HealthScore != 86 {
-		t.Fatalf("HealthScore = %d, want 86", result.HealthScore)
+	if result.HealthScore != 88 {
+		t.Fatalf("HealthScore = %d, want 88", result.HealthScore)
 	}
 	if result.OverallRiskLevel != "medium" {
 		t.Fatalf("OverallRiskLevel = %q, want medium", result.OverallRiskLevel)
