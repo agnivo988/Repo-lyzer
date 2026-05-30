@@ -19,6 +19,7 @@ type FileEditModel struct {
 	filePath  string
 	repoOwner string
 	repoName  string
+	branch    string
 	isOwner   bool
 	width     int
 	height    int
@@ -175,7 +176,7 @@ func getDesktopPath() string {
 // openInBrowser opens the file on GitHub in the default browser
 func (m FileEditModel) openInBrowser() tea.Cmd {
 	return func() tea.Msg {
-		githubURL, err := buildBlobURL("github.com", m.repoOwner, m.repoName, m.filePath)
+		githubURL, err := m.buildBlobURL("github.com")
 		if err != nil {
 			return openResultMsg{err}
 		}
@@ -189,7 +190,7 @@ func (m FileEditModel) openInBrowser() tea.Cmd {
 func (m FileEditModel) openInVSCode() tea.Cmd {
 	return func() tea.Msg {
 		// Use vscode.dev to open the file in browser-based VS Code
-		vscodeURL, err := buildVSCodeBlobURL(m.repoOwner, m.repoName, m.filePath)
+		vscodeURL, err := m.buildVSCodeBlobURL()
 		if err != nil {
 			return openResultMsg{err}
 		}
@@ -200,38 +201,48 @@ func (m FileEditModel) openInVSCode() tea.Cmd {
 }
 
 // buildBlobURL creates a safe GitHub blob URL for a repository file.
-func buildBlobURL(host, owner, repo, filePath string) (string, error) {
-	owner = strings.TrimSpace(owner)
-	repo = strings.TrimSpace(repo)
+func (m FileEditModel) buildBlobURL(host string) (string, error) {
+	owner := strings.TrimSpace(m.repoOwner)
+	repo := strings.TrimSpace(m.repoName)
 	if owner == "" || repo == "" {
 		return "", fmt.Errorf("invalid repository reference")
 	}
 
-	safePath, err := sanitizeRepoPath(filePath)
+	safePath, err := sanitizeRepoPath(m.filePath)
 	if err != nil {
 		return "", err
 	}
 
+	branch := m.branch
+	if branch == "" {
+		branch = "main"
+	}
+
 	base := &url.URL{Scheme: "https", Host: host}
-	base.Path = path.Join(owner, repo, "blob", "main", safePath)
+	base.Path = path.Join(owner, repo, "blob", branch, safePath)
 	return base.String(), nil
 }
 
 // buildVSCodeBlobURL creates a safe vscode.dev blob URL for a repository file.
-func buildVSCodeBlobURL(owner, repo, filePath string) (string, error) {
-	owner = strings.TrimSpace(owner)
-	repo = strings.TrimSpace(repo)
+func (m FileEditModel) buildVSCodeBlobURL() (string, error) {
+	owner := strings.TrimSpace(m.repoOwner)
+	repo := strings.TrimSpace(m.repoName)
 	if owner == "" || repo == "" {
 		return "", fmt.Errorf("invalid repository reference")
 	}
 
-	safePath, err := sanitizeRepoPath(filePath)
+	safePath, err := sanitizeRepoPath(m.filePath)
 	if err != nil {
 		return "", err
 	}
 
+	branch := m.branch
+	if branch == "" {
+		branch = "main"
+	}
+
 	base := &url.URL{Scheme: "https", Host: "vscode.dev"}
-	base.Path = path.Join("github", owner, repo, "blob", "main", safePath)
+	base.Path = path.Join("github", owner, repo, "blob", branch, safePath)
 	return base.String(), nil
 }
 

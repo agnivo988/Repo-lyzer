@@ -8,7 +8,8 @@ import (
 func TestBuildBlobURL_EscapesUntrustedPathSegments(t *testing.T) {
 	t.Parallel()
 
-	got, err := buildBlobURL("github.com", "owner", "repo", "/dir/a&b?.go")
+	m := FileEditModel{repoOwner: "owner", repoName: "repo", filePath: "/dir/a&b?.go", branch: "main"}
+	got, err := m.buildBlobURL("github.com")
 	if err != nil {
 		t.Fatalf("buildBlobURL returned error: %v", err)
 	}
@@ -22,7 +23,8 @@ func TestBuildBlobURL_EscapesUntrustedPathSegments(t *testing.T) {
 func TestBuildVSCodeBlobURL_EscapesPathAndUsesVSCodeHost(t *testing.T) {
 	t.Parallel()
 
-	got, err := buildVSCodeBlobURL("owner", "repo", "/folder/name with spaces.ts")
+	m := FileEditModel{repoOwner: "owner", repoName: "repo", filePath: "/folder/name with spaces.ts", branch: "main"}
+	got, err := m.buildVSCodeBlobURL()
 	if err != nil {
 		t.Fatalf("buildVSCodeBlobURL returned error: %v", err)
 	}
@@ -53,7 +55,8 @@ func TestBuildBlobURL_RejectsInvalidInputs(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, err := buildBlobURL(tt.host, tt.owner, tt.repo, tt.filePath)
+			m := FileEditModel{repoOwner: tt.owner, repoName: tt.repo, filePath: tt.filePath, branch: "main"}
+			_, err := m.buildBlobURL(tt.host)
 			if err == nil {
 				t.Fatalf("expected error for case %q", tt.name)
 			}

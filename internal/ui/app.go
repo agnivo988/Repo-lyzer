@@ -762,6 +762,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					repoName = m.dashboard.data.Repo.FullName
 				}
 				m.fileEdit = NewFileEditModel(m.tree.SelectedPath, repoName)
+				if m.dashboard.data.Repo != nil {
+					m.fileEdit.branch = m.dashboard.data.Repo.DefaultBranch
+				}
 
 				// Check ownership
 				isOwner := m.checkOwnership()
