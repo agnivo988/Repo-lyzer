@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"encoding/base64"
 	"math"
 	"sort"
 	"strings"
@@ -101,7 +102,12 @@ func AnalyzeHotspots(
 
 			content, err := client.GetFileContent(repo.Owner.Login, repo.Name, hotspot.FilePath)
 			if err == nil {
-				hotspot.Complexity = calculateComplexity(content, hotspot.FilePath)
+				complexity, err := calculateComplexityFromGitHubContent(content, hotspot.FilePath)
+				if err != nil {
+					hotspot.Reason = "Unable to decode file content"
+					return
+				}
+				hotspot.Complexity = complexity
 
 				// Update score with actual complexity
 				// Map complexity 1-50 to 0-100
@@ -175,6 +181,15 @@ func analyzeChurn(commits []github.Commit, repo *github.Repo, client *github.Cli
 	wg.Wait()
 
 	return churnMap
+}
+
+func calculateComplexityFromGitHubContent(content, filename string) (int, error) {
+	decoded, err := base64.StdEncoding.DecodeString(content)
+	if err != nil {
+		return 0, err
+	}
+
+	return calculateComplexity(string(decoded), filename), nil
 }
 
 func calculateComplexity(content, filename string) int {
