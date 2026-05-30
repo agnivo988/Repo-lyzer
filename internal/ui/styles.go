@@ -60,4 +60,8 @@ var (
 				Padding(0, 2).
 				MarginRight(1).
 				Border(lipgloss.RoundedBorder(), true, true, false, true)
+
+	HighlightStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FFA500"))
 )
