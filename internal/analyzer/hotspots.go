@@ -184,7 +184,8 @@ func analyzeChurn(commits []github.Commit, repo *github.Repo, client *github.Cli
 }
 
 func calculateComplexityFromGitHubContent(content, filename string) (int, error) {
-	decoded, err := base64.StdEncoding.DecodeString(content)
+	normalized := strings.NewReplacer("\n", "", "\r", "").Replace(content)
+	decoded, err := base64.StdEncoding.DecodeString(normalized)
 	if err != nil {
 		return 0, err
 	}

@@ -16,8 +16,9 @@ func TestCalculateComplexityFromGitHubContentDecodesBeforeScanning(t *testing.T)
   }
 }`
 	encoded := base64.StdEncoding.EncodeToString([]byte(source))
+	wrapped := encoded[:24] + "\n" + encoded[24:48] + "\r\n" + encoded[48:]
 
-	got, err := calculateComplexityFromGitHubContent(encoded, "risk.js")
+	got, err := calculateComplexityFromGitHubContent(wrapped, "risk.js")
 	if err != nil {
 		t.Fatalf("expected encoded GitHub content to decode: %v", err)
 	}
