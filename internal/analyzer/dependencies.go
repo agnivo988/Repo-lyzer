@@ -427,6 +427,16 @@ func parseCargoToml(content []byte) ([]Dependency, string) {
 				name := strings.TrimSpace(parts[0])
 				version := strings.Trim(strings.TrimSpace(parts[1]), "\"'")
 
+				// Handle Rust inline table dependencies (e.g., serde = { version = "1.0", features = ["derive"] })
+				if strings.HasPrefix(version, "{") {
+					versionPattern := regexp.MustCompile(`version\s*=\s*["']([^"']+)["']`)
+					if matches := versionPattern.FindStringSubmatch(version); len(matches) >= 2 {
+						version = matches[1]
+					} else {
+						version = "*"
+					}
+				}
+
 				depType := "production"
 				if inDevDeps {
 					depType = "dev"

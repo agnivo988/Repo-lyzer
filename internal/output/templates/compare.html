@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Repo-lyzer Comparison Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-alt: #eef4ff;
+      --text: #112033;
+      --muted: #5b6b7f;
+      --border: #d8e0eb;
+      --accent: #0f766e;
+      --accent-2: #2563eb;
+      --good: #16a34a;
+      --warn: #d97706;
+      --bad: #dc2626;
+      --shadow: 0 20px 50px rgba(17, 32, 51, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.09), transparent 32%),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 28%),
+        linear-gradient(180deg, #f7f9fc 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 20px 56px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(15,118,110,0.96), rgba(37,99,235,0.94));
+      color: white;
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 45%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.74rem;
+      opacity: 0.85;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      line-height: 1.05;
+      position: relative;
+      z-index: 1;
+    }
+
+    .meta {
+      margin-top: 12px;
+      color: rgba(255,255,255,0.86);
+      font-size: 0.98rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .verdict {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .repo-title {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .repo-desc {
+      margin: 8px 0 0;
+      color: var(--muted);
+      min-height: 1.5em;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--panel-alt);
+      border: 1px solid rgba(37,99,235,0.14);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .score {
+      margin-left: auto;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .score-good { background: var(--good); }
+    .score-warning { background: var(--warn); }
+    .score-bad { background: var(--bad); }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+    }
+
+    .metrics {
+      margin-top: 18px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .metric-better {
+      font-weight: 700;
+      color: var(--good);
+    }
+
+    .metric-worse {
+      color: var(--bad);
+    }
+
+    .languages {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .lang-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .lang-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .lang-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .bar {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(37,99,235,0.12);
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: right;
+    }
+
+    @media (max-width: 900px) {
+      .grid, .languages { grid-template-columns: 1fr; }
+      .page { padding: 18px 14px 36px; }
+      .hero { padding: 24px; border-radius: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Repo-lyzer comparison report</div>
+      <h1>{{.Repo1.FullName}} vs {{.Repo2.FullName}}</h1>
+      <div class="meta">Generated {{.GeneratedAt}}</div>
+      <div class="verdict">{{.Verdict}}</div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2 class="repo-title">{{.Repo1.FullName}}</h2>
+        <p class="repo-desc">{{.Repo1.Description}}</p>
+        <div class="pills">
+          <span class="pill">Primary language: {{.Repo1.PrimaryLanguage}}</span>
+          <span class="score {{.Repo1.HealthClass}}">Health {{.Repo1.HealthScore}}</span>
+          <span class="pill">Maturity {{.Repo1.MaturityLevel}} ({{.Repo1.MaturityScore}})</span>
+          <span class="pill">Bus factor {{.Repo1.BusFactor}} ({{.Repo1.BusRisk}})</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2 class="repo-title">{{.Repo2.FullName}}</h2>
+        <p class="repo-desc">{{.Repo2.Description}}</p>
+        <div class="pills">
+          <span class="pill">Primary language: {{.Repo2.PrimaryLanguage}}</span>
+          <span class="score {{.Repo2.HealthClass}}">Health {{.Repo2.HealthScore}}</span>
+          <span class="pill">Maturity {{.Repo2.MaturityLevel}} ({{.Repo2.MaturityScore}})</span>
+          <span class="pill">Bus factor {{.Repo2.BusFactor}} ({{.Repo2.BusRisk}})</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="card metrics">
+      <h2>Side-by-side metrics</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>{{.Repo1.FullName}}</th>
+            <th>{{.Repo2.FullName}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Metrics}}
+          <tr>
+            <td>{{.Label}}</td>
+            <td class="{{.LeftClass}}">{{.Left}}</td>
+            <td class="{{.RightClass}}">{{.Right}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="languages">
+      <article class="card">
+        <h2>Language breakdown - {{.Repo1.FullName}}</h2>
+        {{if .Repo1.Languages}}
+        <div class="lang-list">
+          {{range .Repo1.Languages}}
+          <div class="lang-row">
+            <div class="lang-top">
+              <span>{{.Name}}</span>
+              <span>{{.Percentage}}</span>
+            </div>
+            <div class="bar"><span style="width: {{.Width}}%;"></span></div>
+          </div>
+          {{end}}
+        </div>
+        {{else}}
+        <p class="repo-desc">No language data available.</p>
+        {{end}}
+      </article>
+
+      <article class="card">
+        <h2>Language breakdown - {{.Repo2.FullName}}</h2>
+        {{if .Repo2.Languages}}
+        <div class="lang-list">
+          {{range .Repo2.Languages}}
+          <div class="lang-row">
+            <div class="lang-top">
+              <span>{{.Name}}</span>
+              <span>{{.Percentage}}</span>
+            </div>
+            <div class="bar"><span style="width: {{.Width}}%;"></span></div>
+          </div>
+          {{end}}
+        </div>
+        {{else}}
+        <p class="repo-desc">No language data available.</p>
+        {{end}}
+      </article>
+    </section>
+
+    <div class="footer">Generated by Repo-lyzer</div>
+  </main>
+</body>
+</html>

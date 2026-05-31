@@ -336,8 +336,20 @@ func analyzeIssueTrendsForTrends(issues []github.Issue, monthlyData []MonthlyMet
 		trend = TrendStable
 	}
 
-	// Average resolution time (simplified - would need actual issue timestamps)
-	avgResolution := 7 * 24 * time.Hour // Default to 7 days
+	// Compute average resolution time from closed issues with valid timestamps.
+	// Fall back to a 7-day estimate only when no closed-issue data is available.
+	avgResolution := 7 * 24 * time.Hour // fallback when there is no data
+	var totalDuration time.Duration
+	var closedCount int
+	for _, issue := range issues {
+		if issue.State == "closed" && issue.ClosedAt != nil {
+			totalDuration += issue.ClosedAt.Sub(issue.CreatedAt)
+			closedCount++
+		}
+	}
+	if closedCount > 0 {
+		avgResolution = totalDuration / time.Duration(closedCount)
+	}
 
 	return trend, avgResolution, resolutionRate
 }

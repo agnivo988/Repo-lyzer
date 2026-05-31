@@ -27,6 +27,7 @@ import (
 //	}
 //	score, risk := BusFactor(contributors)
 //	// score: 2, risk: "Medium Risk"
+//
 // sortContributorsByCommitsDesc returns a copy sorted by commit count (highest first).
 func sortContributorsByCommitsDesc(contributors []github.Contributor) []github.Contributor {
 	sorted := append([]github.Contributor(nil), contributors...)

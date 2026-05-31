@@ -162,26 +162,41 @@ func ApplyTheme(theme Theme) {
 
 	TitleStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(theme.Primary)
+		Padding(0, 2).
+		Foreground(theme.Background).
+		Background(theme.Primary).
+		MarginBottom(1)
 
 	BoxStyle = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(theme.Border).
-		Padding(1, 4)
+		Padding(1, 3)
+
+	CardStyle = lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(theme.Secondary).
+		Padding(1, 2).
+		Margin(0, 1)
 
 	SelectedStyle = lipgloss.NewStyle().
-		Foreground(theme.Success).
-		Bold(true)
+		Foreground(theme.Background).
+		Background(theme.Success).
+		Bold(true).
+		Padding(0, 2).
+		MarginLeft(2)
 
 	NormalStyle = lipgloss.NewStyle().
-		Foreground(theme.Text)
+		Foreground(theme.Text).
+		Padding(0, 2).
+		MarginLeft(2)
 
 	InputStyle = lipgloss.NewStyle().
 		Foreground(theme.Warning).
 		Bold(true)
 
 	SubtleStyle = lipgloss.NewStyle().
-		Foreground(theme.TextMuted)
+		Foreground(theme.TextMuted).
+		Italic(true)
 
 	SuccessStyle = lipgloss.NewStyle().
 		Foreground(theme.Success).
@@ -190,6 +205,23 @@ func ApplyTheme(theme Theme) {
 	ErrorStyle = lipgloss.NewStyle().
 		Foreground(theme.Error).
 		Bold(true)
+
+	ActiveTabStyle = lipgloss.NewStyle().
+		Foreground(theme.Background).
+		Background(theme.Primary).
+		Bold(true).
+		Padding(0, 2).
+		MarginRight(1).
+		Border(lipgloss.RoundedBorder(), true, true, false, true).
+		BorderForeground(theme.Primary)
+
+	InactiveTabStyle = lipgloss.NewStyle().
+		Foreground(theme.Text).
+		Background(theme.Background).
+		Padding(0, 2).
+		MarginRight(1).
+		Border(lipgloss.RoundedBorder(), true, true, false, true).
+		BorderForeground(theme.TextMuted)
 }
 
 // CycleTheme switches to the next theme

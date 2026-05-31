@@ -16,19 +16,20 @@ import (
 )
 
 type FileEditModel struct {
-	filePath  string
-	repoOwner string
-	repoName  string
-	isOwner   bool
-	width     int
-	height    int
-	Done      bool
-	statusMsg string
-	clonePath string
-	isCloned  bool
+	filePath      string
+	repoOwner     string
+	repoName      string
+	defaultBranch string
+	isOwner       bool
+	width         int
+	height        int
+	Done          bool
+	statusMsg     string
+	clonePath     string
+	isCloned      bool
 }
 
-func NewFileEditModel(filePath, repoFullName string) FileEditModel {
+func NewFileEditModel(filePath, repoFullName, defaultBranch string) FileEditModel {
 	parts := strings.Split(repoFullName, "/")
 	repoOwner := ""
 	repoName := ""
@@ -45,12 +46,17 @@ func NewFileEditModel(filePath, repoFullName string) FileEditModel {
 		isCloned = true
 	}
 
+	if defaultBranch == "" {
+		defaultBranch = "main"
+	}
+
 	return FileEditModel{
-		filePath:  filePath,
-		repoOwner: repoOwner,
-		repoName:  repoName,
-		clonePath: clonePath,
-		isCloned:  isCloned,
+		filePath:      filePath,
+		repoOwner:     repoOwner,
+		repoName:      repoName,
+		defaultBranch: defaultBranch,
+		clonePath:     clonePath,
+		isCloned:      isCloned,
 	}
 }
 
@@ -175,7 +181,7 @@ func getDesktopPath() string {
 // openInBrowser opens the file on GitHub in the default browser
 func (m FileEditModel) openInBrowser() tea.Cmd {
 	return func() tea.Msg {
-		githubURL, err := buildBlobURL("github.com", m.repoOwner, m.repoName, m.filePath)
+		githubURL, err := buildBlobURL("github.com", m.repoOwner, m.repoName, m.defaultBranch, m.filePath)
 		if err != nil {
 			return openResultMsg{err}
 		}
@@ -189,7 +195,7 @@ func (m FileEditModel) openInBrowser() tea.Cmd {
 func (m FileEditModel) openInVSCode() tea.Cmd {
 	return func() tea.Msg {
 		// Use vscode.dev to open the file in browser-based VS Code
-		vscodeURL, err := buildVSCodeBlobURL(m.repoOwner, m.repoName, m.filePath)
+		vscodeURL, err := buildVSCodeBlobURL(m.repoOwner, m.repoName, m.defaultBranch, m.filePath)
 		if err != nil {
 			return openResultMsg{err}
 		}
@@ -200,11 +206,15 @@ func (m FileEditModel) openInVSCode() tea.Cmd {
 }
 
 // buildBlobURL creates a safe GitHub blob URL for a repository file.
-func buildBlobURL(host, owner, repo, filePath string) (string, error) {
+func buildBlobURL(host, owner, repo, branch, filePath string) (string, error) {
 	owner = strings.TrimSpace(owner)
 	repo = strings.TrimSpace(repo)
+	branch = strings.TrimSpace(branch)
 	if owner == "" || repo == "" {
 		return "", fmt.Errorf("invalid repository reference")
+	}
+	if branch == "" {
+		branch = "main"
 	}
 
 	safePath, err := sanitizeRepoPath(filePath)
@@ -213,16 +223,20 @@ func buildBlobURL(host, owner, repo, filePath string) (string, error) {
 	}
 
 	base := &url.URL{Scheme: "https", Host: host}
-	base.Path = path.Join(owner, repo, "blob", "main", safePath)
+	base.Path = path.Join(owner, repo, "blob", branch, safePath)
 	return base.String(), nil
 }
 
 // buildVSCodeBlobURL creates a safe vscode.dev blob URL for a repository file.
-func buildVSCodeBlobURL(owner, repo, filePath string) (string, error) {
+func buildVSCodeBlobURL(owner, repo, branch, filePath string) (string, error) {
 	owner = strings.TrimSpace(owner)
 	repo = strings.TrimSpace(repo)
+	branch = strings.TrimSpace(branch)
 	if owner == "" || repo == "" {
 		return "", fmt.Errorf("invalid repository reference")
+	}
+	if branch == "" {
+		branch = "main"
 	}
 
 	safePath, err := sanitizeRepoPath(filePath)
@@ -231,7 +245,7 @@ func buildVSCodeBlobURL(owner, repo, filePath string) (string, error) {
 	}
 
 	base := &url.URL{Scheme: "https", Host: "vscode.dev"}
-	base.Path = path.Join("github", owner, repo, "blob", "main", safePath)
+	base.Path = path.Join("github", owner, repo, "blob", branch, safePath)
 	return base.String(), nil
 }
 

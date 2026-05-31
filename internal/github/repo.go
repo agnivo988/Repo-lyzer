@@ -1,6 +1,10 @@
 package github
 
-import "time"
+import (
+	"time"
+
+	gocache "github.com/patrickmn/go-cache"
+)
 
 type Repo struct {
 	Name          string    `json:"name"`
@@ -24,7 +28,28 @@ type Repo struct {
 }
 
 func (c *Client) GetRepo(owner, repo string) (*Repo, error) {
-	var r Repo
-	err := c.get("https://api.github.com/repos/"+owner+"/"+repo, &r)
-	return &r, err
+	cacheKey := "repo:" + owner + "/" + repo
+	if cached, found := c.cache.Get(cacheKey); found {
+		r := cached.(Repo)
+		return &r, nil
+	}
+
+	v, err, _ := c.sf.Do(cacheKey, func() (interface{}, error) {
+		if cached, found := c.cache.Get(cacheKey); found {
+			r := cached.(Repo)
+			return &r, nil
+		}
+
+		var r Repo
+		if err := c.get("https://api.github.com/repos/"+owner+"/"+repo, &r); err != nil {
+			return nil, err
+		}
+
+		c.cache.Set(cacheKey, r, gocache.DefaultExpiration)
+		return &r, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*Repo), nil
 }

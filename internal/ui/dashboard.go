@@ -32,15 +32,21 @@ const (
 )
 
 type DashboardModel struct {
-	data        AnalysisResult
-	BackToMenu  bool
-	width       int
-	height      int
-	showExport  bool
-	statusMsg   string
-	currentView dashboardView
-	showHelp    bool
-	cacheStatus string // "fresh", "cached", or ""
+	data              AnalysisResult
+	BackToMenu        bool
+	width             int
+	height            int
+	showExport        bool
+	statusMsg         string
+	currentView       dashboardView
+	showHelp          bool
+	cacheStatus       string // "fresh", "cached", or ""
+	
+	// Precalculated fields for performance
+	// Precalculated fields for performance
+	precalcActivity map[string]int
+	apiStatusMsg    string
+	isFetchingAPI        bool
 }
 
 func NewDashboardModel() DashboardModel {
@@ -53,11 +59,21 @@ func (m DashboardModel) Init() tea.Cmd { return nil }
 
 func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
+	// Precalculate heavy charts
+	m.precalcActivity = analyzer.CommitsPerDay(m.data.Commits)
+	
+	if m.data.ContributorInsights == nil && len(m.data.Contributors) > 0 {
+		m.data.ContributorInsights = analyzer.AnalyzeContributors(m.data.Contributors)
+	}
+	
+	m.apiStatusMsg = ""
+	m.isFetchingAPI = false
 }
 
 func (m *DashboardModel) SetCacheStatus(status string) {
 	m.cacheStatus = status
 }
+
 
 type exportMsg struct {
 	err error
@@ -66,6 +82,11 @@ type exportMsg struct {
 
 func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case fetchedAPIStatusMsg:
+		m.apiStatusMsg = string(msg)
+		m.isFetchingAPI = false
+		return m, nil
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -219,6 +240,11 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	if m.currentView == viewAPIStatus && m.apiStatusMsg == "" && !m.isFetchingAPI {
+		m.isFetchingAPI = true
+		return m, fetchAPIStatusCmd()
+	}
+
 	return m, nil
 }
 
@@ -346,11 +372,9 @@ func (m DashboardModel) overviewView() string {
 		"\n"+metrics,
 	))
 
-	activity := analyzer.CommitsPerDay(m.data.Commits)
-	chart := RenderCommitActivity(activity, 15)
 	chartBox := CardStyle.Render(lipgloss.JoinVertical(lipgloss.Left,
 		lipgloss.NewStyle().Bold(true).Render("Activity Trend"),
-		"\n"+chart,
+		"\n"+RenderCommitActivity(m.precalcActivity, 15),
 	))
 	riskPanel := m.riskAlertsView()
 
@@ -474,8 +498,7 @@ func (m DashboardModel) languagesView() string {
 
 func (m DashboardModel) activityView() string {
 	header := TitleStyle.Render(" Commit Activity ")
-	activity := analyzer.CommitsPerDay(m.data.Commits)
-	chart := RenderCommitActivity(activity, 40) // Wider chart
+	chart := RenderCommitActivity(m.precalcActivity, 40)
 	totalCommits := len(m.data.Commits)
 	stats := fmt.Sprintf("\nTotal Commits (Last Year): %d", totalCommits)
 
@@ -629,11 +652,8 @@ func (m DashboardModel) contributorInsightsView() string {
 	header := TitleStyle.Render(" Insights ")
 
 	insights := m.data.ContributorInsights
-	if insights == nil {
-		insights = analyzer.AnalyzeContributors(m.data.Contributors)
-	}
 
-	if insights.TotalContributors == 0 {
+	if insights == nil || insights.TotalContributors == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("No contributor data available"))
 	}
 
@@ -774,45 +794,55 @@ func (m DashboardModel) riskAlertsView() string {
 	)
 }
 
+type fetchedAPIStatusMsg string
+
+func fetchAPIStatusCmd() tea.Cmd {
+	return func() tea.Msg {
+		client := github.NewClient()
+		rateLimit, err := client.GetRateLimit()
+
+		var rateLimitInfo string
+		if err != nil {
+			rateLimitInfo = "⚠️ Could not fetch rate limit info"
+		} else {
+			status := rateLimit.GetRateLimitStatus()
+			resetTime := rateLimit.FormatResetTime()
+			usage := rateLimit.UsagePercent()
+
+			rateLimitInfo = fmt.Sprintf(
+				"Status:    %s\n"+
+					"Remaining: %d / %d\n"+
+					"Used:      %.1f%%\n"+
+					"Reset:     %s",
+				status,
+				rateLimit.Resources.Core.Remaining,
+				rateLimit.Resources.Core.Limit,
+				usage,
+				resetTime,
+			)
+		}
+
+		mode := "🔴 Unauthenticated"
+		if client.HasToken() {
+			mode = "🟢 Authenticated"
+		}
+
+		msg := fmt.Sprintf("Authentication: %s\n\n%s", mode, rateLimitInfo)
+		return fetchedAPIStatusMsg(msg)
+	}
+}
+
 func (m DashboardModel) apiStatusView() string {
 	header := TitleStyle.Render(" API Status ")
 
-	client := github.NewClient()
-	rateLimit, err := client.GetRateLimit()
-
-	var rateLimitInfo string
-	if err != nil {
-		rateLimitInfo = "⚠️ Could not fetch rate limit info"
-	} else {
-		status := rateLimit.GetRateLimitStatus()
-		resetTime := rateLimit.FormatResetTime()
-		usage := rateLimit.UsagePercent()
-
-		rateLimitInfo = fmt.Sprintf(
-			"Status:    %s\n"+
-				"Remaining: %d / %d\n"+
-				"Used:      %.1f%%\n"+
-				"Reset:     %s",
-			status,
-			rateLimit.Resources.Core.Limit-rateLimit.Resources.Core.Remaining,
-			rateLimit.Resources.Core.Limit,
-			usage,
-			resetTime,
-		)
+	if m.apiStatusMsg == "" {
+		if !m.isFetchingAPI {
+			return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("Press R to reload or switch back/forth to fetch status..."))
+		}
+		return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("Loading API Status..."))
 	}
 
-	mode := "🔴 Unauthenticated"
-	if client.HasToken() {
-		mode = "🟢 Authenticated"
-	}
-
-	info := fmt.Sprintf(
-		"Mode: %s\n\n%s",
-		mode,
-		rateLimitInfo,
-	)
-
-	return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(info))
+	return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(m.apiStatusMsg))
 }
 
 func (m DashboardModel) qualityDashboardView() string {

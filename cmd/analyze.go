@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
+	"github.com/agnivo988/Repo-lyzer/internal/cache"
 	"github.com/agnivo988/Repo-lyzer/internal/contribution"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 	"github.com/agnivo988/Repo-lyzer/internal/output"
@@ -147,6 +148,7 @@ var analyzeCmd = &cobra.Command{
 		summary, _ := cmd.Flags().GetBool("summary")
 		incremental, _ := cmd.Flags().GetBool("incremental")
 		contribute, _ := cmd.Flags().GetBool("contribute")
+		format, _ := cmd.Flags().GetString("format")
 
 		if dryRun {
 			return runDryRun(args[0])
@@ -251,21 +253,47 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get file tree: %w", err)
 		}
 		overallProgress.CompleteStep("File structure scanned")
+		cacheInstance, _ := cache.NewCache()
 		// Incremental analysis support
 		if incremental {
 
-			currentHashes := make(map[string]string)
+			fmt.Println("🔄 Incremental analysis enabled")
 
-			for _, file := range fileTree {
-				if file.Type != "blob" {
-					continue
-				}
+			var cachedMetadata map[string]cache.FileMetadata
 
-				currentHashes[file.Path] = file.Sha
+			if entry, found := cacheInstance.Get(repoInfo.FullName); found {
+				cachedMetadata = entry.IncrementalMetadata
+				fmt.Printf("📦 Loaded cache metadata for %s\n", repoInfo.FullName)
+			} else {
+				cachedMetadata = make(map[string]cache.FileMetadata)
+				fmt.Println("🆕 No previous cache found")
 			}
 
-			fmt.Println("🔄 Incremental analysis enabled")
-			fmt.Printf("📂 Repository files tracked: %d\n", len(currentHashes))
+			changedFiles, stats :=
+				analyzer.DetectChangedFiles(
+					cachedMetadata,
+					fileTree,
+				)
+
+			fmt.Printf("📂 Files scanned: %d\n", stats.FilesScanned)
+			fmt.Printf("✅ Cache hits: %d\n", stats.CacheHits)
+			fmt.Printf("❌ Cache misses: %d\n", stats.CacheMisses)
+			fmt.Printf("⏭️ Files skipped: %d\n", stats.FilesSkipped)
+
+			// Replace full tree with changed files only
+			fileTree = changedFiles
+
+			// Update metadata cache
+			metadata := cache.BuildFileMetadata(fileTree)
+
+			err := cacheInstance.UpdateFileMetadata(
+				repoInfo.FullName,
+				metadata,
+			)
+
+			if err != nil {
+				fmt.Printf("⚠️ Failed to update incremental cache: %v\n", err)
+			}
 		}
 
 		// Calculate repository health score
@@ -300,8 +328,41 @@ var analyzeCmd = &cobra.Command{
 
 		// Track analysis duration
 		duration := time.Since(startTime)
+		savePath, _ := cmd.Flags().GetString("save")
 
+		if format == "yaml" {
+			return output.PrintYAML(output.CompactConfig{
+				Repo:            repoInfo,
+				HealthScore:     score,
+				BusFactor:       busFactor,
+				BusRisk:         busRisk,
+				MaturityScore:   maturityScore,
+				MaturityLevel:   maturityLevel,
+				CommitsLastYear: len(commits),
+				Contributors:    len(contributors),
+				Duration:        duration,
+				Languages:       langs,
+			})
+		}
+
+		if format != "" {
+			return fmt.Errorf("unsupported format: %s", format)
+		}
 		if compact {
+			if savePath != "" {
+				output.SaveJSON(output.CompactConfig{
+					Repo:            repoInfo,
+					HealthScore:     score,
+					BusFactor:       busFactor,
+					BusRisk:         busRisk,
+					MaturityScore:   maturityScore,
+					MaturityLevel:   maturityLevel,
+					CommitsLastYear: len(commits),
+					Contributors:    len(contributors),
+					Duration:        duration,
+					Languages:       langs,
+				}, savePath)
+			}
 			return output.PrintCompactJSON(output.CompactConfig{
 				Repo:            repoInfo,
 				HealthScore:     score,
@@ -362,6 +423,21 @@ var analyzeCmd = &cobra.Command{
 
 		// Mark analysis as complete
 		overallProgress.Finish()
+
+		if savePath != "" {
+			output.SaveJSON(output.CompactConfig{
+				Repo:            repoInfo,
+				HealthScore:     score,
+				BusFactor:       busFactor,
+				BusRisk:         busRisk,
+				MaturityScore:   maturityScore,
+				MaturityLevel:   maturityLevel,
+				CommitsLastYear: len(commits),
+				Contributors:    len(contributors),
+				Duration:        duration,
+				Languages:       langs,
+			}, savePath)
+		}
 
 		return nil
 	},
@@ -555,4 +631,10 @@ func init() {
 		false,
 		"Show Contribution Friendliness Score inside the overview/cli output",
 	)
+	analyzeCmd.Flags().String(
+		"format",
+		"",
+		"Output format: yaml",
+	)
+
 }

@@ -7,12 +7,19 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/zalando/go-keyring"
 	"github.com/robfig/cron/v3"
+)
+
+const (
+	secureStoreService = "repo-lyzer"
+	secureStoreUser    = "github_token"
 )
 
 // ExportFormat represents available export formats
@@ -41,7 +48,7 @@ type AppSettings struct {
 	ExportDirectory     string       `json:"export_directory"`
 
 	// GitHub settings
-	GitHubToken string `json:"github_token"`
+	GitHubToken string `json:"-"`
 
 	// Analysis settings
 	DefaultAnalysisType string `json:"default_analysis_type"` // "quick", "detailed", "custom"
@@ -96,7 +103,15 @@ func getSettingsPath() (string, error) {
 func LoadSettings() (*AppSettings, error) {
 	settingsPath, err := getSettingsPath()
 	if err != nil {
-		return applyEnvOverrides(DefaultSettings()), err
+		settings := applyEnvOverrides(DefaultSettings())
+		if settings.GitHubToken == "" {
+			if token, secureErr := loadTokenFromSecureStore(); secureErr != nil {
+				return settings, secureErr
+			} else {
+				settings.GitHubToken = token
+			}
+		}
+		return settings, err
 	}
 
 	settings := DefaultSettings()
@@ -113,7 +128,16 @@ func LoadSettings() (*AppSettings, error) {
 		}
 	}
 
-	return applyEnvOverrides(settings), nil
+	settings = applyEnvOverrides(settings)
+	if settings.GitHubToken == "" {
+		if token, secureErr := loadTokenFromSecureStore(); secureErr != nil {
+			return settings, secureErr
+		} else {
+			settings.GitHubToken = token
+		}
+	}
+
+	return settings, nil
 }
 
 // applyEnvOverrides applies environment variable overrides to the given settings
@@ -152,7 +176,7 @@ func (s *AppSettings) SaveSettings() error {
 	}
 
 	// Ensure directory exists
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
 	}
 
@@ -161,7 +185,13 @@ func (s *AppSettings) SaveSettings() error {
 		return err
 	}
 
-	return os.WriteFile(settingsPath, data, 0644)
+	if err := os.WriteFile(settingsPath, data, 0600); err != nil {
+		return err
+	}
+
+	// Best effort: keep file private when permissions are supported.
+	_ = os.Chmod(settingsPath, 0600)
+	return nil
 }
 
 // ResetToDefaults resets all settings to default values and saves
@@ -192,13 +222,50 @@ func (s *AppSettings) SetExportDirectory(dir string) error {
 // SetGitHubToken updates the GitHub token and saves
 func (s *AppSettings) SetGitHubToken(token string) error {
 	s.GitHubToken = token
+	if token != "" {
+		if err := saveTokenToSecureStore(token); err != nil {
+			return err
+		}
+	}
 	return s.SaveSettings()
 }
 
 // ClearGitHubToken removes the GitHub token and saves
 func (s *AppSettings) ClearGitHubToken() error {
 	s.GitHubToken = ""
+	if err := clearTokenFromSecureStore(); err != nil {
+		return err
+	}
 	return s.SaveSettings()
+}
+
+func loadTokenFromSecureStore() (string, error) {
+	token, err := keyring.Get(secureStoreService, secureStoreUser)
+	if err == nil {
+		return token, nil
+	}
+
+	if errors.Is(err, keyring.ErrNotFound) || errors.Is(err, keyring.ErrUnsupportedPlatform) {
+		return "", nil
+	}
+
+	return "", err
+}
+
+func saveTokenToSecureStore(token string) error {
+	err := keyring.Set(secureStoreService, secureStoreUser, token)
+	if errors.Is(err, keyring.ErrUnsupportedPlatform) {
+		return nil
+	}
+	return err
+}
+
+func clearTokenFromSecureStore() error {
+	err := keyring.Delete(secureStoreService, secureStoreUser)
+	if errors.Is(err, keyring.ErrNotFound) || errors.Is(err, keyring.ErrUnsupportedPlatform) {
+		return nil
+	}
+	return err
 }
 
 // HasGitHubToken returns true if a GitHub token is configured
