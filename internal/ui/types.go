@@ -38,6 +38,7 @@ type CachedAnalysisResult struct {
 	Result   AnalysisResult
 	IsCached bool
 	CachedAt time.Time
+	ExpiresAt time.Time
 }
 
 // CompareResult holds analysis data for two repositories

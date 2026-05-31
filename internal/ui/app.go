@@ -115,6 +115,9 @@ type MainModel struct {
 	progress        *ProgressTracker
 	cacheStatus     string
 	initialCmd      tea.Cmd
+	// cachedShown indicates a cached result was displayed; cachedShownRepo records which repo
+	cachedShown     bool
+	cachedShownRepo string
 }
 
 // NewMainModel creates a new MainModel with initialized sub-models
@@ -205,6 +208,17 @@ func helpContentForSubmenu(index int) string {
 // Init initializes the Bubble Tea program
 func (m MainModel) Init() tea.Cmd {
 	return m.initialCmd
+}
+
+// cacheStatusFromExpires returns "fresh" when now is before expires, otherwise "stale".
+func cacheStatusFromExpires(expires time.Time) string {
+	if expires.IsZero() {
+		return "cached"
+	}
+	if time.Now().Before(expires) {
+		return "fresh"
+	}
+	return "stale"
 }
 
 // Update handles messages and updates the model
@@ -405,7 +419,19 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if result, ok := msg.(AnalysisResult); ok {
 			m.dashboard.SetData(result)
-			m.dashboard.SetCacheStatus("fresh")
+			// If a cached result was previously shown for the same repo, mark as refreshed
+			repoName := ""
+			if result.Repo != nil {
+				repoName = result.Repo.FullName
+			}
+			if m.cachedShown && m.cachedShownRepo == repoName {
+				m.dashboard.SetCacheStatus("refreshed")
+			} else {
+				m.dashboard.SetCacheStatus("fresh")
+			}
+			// clear cachedShown marker
+			m.cachedShown = false
+			m.cachedShownRepo = ""
 			m.state = stateDashboard
 			m.progress = nil
 			m.cacheStatus = "fresh"
@@ -422,11 +448,21 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if cachedResult, ok := msg.(CachedAnalysisResult); ok {
 			m.dashboard.SetData(cachedResult.Result)
-			m.dashboard.SetCacheStatus("cached")
+			// Determine fresh/stale using ExpiresAt when available
+			status := "cached"
+			if !cachedResult.ExpiresAt.IsZero() {
+				status = cacheStatusFromExpires(cachedResult.ExpiresAt)
+			}
+			m.dashboard.SetCacheStatus(status)
 			m.state = stateDashboard
 			m.progress = nil
-			m.cacheStatus = "cached"
+			m.cacheStatus = status
 			m.analysisCancel = nil
+			// track that a cached result was shown for potential refreshed transition
+			if cachedResult.Result.Repo != nil {
+				m.cachedShown = true
+				m.cachedShownRepo = cachedResult.Result.Repo.FullName
+			}
 			// Save to history
 			history, _ := LoadHistory()
 			m.history.Entries = history.Entries
@@ -746,6 +782,37 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case stateDashboard:
+		// Allow receiving a live AnalysisResult while on dashboard (e.g. background refresh completed)
+		if result, ok := msg.(AnalysisResult); ok {
+			m.dashboard.SetData(result)
+			// If a cached result was previously shown for the same repo, mark as refreshed
+			repoName := ""
+			if result.Repo != nil {
+				repoName = result.Repo.FullName
+			}
+			if m.cachedShown && m.cachedShownRepo == repoName {
+				m.dashboard.SetCacheStatus("refreshed")
+			} else {
+				m.dashboard.SetCacheStatus("fresh")
+			}
+			// clear cachedShown marker
+			m.cachedShown = false
+			m.cachedShownRepo = ""
+			m.state = stateDashboard
+			m.progress = nil
+			m.cacheStatus = "fresh"
+			m.analysisCancel = nil
+			// Save to history and persist current analysis
+			history, _ := LoadHistory()
+			m.history.Entries = history.Entries
+			m.history.AddEntry(result)
+			m.history.Save()
+			if err := SaveCurrentAnalysis(result); err != nil {
+				log.Printf("Failed to persist current analysis: %v", err)
+			}
+			return m, nil
+		}
+
 		if key, ok := msg.(tea.KeyMsg); ok {
 			if key.String() == "." {
 				if m.dashboard.data.Repo != nil {
@@ -943,6 +1010,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 						Result:   result,
 						IsCached: true,
 						CachedAt: entry.CachedAt,
+						ExpiresAt: entry.ExpiresAt,
 					}
 				}
 			}
@@ -1026,6 +1094,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 								Result:   result,
 								IsCached: true,
 								CachedAt: entry.CachedAt,
+								ExpiresAt: entry.ExpiresAt,
 							}
 						}
 					}

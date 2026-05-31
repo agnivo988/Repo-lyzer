@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zalando/go-keyring"
 	"github.com/robfig/cron/v3"
+	"github.com/zalando/go-keyring"
 )
 
 const (
@@ -51,9 +51,9 @@ type AppSettings struct {
 	GitHubToken string `json:"-"`
 
 	// Analysis settings
-	DefaultAnalysisType string `json:"default_analysis_type"` // "quick", "detailed", "custom"
+	DefaultAnalysisType string        `json:"default_analysis_type"` // "quick", "detailed", "custom"
 	CacheTTL            time.Duration `json:"cache_ttl"`
-	CacheAutoRefresh     bool          `json:"cache_auto_refresh"`
+	CacheAutoRefresh    bool          `json:"cache_auto_refresh"`
 
 	// Log settings
 	LogLevel string `json:"log_level"`

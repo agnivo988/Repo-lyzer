@@ -352,6 +352,10 @@ func (m DashboardModel) overviewView() string {
 		cacheIndicator = "🟡 Cached"
 	case "expired":
 		cacheIndicator = "🔴 Expired"
+	case "stale":
+		cacheIndicator = "🔴 Stale"
+	case "refreshed":
+		cacheIndicator = "🔄 Refreshed"
 	}
 
 	header := TitleStyle.Render(fmt.Sprintf(" %s ", m.data.Repo.FullName))
