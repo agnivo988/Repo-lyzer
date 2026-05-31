@@ -41,6 +41,14 @@ type CachedAnalysisResult struct {
 	ExpiresAt time.Time
 }
 
+// RefreshSummary captures the delta between the displayed analysis and a fresh sync.
+type RefreshSummary struct {
+	LastSync        time.Time
+	NewIssues       int
+	NewPullRequests int
+	NewContributors int
+}
+
 // CompareResult holds analysis data for two repositories
 type CompareResult struct {
 	Repo1 AnalysisResult

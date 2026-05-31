@@ -32,21 +32,22 @@ const (
 )
 
 type DashboardModel struct {
-	data              AnalysisResult
-	BackToMenu        bool
-	width             int
-	height            int
-	showExport        bool
-	statusMsg         string
-	currentView       dashboardView
-	showHelp          bool
-	cacheStatus       string // "fresh", "cached", or ""
-	
+	data           AnalysisResult
+	BackToMenu     bool
+	width          int
+	height         int
+	showExport     bool
+	statusMsg      string
+	currentView    dashboardView
+	showHelp       bool
+	cacheStatus    string // "fresh", "cached", "synced", or ""
+	refreshSummary *RefreshSummary
+
 	// Precalculated fields for performance
 	// Precalculated fields for performance
 	precalcActivity map[string]int
 	apiStatusMsg    string
-	isFetchingAPI        bool
+	isFetchingAPI   bool
 }
 
 func NewDashboardModel() DashboardModel {
@@ -59,13 +60,14 @@ func (m DashboardModel) Init() tea.Cmd { return nil }
 
 func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
+	m.refreshSummary = nil
 	// Precalculate heavy charts
 	m.precalcActivity = analyzer.CommitsPerDay(m.data.Commits)
-	
+
 	if m.data.ContributorInsights == nil && len(m.data.Contributors) > 0 {
 		m.data.ContributorInsights = analyzer.AnalyzeContributors(m.data.Contributors)
 	}
-	
+
 	m.apiStatusMsg = ""
 	m.isFetchingAPI = false
 }
@@ -74,6 +76,9 @@ func (m *DashboardModel) SetCacheStatus(status string) {
 	m.cacheStatus = status
 }
 
+func (m *DashboardModel) SetRefreshSummary(summary *RefreshSummary) {
+	m.refreshSummary = summary
+}
 
 type exportMsg struct {
 	err error
@@ -354,12 +359,28 @@ func (m DashboardModel) overviewView() string {
 		cacheIndicator = "🔴 Expired"
 	case "stale":
 		cacheIndicator = "🔴 Stale"
-	case "refreshed":
-		cacheIndicator = "🔄 Refreshed"
+	case "synced":
+		cacheIndicator = "🔄 Synced"
 	}
 
 	header := TitleStyle.Render(fmt.Sprintf(" %s ", m.data.Repo.FullName))
 	subHeader := SubtleStyle.Render(fmt.Sprintf(" %s", cacheIndicator))
+
+	refreshBox := ""
+	if m.refreshSummary != nil && !m.refreshSummary.LastSync.IsZero() {
+		refreshLines := []string{
+			fmt.Sprintf("Last Sync: %s", formatRelativeTime(m.refreshSummary.LastSync)),
+			"",
+			"Fetched:",
+			fmt.Sprintf("%d new issues", m.refreshSummary.NewIssues),
+			fmt.Sprintf("%d new pull requests", m.refreshSummary.NewPullRequests),
+			fmt.Sprintf("%d new contributor", m.refreshSummary.NewContributors),
+		}
+		if m.refreshSummary.NewContributors != 1 {
+			refreshLines[len(refreshLines)-1] = fmt.Sprintf("%d new contributors", m.refreshSummary.NewContributors)
+		}
+		refreshBox = CardStyle.Render(strings.Join(refreshLines, "\n"))
+	}
 
 	metrics := fmt.Sprintf(
 		"💚 Health:   %d/100\n"+
@@ -424,15 +445,38 @@ func (m DashboardModel) overviewView() string {
 		bottomPanel = riskPanel
 	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader),
-		"\n",
+	sections := []string{lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader)}
+	if refreshBox != "" {
+		sections = append(sections, refreshBox)
+	}
+	sections = append(sections,
 		lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
-		"\n",
 		bottomPanel,
 	)
 
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+
+}
+
+func formatRelativeTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
+	delta := time.Since(t)
+	if delta < time.Minute {
+		return "just now"
+	}
+	if delta < time.Hour {
+		return fmt.Sprintf("%d minutes ago", int(delta.Minutes()))
+	}
+	if delta < 24*time.Hour {
+		return fmt.Sprintf("%d hours ago", int(delta.Hours()))
+	}
+	if delta < 48*time.Hour {
+		return "Yesterday"
+	}
+	return t.Format("2006-01-02 15:04")
 }
 
 func (m DashboardModel) repoView() string {

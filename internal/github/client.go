@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	
 	gocache "github.com/patrickmn/go-cache"
 	"golang.org/x/sync/singleflight"
 )
@@ -121,14 +120,14 @@ func (c *Client) get(url string, target interface{}) error {
 				}
 
 				resp.Body.Close()
-				// If unauthenticated, return informative error after waiting once
+				// If unauthenticated, return immediately so interactive screens do not
+				// appear frozen while waiting for GitHub's rate-limit reset.
 				if c.token == "" {
-					select {
-					case <-time.After(waitTime + time.Second):
-						return fmt.Errorf("rate limit exceeded and no token configured; consider setting GITHUB_TOKEN")
-					case <-c.ctx.Done():
-						return c.ctx.Err()
-					}
+					return fmt.Errorf("rate limit exceeded and no token configured; reset in %s; set GITHUB_TOKEN for a higher limit", formatDuration(waitTime))
+				}
+
+				if deadline, ok := c.ctx.Deadline(); ok && time.Until(deadline) < waitTime+time.Second {
+					return fmt.Errorf("rate limit exceeded; reset in %s", formatDuration(waitTime))
 				}
 
 				// Authenticated: wait and retry
