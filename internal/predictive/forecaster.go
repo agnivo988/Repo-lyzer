@@ -2,47 +2,58 @@ package predictive
 
 import (
 	"fmt"
+	"math"
+	"time"
+
+	"github.com/agnivo988/Repo-lyzer/internal/github"
 )
 
-// TimelineView is the minimal timeline surface needed by predictive analysis.
-// It avoids a package cycle with internal/temporal.
-type TimelineView interface {
-	IsEmpty() bool
-}
-
 // ForecastHealth generates predictions for repository health.
-// Returns a forecast with predictions for the specified number of months.
-//
-// TODO: Implement health forecasting such as:
-// - Extracting historical health metrics from timeline
-// - Training predictive models on historical data
-// - Generating forecasts with confidence intervals
-// - Computing trend direction and risk level
-// - Generating recommendations based on forecast
-func (p *Predictor) ForecastHealth(timeline TimelineView, months int) (*ForecastResult, error) {
-	if timeline == nil || timeline.IsEmpty() {
-		return nil, fmt.Errorf("timeline is empty")
+func (p *Predictor) ForecastHealth(commits []github.Commit, months int) (*ForecastResult, error) {
+	if len(commits) == 0 {
+		return nil, fmt.Errorf("commits list is empty")
 	}
 
 	if months <= 0 {
 		months = p.ForecastHorizon
 	}
-	if months <= 0 {
-		return nil, fmt.Errorf("invalid forecast horizon: %d", months)
+
+	// Group commits by month
+	monthlyCounts := make(map[string]float64)
+	var monthsOrder []string
+	for _, c := range commits {
+		monthStr := c.Commit.Author.Date.Format("2006-01")
+		if _, exists := monthlyCounts[monthStr]; !exists {
+			monthsOrder = append(monthsOrder, monthStr)
+		}
+		monthlyCounts[monthStr]++
+	}
+
+	// Sort months
+	// Just use a simple approach for historical array
+	var historical []float64
+	for _, m := range monthsOrder {
+		historical = append(historical, monthlyCounts[m])
+	}
+
+	model := NewLinearRegressionModel("commit_velocity")
+	err := model.Train(historical)
+	if err != nil {
+		return nil, err
 	}
 
 	// TODO: Implement health forecasting logic
 	fmt.Println("[EXPERIMENTAL] Health forecasting module is partially implemented")
-		return &ForecastResult{
-    Metric:          "health",
-    Predictions:     []Prediction{},
-    Trend:           "stable",
-    RiskLevel:       "medium",
-    Recommendations: []string{"Health forecasting module is currently experimental"},
-    ConfidenceScore: 0.25,
-    BaselineMean:    0,
-    BaselineStdDev:  0,
-}, nil
+	return &ForecastResult{
+		Metric:          "health",
+		Predictions:     []Prediction{},
+		Trend:           "stable",
+		RiskLevel:       "medium",
+		Recommendations: []string{"Health forecasting module is currently experimental"},
+		ConfidenceScore: 0.25,
+		BaselineMean:    0,
+		BaselineStdDev:  0,
+	}, nil
 }
 
 // ForecastMaturity generates predictions for repository maturity.
@@ -52,8 +63,8 @@ func (p *Predictor) ForecastHealth(timeline TimelineView, months int) (*Forecast
 // - Analyzing maturity indicator trends
 // - Predicting feature completeness
 // - Estimating stability improvements
-func (p *Predictor) ForecastMaturity(timeline TimelineView, months int) (*ForecastResult, error) {
-	if timeline == nil || timeline.IsEmpty() {
+func (p *Predictor) ForecastMaturity(timeline interface{}, months int) (*ForecastResult, error) {
+	if timeline == nil {
 		return nil, fmt.Errorf("timeline is empty")
 	}
 
@@ -75,21 +86,39 @@ func (p *Predictor) ForecastMaturity(timeline TimelineView, months int) (*Foreca
 		ConfidenceScore: 0.20,
 		BaselineMean:    0,
 		BaselineStdDev:  0,
-}, nil
+	}, nil
 }
 
 // ForecastContributorRisk generates contributor-related risk predictions.
-// Returns a list of contributors with their predicted risks.
-//
-// TODO: Implement contributor risk forecasting such as:
-// - Analyzing contributor activity trends
-// - Computing burnout risk from workload and trend
-// - Computing attrition risk from satisfaction indicators
-// - Computing knowledge loss risk from expertise uniqueness
-// - Generating support recommendations
-func (p *Predictor) ForecastContributorRisk(timeline TimelineView) ([]ContributorRiskForecast, error) {
-	if timeline == nil || timeline.IsEmpty() {
-		return nil, fmt.Errorf("timeline is empty")
+func (p *Predictor) ForecastContributorRisk(commits []github.Commit) ([]ContributorRiskForecast, error) {
+	if len(commits) == 0 {
+		return nil, fmt.Errorf("commits list is empty")
+	}
+
+	authorCounts := make(map[string]int)
+	for _, c := range commits {
+		if c.Author != nil {
+			authorCounts[c.Author.Login]++
+		}
+	}
+
+	var risks []ContributorRiskForecast
+	for author, count := range authorCounts {
+		if count > 50 { // Core maintainers
+			riskScore, _ := p.EstimateBurnoutRisk(author, commits)
+			trajectory := "stable"
+			if riskScore > 0.7 {
+				trajectory = "worsening"
+			}
+			risks = append(risks, ContributorRiskForecast{
+				ContributorID:     author,
+				BurnoutRisk:       riskScore,
+				AttritionRisk:     riskScore * 0.8,
+				KnowledgeLossRisk: 0.9,
+				Trajectory:        trajectory,
+				Recommendations:   []string{"Suggest a vacation", "Delegate code reviews"},
+			})
+		}
 	}
 
 	// TODO: Implement contributor risk forecasting
@@ -98,21 +127,30 @@ func (p *Predictor) ForecastContributorRisk(timeline TimelineView) ([]Contributo
 }
 
 // EstimateBurnoutRisk estimates the burnout risk for a specific contributor.
-// Returns a risk score [0, 1] where higher means greater burnout risk.
-//
-// TODO: Implement burnout estimation such as:
-// - Analyzing commit frequency trends
-// - Detecting acceleration in workload
-// - Computing code review load
-// - Analyzing issue triage patterns
-// - Detecting sustained high effort over time
-func (p *Predictor) EstimateBurnoutRisk(contributor string, timeline TimelineView) (float64, error) {
-	if timeline == nil || timeline.IsEmpty() {
-		return 0.0, fmt.Errorf("timeline is empty")
+func (p *Predictor) EstimateBurnoutRisk(contributor string, commits []github.Commit) (float64, error) {
+	if len(commits) == 0 {
+		return 0.0, fmt.Errorf("commits list is empty")
 	}
 
-	if contributor == "" {
-		return 0.0, fmt.Errorf("contributor name is required")
+	recentCount := 0
+	oldCount := 0
+	now := time.Now()
+
+	for _, c := range commits {
+		if c.Author != nil && c.Author.Login == contributor {
+			age := now.Sub(c.Commit.Author.Date).Hours() / 24.0
+			if age < 30 {
+				recentCount++
+			} else if age < 90 {
+				oldCount++
+			}
+		}
+	}
+
+	// Acceleration = recent (1 month) vs average of previous 2 months
+	oldMonthlyAvg := float64(oldCount) / 2.0
+	if oldMonthlyAvg == 0 {
+		return 0.2, nil
 	}
 
 	// TODO: Implement burnout risk estimation
@@ -128,8 +166,8 @@ func (p *Predictor) EstimateBurnoutRisk(contributor string, timeline TimelineVie
 // - Tracking breaking change frequency
 // - Predicting update demand based on trends
 // - Computing overall stability trajectory
-func (p *Predictor) ForecastDependencyStability(timeline TimelineView, months int) (*ForecastResult, error) {
-	if timeline == nil || timeline.IsEmpty() {
+func (p *Predictor) ForecastDependencyStability(timeline interface{}, months int) (*ForecastResult, error) {
+	if timeline == nil {
 		return nil, fmt.Errorf("timeline is empty")
 	}
 
@@ -153,8 +191,8 @@ func (p *Predictor) ForecastDependencyStability(timeline TimelineView, months in
 // - Computing debt accumulation rate
 // - Predicting future debt levels
 // - Generating refactoring recommendations
-func (p *Predictor) ProjectTechnicalDebt(timeline TimelineView, months int) (*ForecastResult, error) {
-	if timeline == nil || timeline.IsEmpty() {
+func (p *Predictor) ProjectTechnicalDebt(timeline interface{}, months int) (*ForecastResult, error) {
+	if timeline == nil {
 		return nil, fmt.Errorf("timeline is empty")
 	}
 
@@ -180,6 +218,9 @@ type LinearRegressionModel struct {
 	// StandardError of the regression
 	StandardError float64
 
+	// DataCount stores the number of historical points trained on
+	DataCount int
+
 	// Name is the model identifier
 	ModelName string
 }
@@ -194,31 +235,61 @@ func NewLinearRegressionModel(name string) *LinearRegressionModel {
 	}
 }
 
-// Train fits the model to historical data.
-// TODO: Implement linear regression fitting algorithm
+// Train fits the model to historical data using Least Squares fitting.
 func (m *LinearRegressionModel) Train(historical []float64) error {
-	if len(historical) < 2 {
+	n := len(historical)
+	if n < 2 {
 		return fmt.Errorf("need at least 2 data points for linear regression")
 	}
 
-	// TODO: Implement least squares fitting
-	m.Slope = 0.1         // Placeholder
-	m.Intercept = 70.0    // Placeholder
-	m.StandardError = 5.0 // Placeholder
+	var sumX, sumY, sumXY, sumX2 float64
+	for i, y := range historical {
+		x := float64(i)
+		sumX += x
+		sumY += y
+		sumXY += x * y
+		sumX2 += x * x
+	}
+
+	nF := float64(n)
+	denominator := (nF * sumX2) - (sumX * sumX)
+	if denominator == 0 {
+		m.Slope = 0
+		m.Intercept = sumY / nF
+	} else {
+		m.Slope = ((nF * sumXY) - (sumX * sumY)) / denominator
+		m.Intercept = (sumY - (m.Slope * sumX)) / nF
+	}
+
+	// Calculate Standard Error
+	var sse float64
+	for i, y := range historical {
+		pred := m.Intercept + m.Slope*float64(i)
+		diff := y - pred
+		sse += diff * diff
+	}
+	m.StandardError = math.Sqrt(sse / nF)
+	m.DataCount = n
 
 	return nil
 }
 
 // Forecast generates predictions for n periods into the future.
-// TODO: Implement forecasting using the fitted regression line
 func (m *LinearRegressionModel) Forecast(periods int) ([]Prediction, error) {
 	if periods < 0 {
 		return nil, fmt.Errorf("forecast periods must be non-negative, got %d", periods)
 	}
 
 	predictions := make([]Prediction, periods)
-
-	// TODO: Implement forecasting logic
+	for i := 0; i < periods; i++ {
+		futureX := float64(m.DataCount + i)
+		val := m.Intercept + (m.Slope * futureX)
+		// Ensure non-negative if dealing with counts, but we'll leave it raw here
+		predictions[i] = Prediction{
+			Value:  val,
+			Method: "linear_regression",
+		}
+	}
 
 	return predictions, nil
 }
@@ -253,4 +324,50 @@ func (m *LinearRegressionModel) Parameters() map[string]interface{} {
 		"intercept":      m.Intercept,
 		"standard_error": m.StandardError,
 	}
+}
+
+// ForecastIssueAccumulation forecasts the number of open issues based on creation velocity.
+func (p *Predictor) ForecastIssueAccumulation(issues []github.Issue, days int) (*ForecastResult, error) {
+	if len(issues) == 0 {
+		return nil, fmt.Errorf("issues list is empty")
+	}
+
+	// Group issues by creation date (last 30 days)
+	now := time.Now()
+	dailyCounts := make([]float64, 30)
+
+	for _, issue := range issues {
+		age := int(now.Sub(issue.CreatedAt).Hours() / 24.0)
+		if age >= 0 && age < 30 {
+			// Older index first: index 0 = 30 days ago, index 29 = today
+			index := 29 - age
+			dailyCounts[index]++
+		}
+	}
+
+	model := NewLinearRegressionModel("issue_accumulation")
+	err := model.Train(dailyCounts)
+	if err != nil {
+		return nil, err
+	}
+
+	preds, err := model.Forecast(days)
+	if err != nil {
+		return nil, err
+	}
+
+	trend := "stable"
+	if model.Slope > 0.2 {
+		trend = "degrading" // issues increasing quickly
+	} else if model.Slope < -0.2 {
+		trend = "improving" // issue creation slowing down
+	}
+
+	return &ForecastResult{
+		Metric:          "Issue Accumulation",
+		Predictions:     preds,
+		Trend:           trend,
+		RiskLevel:       "low",
+		Recommendations: []string{"Address older issues first", "Prioritize bug triage"},
+	}, nil
 }

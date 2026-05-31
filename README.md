@@ -3,16 +3,20 @@
   <img src="https://res.cloudinary.com/dhyii4oiw/image/upload/v1767324445/Screenshot_2026-01-02_085503_ros5gz.png" alt="Repo-lyzer Logo" width="300">
 </p>
 
+### Enterprise Grade Intelligence
+![Health Dashboard](assets/health-dashboard.png)
+![Risk Dashboard](assets/risk-dashboard.png)
+
 **Repo-lyzer** is a modern, terminal-based CLI tool written in **Golang** that analyzes GitHub repositories and presents insights in a beautifully formatted, interactive dashboard.
 
 ---
 
 ## Features
-- **Deep Analytics** – Repository health, maturity scores, and bus factor.
+- **Health Intelligence Engine** – Deep, modular repository health scoring (PR Velocity, Bus Factor, Stale Detection).
+- **Risk Intelligence Engine** – Enterprise-grade risk analytics (Maintainer Overload, Security Posture, Dependency Risk).
 - **Contribution Friendliness** – Assess how easy it is to contribute to a repository using weighted metrics (`--contribute` flag).
 - **Interactive TUI** – Fully navigable keyboard-driven menu system.
-- **Visual Data** – Language breakdown bars and horizontal commit graphs.
-- **File Explorer** – Browse repository structures directly in the dashboard.
+- **Enterprise Visual Data** – Visual risk pulse bars `[XXXX----]` and color-coded health indicators.
 - **Multi-Format Export** – Save reports as JSON, Markdown, CSV, or HTML.
 
 ---
@@ -75,25 +79,31 @@ The `docker-compose.yml` mounts a local `./data` directory to persist settings a
 
 ## Architecture Overview
 
-```
-┌────────────────────────────────────────────┐
-│               main.go                      │
-└────────────────────────────────────────────┘
-                    │
-                    ▼
-┌────────────────────────────────────────────┐
-│                 cmd/                       │
-└────────────────────────────────────────────┘
-                    │
-                    ▼
-┌────────────────────────────────────────────┐
-│             internal/ui/                   │
-└────────────────────────────────────────────┘
-          │           │           │
-          ▼           ▼           ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│   github     │ │   analyzer   │ │   output     │
-└──────────────┘ └──────────────┘ └──────────────┘
+```mermaid
+graph TD
+    A[main.go / cmd] --> B[internal/ui]
+    B --> C[internal/github]
+    
+    B --> D[Health Intelligence Engine]
+    B --> E[Risk Intelligence Engine]
+    
+    subgraph Core Analyzers
+        D --> H1[PR Velocity]
+        D --> H2[Bus Factor]
+        D --> H3[Stale Detection]
+        E --> R1[Maintainer Overload]
+        E --> R2[Dependency Risk]
+        E --> R3[Security Posture]
+    end
+    
+    H1 --> W[WeightedScoreEngine]
+    H2 --> W
+    H3 --> W
+    R1 --> W
+    R2 --> W
+    R3 --> W
+    
+    W --> F[internal/output & renderers]
 ```
 
 ---
