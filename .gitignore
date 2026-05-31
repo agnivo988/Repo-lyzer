@@ -17,3 +17,5 @@ repo-lyzer
 
 # Go workspace file
 go.work
+analysis.json
+package-lock.json
