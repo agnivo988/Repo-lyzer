@@ -58,10 +58,19 @@ func (c *Client) HasToken() bool {
 	return c.token != ""
 }
 
-// SetToken sets the GitHub token for authentication
+// SetToken sets the GitHub token for authentication.
+// The previous token value is overwritten so subsequent requests use the new token.
 func (c *Client) SetToken(token string) {
 	c.token = token
 	c.cache.Flush()
+}
+
+// ClearToken removes the GitHub token from this Client instance so subsequent
+// requests are made without authentication. Call this on every live Client after
+// ClearGitHubToken() is invoked on the settings, otherwise the old token
+// persists in memory and continues to be sent in API request headers.
+func (c *Client) ClearToken() {
+	c.token = ""
 }
 
 // get performs a GET request to the GitHub API and decodes the JSON response.

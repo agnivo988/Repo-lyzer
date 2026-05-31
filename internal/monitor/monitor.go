@@ -119,6 +119,13 @@ func (m *Monitor) Stop() {
 	m.cancel()
 }
 
+// ClearToken removes the GitHub token from the underlying API client so
+// subsequent monitoring requests are made without authentication.
+// Call this whenever the user clears their GitHub token in settings.
+func (m *Monitor) ClearToken() {
+	m.client.ClearToken()
+}
+
 // monitorLoop runs the main monitoring loop
 func (m *Monitor) monitorLoop() {
 	defer m.wg.Done()

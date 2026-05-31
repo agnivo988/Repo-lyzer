@@ -99,6 +99,14 @@ func (m *MonitorDashboardModel) StopMonitoring() {
 	m.isMonitoring = false
 }
 
+// ClearToken propagates a token clear to the active monitor so it no longer
+// sends the old token on in-flight or future API requests.
+func (m *MonitorDashboardModel) ClearToken() {
+	if m.monitor != nil {
+		m.monitor.ClearToken()
+	}
+}
+
 func (m MonitorDashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
