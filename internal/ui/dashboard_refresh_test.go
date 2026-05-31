@@ -92,7 +92,7 @@ func TestDashboardOverviewShowsRefreshSummary(t *testing.T) {
 	})
 
 	view := model.overviewView()
-	for _, want := range []string{"Last Sync:", "Fetched:", "12 new issues", "3 new pull requests", "1 new contributor"} {
+	for _, want := range []string{"Last Sync:", "Fetching:", "12 new issues", "3 new pull requests", "1 new contributor"} {
 		if !strings.Contains(view, want) {
 			t.Fatalf("expected overview to contain %q, got:\n%s", want, view)
 		}

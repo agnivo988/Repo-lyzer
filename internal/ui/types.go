@@ -35,9 +35,9 @@ type AnalysisResult struct {
 
 // CachedAnalysisResult wraps AnalysisResult with cache metadata
 type CachedAnalysisResult struct {
-	Result   AnalysisResult
-	IsCached bool
-	CachedAt time.Time
+	Result    AnalysisResult
+	IsCached  bool
+	CachedAt  time.Time
 	ExpiresAt time.Time
 }
 

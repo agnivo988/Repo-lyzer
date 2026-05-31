@@ -1060,9 +1060,9 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 				if err := json.Unmarshal(entry.Analysis, &result); err == nil {
 					// Return cached result with status
 					return CachedAnalysisResult{
-						Result:   result,
-						IsCached: true,
-						CachedAt: entry.CachedAt,
+						Result:    result,
+						IsCached:  true,
+						CachedAt:  entry.CachedAt,
 						ExpiresAt: entry.ExpiresAt,
 					}
 				}
@@ -1144,9 +1144,9 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 						if err := json.Unmarshal(entry.Analysis, &result); err == nil {
 							// Return cached result with status
 							return CachedAnalysisResult{
-								Result:   result,
-								IsCached: true,
-								CachedAt: entry.CachedAt,
+								Result:    result,
+								IsCached:  true,
+								CachedAt:  entry.CachedAt,
 								ExpiresAt: entry.ExpiresAt,
 							}
 						}

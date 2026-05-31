@@ -21,8 +21,10 @@ func TestCacheStatusFromExpires_FreshAndStale(t *testing.T) {
 }
 
 func TestCachedThenLive_ProducesSynced(t *testing.T) {
-	// ensure no persisted current analysis interferes with tests
 	_ = os.Remove("exports/current_analysis.json")
+	t.Cleanup(func() {
+		_ = os.Remove("exports/current_analysis.json")
+	})
 
 	m := NewMainModel(nil, nil)
 
@@ -51,9 +53,6 @@ func TestCachedThenLive_ProducesSynced(t *testing.T) {
 	if m2.dashboard.cacheStatus != "synced" {
 		t.Fatalf("expected dashboard status synced after live result, got %s", m2.dashboard.cacheStatus)
 	}
-
-	// cleanup
-	_ = os.Remove("exports/current_analysis.json")
 }
 
 func TestNewMainModelStartsAtMenuEvenWithPersistedAnalysis(t *testing.T) {

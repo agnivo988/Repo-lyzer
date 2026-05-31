@@ -12,16 +12,8 @@ func withTempConfigPath(t *testing.T) string {
 
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "settings.json")
-	if err := os.Setenv("REPO_LYZER_CONFIG_PATH", configPath); err != nil {
-		t.Fatalf("Setenv(REPO_LYZER_CONFIG_PATH) error = %v", err)
-	}
-	if err := os.Setenv("REPO_LYZER_GITHUB_TOKEN", "test-token"); err != nil {
-		t.Fatalf("Setenv(REPO_LYZER_GITHUB_TOKEN) error = %v", err)
-	}
-	t.Cleanup(func() {
-		_ = os.Unsetenv("REPO_LYZER_CONFIG_PATH")
-		_ = os.Unsetenv("REPO_LYZER_GITHUB_TOKEN")
-	})
+	t.Setenv("REPO_LYZER_CONFIG_PATH", configPath)
+	t.Setenv("REPO_LYZER_GITHUB_TOKEN", "test-token")
 
 	return configPath
 }

@@ -371,9 +371,9 @@ func (m DashboardModel) overviewView() string {
 		refreshLines := []string{
 			fmt.Sprintf("Last Sync: %s", formatRelativeTime(m.refreshSummary.LastSync)),
 			"",
-			"Fetched:",
-			fmt.Sprintf("%d new issues", m.refreshSummary.NewIssues),
-			fmt.Sprintf("%d new pull requests", m.refreshSummary.NewPullRequests),
+			"Fetching:",
+			pluralizedCount(m.refreshSummary.NewIssues, "new issue", "new issues"),
+			pluralizedCount(m.refreshSummary.NewPullRequests, "new pull request", "new pull requests"),
 			fmt.Sprintf("%d new contributor", m.refreshSummary.NewContributors),
 		}
 		if m.refreshSummary.NewContributors != 1 {
@@ -468,15 +468,30 @@ func formatRelativeTime(t time.Time) string {
 		return "just now"
 	}
 	if delta < time.Hour {
-		return fmt.Sprintf("%d minutes ago", int(delta.Minutes()))
+		minutes := int(delta.Minutes())
+		if minutes == 1 {
+			return "1 minute ago"
+		}
+		return fmt.Sprintf("%d minutes ago", minutes)
 	}
 	if delta < 24*time.Hour {
-		return fmt.Sprintf("%d hours ago", int(delta.Hours()))
+		hours := int(delta.Hours())
+		if hours == 1 {
+			return "1 hour ago"
+		}
+		return fmt.Sprintf("%d hours ago", hours)
 	}
 	if delta < 48*time.Hour {
 		return "Yesterday"
 	}
 	return t.Format("2006-01-02 15:04")
+}
+
+func pluralizedCount(count int, singular string, plural string) string {
+	if count == 1 {
+		return fmt.Sprintf("1 %s", singular)
+	}
+	return fmt.Sprintf("%d %s", count, plural)
 }
 
 func (m DashboardModel) repoView() string {
