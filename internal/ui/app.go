@@ -1237,7 +1237,10 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		commits1, _ := client.GetCommits(parts1[0], parts1[1], 365)
 		contributors1, _ := client.GetContributorsWithAvatars(parts1[0], parts1[1], 15)
 		languages1, _ := client.GetLanguages(parts1[0], parts1[1])
-		fileTree1, _ := client.GetFileTree(parts1[0], parts1[1], repo1.DefaultBranch)
+		fileTree1, err := client.GetFileTree(parts1[0], parts1[1], repo1.DefaultBranch)
+		if err != nil {
+			fmt.Printf("⚠️ %v\n", err)
+		}
 		score1 := analyzer.CalculateHealth(repo1, commits1)
 		busFactor1, busRisk1 := analyzer.BusFactor(contributors1)
 		maturityScore1, maturityLevel1 := analyzer.RepoMaturityScore(repo1, len(commits1), len(contributors1), false)
@@ -1263,7 +1266,10 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		commits2, _ := client.GetCommits(parts2[0], parts2[1], 365)
 		contributors2, _ := client.GetContributorsWithAvatars(parts2[0], parts2[1], 15)
 		languages2, _ := client.GetLanguages(parts2[0], parts2[1])
-		fileTree2, _ := client.GetFileTree(parts2[0], parts2[1], repo2.DefaultBranch)
+		fileTree2, err := client.GetFileTree(parts2[0], parts2[1], repo2.DefaultBranch)
+		if err != nil {
+			fmt.Printf("⚠️ %v\n", err)
+		}
 		score2 := analyzer.CalculateHealth(repo2, commits2)
 		busFactor2, busRisk2 := analyzer.BusFactor(contributors2)
 		maturityScore2, maturityLevel2 := analyzer.RepoMaturityScore(repo2, len(commits2), len(contributors2), false)

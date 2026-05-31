@@ -1,5 +1,7 @@
 package github
 
+import "fmt"
+
 type TreeEntry struct {
 	Path string `json:"path"`
 	Mode string `json:"mode"`
@@ -19,5 +21,11 @@ func (c *Client) GetFileTree(owner, repo, branch string) ([]TreeEntry, error) {
 	var t TreeResponse
 	// recursive=1 to get full tree
 	err := c.get("https://api.github.com/repos/"+owner+"/"+repo+"/git/trees/"+branch+"?recursive=1", &t)
-	return t.Tree, err
+	if err != nil {
+		return nil, err
+	}
+	if t.Truncated {
+		return t.Tree, fmt.Errorf("file tree truncated by GitHub: results may be incomplete for large repositories")
+	}
+	return t.Tree, nil
 }
