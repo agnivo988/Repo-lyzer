@@ -837,7 +837,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 
 		// Check cache first
 		if m.cache != nil {
-			if entry, found := m.cache.Get(repoName); found {
+			if entry, found := m.cache.Get("analysis:" + repoName); found {
 				// Unmarshal cached analysis
 				var result AnalysisResult
 				if err := json.Unmarshal(entry.Analysis, &result); err == nil {
@@ -902,7 +902,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		// Compare with cached incremental metadata
 		changedFiles := []string{}
 
-		if entry, found := m.cache.Get(repoName); found {
+		if entry, found := m.cache.Get("analysis:" + repoName); found {
 			if entry.IncrementalMetadata != nil {
 
 				for path, hash := range currentHashes {
@@ -1054,7 +1054,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 
 		// Save to cache
 		if m.cache != nil {
-			m.cache.Set(repoName, result)
+			m.cache.Set("analysis:"+repoName, result)
 		}
 
 		// Add success notification
