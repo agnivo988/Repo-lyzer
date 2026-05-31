@@ -21,10 +21,10 @@ func TestCacheStatusFromExpires_FreshAndStale(t *testing.T) {
 }
 
 func TestCachedThenLive_ProducesSynced(t *testing.T) {
-	_ = os.Remove("exports/current_analysis.json")
 	t.Cleanup(func() {
 		_ = os.Remove("exports/current_analysis.json")
 	})
+	_ = os.Remove("exports/current_analysis.json")
 
 	m := NewMainModel(nil, nil)
 
@@ -56,12 +56,13 @@ func TestCachedThenLive_ProducesSynced(t *testing.T) {
 }
 
 func TestNewMainModelStartsAtMenuEvenWithPersistedAnalysis(t *testing.T) {
-	if err := SaveCurrentAnalysis(AnalysisResult{Repo: &github.Repo{FullName: "owner/repo"}}); err != nil {
-		t.Fatalf("failed to save current analysis: %v", err)
-	}
 	t.Cleanup(func() {
 		_ = os.Remove("exports/current_analysis.json")
 	})
+
+	if err := SaveCurrentAnalysis(AnalysisResult{Repo: &github.Repo{FullName: "owner/repo"}}); err != nil {
+		t.Fatalf("failed to save current analysis: %v", err)
+	}
 
 	m := NewMainModel(nil, nil)
 	if m.state != stateMenu {
