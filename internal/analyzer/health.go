@@ -1,25 +1,13 @@
 package analyzer
 
-import "github.com/agnivo988/Repo-lyzer/internal/github"
+import (
+	"github.com/agnivo988/Repo-lyzer/internal/analyzer/health"
+	"github.com/agnivo988/Repo-lyzer/internal/github"
+)
 
+// CalculateHealth is the legacy wrapper for the new modular HealthAnalyzer
 func CalculateHealth(repo *github.Repo, commits []github.Commit) int {
-	score := 50
-
-	if repo.Description != "" {
-		score += 10
-	}
-	if repo.Stars > 50 {
-		score += 10
-	}
-	if len(commits) > 10 {
-		score += 20
-	}
-	if repo.OpenIssues < 20 {
-		score += 10
-	}
-
-	if score > 100 {
-		score = 100
-	}
-	return score
+	analyzer := health.NewHealthAnalyzer()
+	score, _ := analyzer.CalculateRepositoryHealth(repo, commits)
+	return int(score)
 }

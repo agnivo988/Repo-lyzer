@@ -37,6 +37,15 @@ func TestBusFactor(t *testing.T) {
 			wantRisk:   "High Risk",
 		},
 		{
+			name: "unsorted list still detects dominant contributor",
+			contributors: []github.Contributor{
+				{Login: "dev2", Commits: 10},
+				{Login: "dev1", Commits: 90},
+			},
+			wantFactor: 1,
+			wantRisk:   "High Risk",
+		},
+		{
 			name: "balanced team (medium risk)",
 			contributors: []github.Contributor{
 				{Login: "dev1", Commits: 50},
@@ -44,6 +53,15 @@ func TestBusFactor(t *testing.T) {
 			},
 			wantFactor: 2,
 			wantRisk:   "Medium Risk",
+		},
+		{
+			name: "all zero commits returns Unknown",
+			contributors: []github.Contributor{
+				{Login: "dev1", Commits: 0},
+				{Login: "dev2", Commits: 0},
+			},
+			wantFactor: 0,
+			wantRisk:   "Unknown",
 		},
 		{
 			name: "large diverse team (low risk)",
@@ -109,6 +127,14 @@ func TestBusFactor_RiskLevels(t *testing.T) {
 				{Login: "dev3", Commits: 40},
 			},
 			wantRisk: "Low Risk",
+		},
+		{
+			name: "unsorted contributors still use top commit count",
+			contributors: []github.Contributor{
+				{Login: "minor", Commits: 10},
+				{Login: "lead", Commits: 90},
+			},
+			wantRisk: "High Risk",
 		},
 	}
 

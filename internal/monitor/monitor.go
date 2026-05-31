@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -14,36 +15,38 @@ import (
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 )
 
+const monitorStateTTL = 100 * 365 * 24 * time.Hour
+
 // MonitorState represents the current state of a monitored repository
 type MonitorState struct {
-	Owner               string    `json:"owner"`
-	Repo                string    `json:"repo"`
-	LastCommitSHA       string    `json:"last_commit_sha"`
-	LastIssueID         int       `json:"last_issue_id"`
-	LastPRID            int       `json:"last_pr_id"`
-	LastContributorCount int      `json:"last_contributor_count"`
-	LastUpdated         time.Time `json:"last_updated"`
+	Owner                string    `json:"owner"`
+	Repo                 string    `json:"repo"`
+	LastCommitSHA        string    `json:"last_commit_sha"`
+	LastIssueCount       int       `json:"last_issue_id"`
+	LastPRCount          int       `json:"last_pr_id"`
+	LastContributorCount int       `json:"last_contributor_count"`
+	LastUpdated          time.Time `json:"last_updated"`
 }
 
 // Monitor manages real-time monitoring of a GitHub repository
 type Monitor struct {
-	client       *github.Client
-	cache        *cache.Cache
-	owner        string
-	repo         string
-	interval     time.Duration
-	state        *MonitorState
-	stateMutex   sync.RWMutex
-	ctx          context.Context
-	cancel       context.CancelFunc
-	wg           sync.WaitGroup
+	client        *github.Client
+	cache         *cache.Cache
+	owner         string
+	repo          string
+	interval      time.Duration
+	state         *MonitorState
+	stateMutex    sync.RWMutex
+	ctx           context.Context
+	cancel        context.CancelFunc
+	wg            sync.WaitGroup
 	notifications chan Notification
-	startOnce    sync.Once
+	startOnce     sync.Once
 }
 
 // Notification represents a monitoring notification
 type Notification struct {
-	Type      string    `json:"type"`      // "commit", "issue", "pr", "contributor"
+	Type      string    `json:"type"` // "commit", "issue", "pr", "contributor"
 	Title     string    `json:"title"`
 	Message   string    `json:"message"`
 	Timestamp time.Time `json:"timestamp"`
@@ -185,7 +188,29 @@ func (m *Monitor) checkCommits() {
 	}
 }
 
-// checkIssues monitors for new issues
+// countIssues returns the number of true issues (PullRequest == nil) in the list.
+func countIssues(items []github.Issue) int {
+	count := 0
+	for _, item := range items {
+		if item.PullRequest == nil {
+			count++
+		}
+	}
+	return count
+}
+
+// countPRs returns the number of pull requests (PullRequest != nil) in the list.
+func countPRs(items []github.Issue) int {
+	count := 0
+	for _, item := range items {
+		if item.PullRequest != nil {
+			count++
+		}
+	}
+	return count
+}
+
+// checkIssues monitors for new issues (excludes pull requests)
 func (m *Monitor) checkIssues() {
 	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
 	if err != nil {
@@ -193,40 +218,43 @@ func (m *Monitor) checkIssues() {
 		return
 	}
 
-	// Check if the number of issues has changed
-	if len(issues) != m.state.LastIssueID {
+	actualIssuesCount := countIssues(issues)
+
+	// Only notify when the count actually changes
+	if actualIssuesCount != m.state.LastIssueCount {
 		notification := Notification{
 			Type:      "issue",
 			Title:     "Issues Update",
-			Message:   fmt.Sprintf("Repository has %d open issues", len(issues)),
+			Message:   fmt.Sprintf("Repository has %d open issues", actualIssuesCount),
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
 		m.notifications <- notification
-		m.state.LastIssueID = len(issues)
+		m.state.LastIssueCount = actualIssuesCount
 	}
 }
 
-// checkPullRequests monitors for new pull requests
+// checkPullRequests monitors for new pull requests (filtered and state-tracked)
 func (m *Monitor) checkPullRequests() {
-	// For now, we'll use the same issues endpoint since PRs are a type of issue
-	// In a full implementation, we'd filter for pull requests specifically
-	prs, err := m.client.GetIssues(m.owner, m.repo, "open")
+	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
 	if err != nil {
 		log.Printf("Failed to get pull requests: %v", err)
 		return
 	}
 
-	// Simplified check - in reality, we'd distinguish between issues and PRs
-	if len(prs) > 0 {
+	actualPRCount := countPRs(issues)
+
+	// Only notify when the PR count actually changes
+	if actualPRCount != m.state.LastPRCount {
 		notification := Notification{
 			Type:      "pr",
 			Title:     "Pull Requests Update",
-			Message:   fmt.Sprintf("Repository has %d open pull requests/issues", len(prs)),
+			Message:   fmt.Sprintf("Repository has %d open pull requests", actualPRCount),
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
 		m.notifications <- notification
+		m.state.LastPRCount = actualPRCount
 	}
 }
 
@@ -282,17 +310,48 @@ func (m *Monitor) loadState() {
 	defer m.stateMutex.Unlock()
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	if _, found := m.cache.Get(key); found {
-		// In a full implementation, we'd deserialize the state
-		// For now, just initialize with current time
-		m.state.LastUpdated = time.Now()
+	entry, found := m.cache.Get(key)
+	if !found || entry == nil || len(entry.Analysis) == 0 {
+		return
 	}
+
+	var cachedState MonitorState
+	if err := json.Unmarshal(entry.Analysis, &cachedState); err != nil {
+		log.Printf("Failed to restore monitoring state for %s: %v", key, err)
+		return
+	}
+
+	// Ensure monitor identity remains consistent even with older cache payloads.
+	if cachedState.Owner == "" {
+		cachedState.Owner = m.owner
+	}
+	if cachedState.Repo == "" {
+		cachedState.Repo = m.repo
+	}
+	if cachedState.Owner != m.owner || cachedState.Repo != m.repo {
+		log.Printf("Ignoring monitoring state for mismatched repository: %s/%s", cachedState.Owner, cachedState.Repo)
+		return
+	}
+
+	m.state = &cachedState
 }
 
 // saveState saves the monitoring state to cache
 func (m *Monitor) saveState() {
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	// In a full implementation, we'd serialize the state
-	// For now, just save a placeholder
-	m.cache.Set(key, m.state)
+	if m.state == nil {
+		return
+	}
+
+	stateCopy := *m.state
+	if stateCopy.Owner == "" {
+		stateCopy.Owner = m.owner
+	}
+	if stateCopy.Repo == "" {
+		stateCopy.Repo = m.repo
+	}
+
+	if err := m.cache.SetWithTTL(key, stateCopy, monitorStateTTL); err != nil {
+		log.Printf("Failed to persist monitoring state for %s: %v", key, err)
+	}
 }

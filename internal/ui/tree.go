@@ -39,6 +39,7 @@ type TreeModel struct {
 // It builds the file tree from analysis results if provided, otherwise creates an empty tree.
 // Parameters:
 //   - result: Pointer to AnalysisResult containing file tree data, can be nil
+//
 // Returns the initialized TreeModel with the file tree populated.
 func NewTreeModel(result *AnalysisResult) TreeModel {
 	var root *FileNode

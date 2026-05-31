@@ -4,6 +4,7 @@ package analyzer
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -165,19 +166,72 @@ func convertVuln(o osvVuln, pkg, ver string) Vulnerability {
 func getSeverity(o osvVuln) string {
 	for _, s := range o.Severity {
 		if s.Type == "CVSS_V3" {
-			var score float64
-			fmt.Sscanf(s.Score, "%f", &score)
+			score := parseCvssScore(s.Score)
 			if score >= 9.0 {
 				return "CRITICAL"
 			} else if score >= 7.0 {
 				return "HIGH"
 			} else if score >= 4.0 {
 				return "MEDIUM"
+			} else if score > 0.0 {
+				return "LOW"
 			}
-			return "LOW"
+			return "NONE"
 		}
 	}
 	return "MEDIUM"
+}
+
+func parseCvssScore(scoreStr string) float64 {
+	var score float64
+	if _, err := fmt.Sscanf(scoreStr, "%f", &score); err == nil {
+		return score
+	}
+	if !strings.HasPrefix(scoreStr, "CVSS:") {
+		return 0
+	}
+	parts := strings.Split(scoreStr, "/")
+	metrics := make(map[string]string)
+	for _, part := range parts {
+		kv := strings.SplitN(part, ":", 2)
+		if len(kv) == 2 {
+			metrics[kv[0]] = kv[1]
+		}
+	}
+	av := map[string]float64{"N": 0.85, "A": 0.62, "L": 0.55, "P": 0.20}[metrics["AV"]]
+	ac := map[string]float64{"L": 0.77, "H": 0.44}[metrics["AC"]]
+	ui := map[string]float64{"N": 0.85, "R": 0.62}[metrics["UI"]]
+	c := map[string]float64{"H": 0.56, "L": 0.22}[metrics["C"]]
+	i := map[string]float64{"H": 0.56, "L": 0.22}[metrics["I"]]
+	a := map[string]float64{"H": 0.56, "L": 0.22}[metrics["A"]]
+	var pr float64
+	s := metrics["S"]
+	if s == "C" {
+		pr = map[string]float64{"N": 0.85, "L": 0.68, "H": 0.50}[metrics["PR"]]
+	} else {
+		pr = map[string]float64{"N": 0.85, "L": 0.62, "H": 0.27}[metrics["PR"]]
+	}
+	iss := 1 - (1-c)*(1-i)*(1-a)
+	var impact float64
+	if s == "C" {
+		impact = 7.52*(iss-0.029) - 3.25*math.Pow(iss-0.02, 15)
+	} else {
+		impact = 6.42 * iss
+	}
+	exploitability := 8.22 * av * ac * pr * ui
+	var base float64
+	if s == "C" {
+		base = 1.08 * (impact + exploitability)
+	} else {
+		base = impact + exploitability
+	}
+	if base > 10 {
+		base = 10
+	}
+	if base < 0 {
+		base = 0
+	}
+	return math.Ceil(base*10) / 10
 }
 
 func calcSecurityScore(r *SecurityScanResult) int {

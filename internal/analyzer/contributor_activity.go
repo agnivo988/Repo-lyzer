@@ -36,12 +36,15 @@ func AnalyzeContributorActivity(commits []github.Commit) ContributorActivityResu
 		Last180Days: last180,
 	}
 
-	// Determine trend
+	// Determine trend by comparing recent period (0-90 days) to previous period (90-180 days)
+	// prev90 = commits in days 90-180
+	prev90 := last180 - last90
+
 	switch {
-	case last90 < last180:
+	case last90 < prev90:
 		result.Trend = "Declining"
 		result.Insight = "Commit activity has decreased in recent months"
-	case last90 > last180:
+	case last90 > prev90:
 		result.Trend = "Growing"
 		result.Insight = "Commit activity has increased recently"
 	default:

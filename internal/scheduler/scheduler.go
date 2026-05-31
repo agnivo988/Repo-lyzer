@@ -96,6 +96,8 @@ func (s *Scheduler) scheduleJob(job config.ScheduledJob) error {
 
 // executeJob runs the analysis and exports the report
 func (s *Scheduler) executeJob(job config.ScheduledJob) error {
+	startTime := time.Now()
+
 	// Initialize GitHub client
 	client := github.NewClient()
 
@@ -138,7 +140,7 @@ func (s *Scheduler) executeJob(job config.ScheduledJob) error {
 		MaturityLevel:   maturityLevel,
 		CommitsLastYear: len(commits),
 		Contributors:    len(contributors),
-		Duration:        time.Since(time.Now()), // Will be corrected
+		Duration:        time.Since(startTime),
 		Languages:       langs,
 	}
 
@@ -352,13 +354,17 @@ func (s *Scheduler) EnableJob(jobID string, enabled bool) error {
 
 // calculateNextRunTime calculates the next run time based on cron expression
 func (s *Scheduler) calculateNextRunTime(cronExpr string) time.Time {
-	// Simple implementation - in production, use the cron library
-	return time.Now().Add(24 * time.Hour)
+	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
+	sched, err := parser.Parse(cronExpr)
+	if err != nil {
+		return time.Now().Add(24 * time.Hour) // fallback
+	}
+	return sched.Next(time.Now())
 }
 
 // ValidateCronExpression validates a cron expression
 func ValidateCronExpression(expr string) error {
-	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 	_, err := parser.Parse(expr)
 	return err
 }

@@ -25,6 +25,7 @@ type AnalyzerDataBridge struct {
 // to provide a clean interface between the analyzer logic and UI components.
 // Parameters:
 //   - result: AnalysisResult containing all repository analysis data
+//
 // Returns a pointer to the initialized AnalyzerDataBridge.
 func NewAnalyzerDataBridge(result AnalysisResult) *AnalyzerDataBridge {
 	return &AnalyzerDataBridge{
@@ -144,9 +145,9 @@ func (b *AnalyzerDataBridge) getHealthColor() string {
 }
 
 func (b *AnalyzerDataBridge) getRiskColor() string {
-	if b.busFactor >= 7 {
+	if b.busFactor >= 3 {
 		return "green"
-	} else if b.busFactor >= 4 {
+	} else if b.busFactor == 2 {
 		return "yellow"
 	}
 	return "red"
@@ -287,12 +288,12 @@ func (b *AnalyzerDataBridge) GenerateSummary() string {
 		summary += "❌ This repository needs attention in several areas.\n"
 	}
 
-	// Bus factor assessment
-	if b.busFactor <= 2 {
+	// Bus factor assessment (1=high risk, 2=medium, 3=low)
+	if b.busFactor <= 1 {
 		summary += "🚌 WARNING: High dependency on few contributors.\n"
-	} else if b.busFactor <= 4 {
+	} else if b.busFactor == 2 {
 		summary += "⚠️ Some concentration of key contributors.\n"
-	} else {
+	} else if b.busFactor >= 3 {
 		summary += "✅ Good distribution of contributor responsibility.\n"
 	}
 

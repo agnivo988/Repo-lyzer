@@ -112,15 +112,17 @@ func calculateOverallScore(health, security, maturity, busFactor int) int {
 }
 
 func normalizeBusFactor(busFactor int) int {
-	// Convert bus factor to 0-100 scale (higher bus factor = better score)
-	if busFactor >= 10 {
+	// BusFactor() returns 1 (high risk), 2 (medium), or 3 (low risk).
+	switch {
+	case busFactor >= 3:
 		return 100
-	}
-	if busFactor <= 1 {
+	case busFactor == 2:
+		return 60
+	case busFactor == 1:
 		return 20
+	default:
+		return 0
 	}
-	// Linear scaling between 1 and 10
-	return 20 + ((busFactor-1)*80)/9
 }
 
 func determineRiskLevel(overallScore, busFactor, securityScore int) string {

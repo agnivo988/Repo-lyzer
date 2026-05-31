@@ -22,16 +22,19 @@ func CalculateOverallScore(health, security, maturity, busFactor, activity int) 
 	return int(overall + 0.5) // Round to nearest
 }
 
-// NormalizeBusFactor converts bus factor to 0-100 scale (higher bus factor = better score)
+// NormalizeBusFactor converts bus factor to 0-100 scale (higher bus factor = better score).
+// BusFactor() returns 1 (high risk), 2 (medium), or 3 (low risk).
 func NormalizeBusFactor(busFactor int) float64 {
-	if busFactor >= 10 {
+	switch {
+	case busFactor >= 3:
 		return 100
-	}
-	if busFactor <= 1 {
+	case busFactor == 2:
+		return 60
+	case busFactor == 1:
 		return 20
+	default:
+		return 0
 	}
-	// Linear scaling between 1 and 10
-	return 20.0 + (float64(busFactor-1)*80.0)/9.0
 }
 
 // GetGrade returns a letter grade based on overall score

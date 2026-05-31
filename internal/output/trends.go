@@ -36,7 +36,7 @@ var (
 )
 
 // PrintTrendMetrics prints comprehensive trend analysis results
-func PrintTrendMetrics(metrics *analyzer.TrendMetrics) {
+func PrintTrendMetrics(metrics *analyzer.TrendMetrics, detailedFlag bool) {
 	fmt.Println()
 	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println(trendHeaderStyle.Render("📈 REPOSITORY TREND ANALYSIS"))
@@ -50,7 +50,7 @@ func PrintTrendMetrics(metrics *analyzer.TrendMetrics) {
 	printOverallTrend(metrics)
 
 	// Commit Trends
-	printCommitTrends(metrics)
+	printCommitTrends(metrics, detailedFlag)
 
 	// Contributor Trends
 	printContributorTrends(metrics)
@@ -83,7 +83,7 @@ func printOverallTrend(metrics *analyzer.TrendMetrics) {
 }
 
 // printCommitTrends prints commit frequency trends
-func printCommitTrends(metrics *analyzer.TrendMetrics) {
+func printCommitTrends(metrics *analyzer.TrendMetrics, detailed bool) {
 	fmt.Println("COMMIT TRENDS")
 	fmt.Println(strings.Repeat("-", 40))
 
@@ -94,6 +94,15 @@ func printCommitTrends(metrics *analyzer.TrendMetrics) {
 	fmt.Printf("   Change Rate: %.1f%%\n", metrics.CommitChangeRate)
 	fmt.Printf("   Avg/Month: %.1f commits\n", metrics.AvgCommitsPerMonth)
 	fmt.Printf("   Sparkline: %s\n\n", sparkline)
+	if detailed {
+		fmt.Println("Monthly Breakdown:")
+
+		for _, month := range metrics.MonthlyData {
+			fmt.Printf("- %s : %d commits\n", month.Month.Format("Jan 06"), month.Commits)
+		}
+
+		fmt.Println()
+	}
 }
 
 // printContributorTrends prints contributor growth trends

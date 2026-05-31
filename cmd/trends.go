@@ -135,7 +135,7 @@ func runTrends(repoArg string, cmd *cobra.Command) error {
 	if jsonFlag {
 		output.PrintTrendCompact(metrics)
 	} else {
-		output.PrintTrendMetrics(metrics)
+		output.PrintTrendMetrics(metrics, detailedFlag)
 
 		// Track analysis duration
 		duration := time.Since(startTime)

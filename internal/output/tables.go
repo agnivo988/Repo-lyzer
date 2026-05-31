@@ -11,7 +11,7 @@ import (
 
 func PrintRepo(r *github.Repo) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.Header([]string{"Repository", "Stars", "Forks", "Open Issues"})
+	table.Header("Repository", "Stars", "Forks", "Open Issues")
 	table.Append([]string{
 		r.FullName,
 		fmt.Sprint(r.Stars),

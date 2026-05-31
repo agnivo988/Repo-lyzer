@@ -1,0 +1,21 @@
+services:
+  repo-lyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: repo-lyzer
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    environment:
+      # Uncomment and set your GitHub Token for API access
+      # - REPO_LYZER_GITHUB_TOKEN=your_token_here
+      
+      # Set the default monitor interval (e.g., 30s, 5m, 1h)
+      - REPO_LYZER_INTERVAL=1h
+      
+      # Set the logging level (debug, info, warn, error)
+      - REPO_LYZER_LOG_LEVEL=info
+      
+      # The config path is set in the Dockerfile by default
+      # - REPO_LYZER_CONFIG_PATH=/app/data/settings.json

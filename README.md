@@ -9,6 +9,7 @@
 
 ## Features
 - **Deep Analytics** – Repository health, maturity scores, and bus factor.
+- **Contribution Friendliness** – Assess how easy it is to contribute to a repository using weighted metrics (`--contribute` flag).
 - **Interactive TUI** – Fully navigable keyboard-driven menu system.
 - **Visual Data** – Language breakdown bars and horizontal commit graphs.
 - **File Explorer** – Browse repository structures directly in the dashboard.
@@ -31,7 +32,44 @@ repo-lyzer summary golang/go
 
 # Run full interactive analysis
 repo-lyzer analyze microsoft/vscode
+
+# Run analysis with contribution scoring enabled
+# Run analysis with contribution scoring enabled
+repo-lyzer analyze microsoft/vscode --contribute
 ```
+
+### Docker Usage
+
+You can run `repo-lyzer` using Docker without installing Go. The Docker image uses a non-root user and is optimized for production.
+
+```bash
+# Build the image
+docker build -t repo-lyzer .
+
+# Run the CLI interactively
+docker run -it --rm repo-lyzer
+```
+
+### Docker Compose (Daemon Mode)
+
+For continuous monitoring and scheduling, you can run the daemon mode using `docker-compose`:
+
+```bash
+# Start the daemon
+docker compose up -d
+
+# View logs
+docker compose logs -f
+```
+
+#### Environment Variables
+You can configure `repo-lyzer` using environment variables. These will override file-based settings:
+- `REPO_LYZER_GITHUB_TOKEN`: Your GitHub Personal Access Token
+- `REPO_LYZER_INTERVAL`: Scheduler polling interval (e.g., `30s`, `5m`, `1h`)
+- `REPO_LYZER_LOG_LEVEL`: Logging level (`debug`, `info`, `warn`, `error`)
+- `REPO_LYZER_CONFIG_PATH`: Override the config file path (defaults to `/app/data/settings.json` in the container)
+
+The `docker-compose.yml` mounts a local `./data` directory to persist settings and reports.
 
 ---
 

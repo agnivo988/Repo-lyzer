@@ -37,8 +37,19 @@ Examples:
   repo-lyzer summary facebook/react
   repo-lyzer summary vuejs/vue
   repo-lyzer summary angular/angular`,
-	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			fmt.Println("Error: please provide a repository name to analyze.")
+			fmt.Println("Usage:   repo-lyzer summary <repository>")
+			fmt.Println("Example: repo-lyzer summary golang/go")
+			return fmt.Errorf("repository name required")
+		} else if len(args) > 1 {
+			fmt.Println("Error: too many arguments provided.")
+			fmt.Println("Usage:   repo-lyzer summary <repository>")
+			fmt.Println("Example: repo-lyzer summary golang/go")
+			return fmt.Errorf("too many arguments: expected 1, got %d", len(args))
+		}
+
 		// Validate the repository URL format
 		owner, repo, err := validateRepoURL(args[0])
 		if err != nil {

@@ -76,7 +76,7 @@ func (s *Spinner) StopWithMessage(message string) {
 	s.stopChan <- true
 
 	// Display the completion message
-	fmt.Printf("\r✓ %s\n", message)
+	fmt.Printf("\r✓ %s\033[K\n", message)
 	s.completed = true
 }
 
@@ -100,7 +100,7 @@ func (s *Spinner) animate() {
 			s.mu.Lock()
 			if s.active {
 				frame := s.frames[frameIndex%len(s.frames)]
-				fmt.Printf("\r%s %s", frame, s.message)
+				fmt.Printf("\r%s %s\033[K", frame, s.message)
 			}
 			s.mu.Unlock()
 
@@ -278,12 +278,14 @@ func clearLine() string {
 // OverallProgress tracks the overall progress of a multi-step analysis operation
 // It displays both the current step spinner and an overall percentage progress
 type OverallProgress struct {
+	stepDone       chan struct{}
 	totalSteps     int
 	completedSteps int
 	currentStep    string
 	mu             sync.Mutex
 	spinner        *Spinner
 	startTime      time.Time
+	stepStartTime  time.Time
 }
 
 // NewOverallProgress creates a new overall progress tracker
@@ -296,6 +298,7 @@ func NewOverallProgress(totalSteps int) *OverallProgress {
 		currentStep:    "",
 		spinner:        NewSpinner(),
 		startTime:      time.Now(),
+		stepStartTime:  time.Now(),
 	}
 }
 
@@ -303,35 +306,80 @@ func NewOverallProgress(totalSteps int) *OverallProgress {
 // This updates the current step display and starts the spinner
 func (o *OverallProgress) StartStep(stepMessage string) {
 	o.mu.Lock()
-	defer o.mu.Unlock()
+	if o.stepDone != nil {
+		close(o.stepDone)
+	}
+
+	o.stepDone = make(chan struct{})
 
 	o.currentStep = stepMessage
+	o.stepStartTime = time.Now()
+
 	percentage := o.calculatePercentage()
 
-	message := fmt.Sprintf("%s [%d/%d - %d%%]", stepMessage, o.completedSteps+1, o.totalSteps, percentage)
+	message := fmt.Sprintf(
+		"%s [%d/%d - %d%%] (0s elapsed)",
+		stepMessage,
+		o.completedSteps+1,
+		o.totalSteps,
+		percentage,
+	)
+
 	o.spinner.Start(message)
+	o.mu.Unlock()
+
+	// Continuously update elapsed time while spinner is active
+	go func(step string, done <-chan struct{}) {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-done:
+				return
+
+			case <-ticker.C:
+				o.mu.Lock()
+
+				elapsed := int(time.Since(o.stepStartTime).Seconds())
+
+				updatedMessage := fmt.Sprintf(
+					"%s [%d/%d - %d%%] (%ds elapsed)",
+					step,
+					o.completedSteps+1,
+					o.totalSteps,
+					o.calculatePercentage(),
+					elapsed,
+				)
+
+				o.spinner.Update(updatedMessage)
+				o.mu.Unlock()
+			}
+		}
+	}(stepMessage, o.stepDone)
 }
 
 // CompleteStep marks the current step as complete and moves to the next
 func (o *OverallProgress) CompleteStep(stepMessage string) {
 	o.mu.Lock()
+	if o.stepDone != nil {
+		close(o.stepDone)
+		o.stepDone = nil
+	}
 	defer o.mu.Unlock()
 
 	o.completedSteps++
 	percentage := o.calculatePercentage()
 
-	o.spinner.StopWithMessage(fmt.Sprintf("%s [%d/%d - %d%%]", stepMessage, o.completedSteps, o.totalSteps, percentage))
-}
-
-// CompleteStepWithDetails marks the current step as complete with additional details
-func (o *OverallProgress) CompleteStepWithDetails(stepMessage string) {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
-	o.completedSteps++
-	percentage := o.calculatePercentage()
-
-	o.spinner.StopWithMessage(fmt.Sprintf("%s [%d/%d - %d%%]", stepMessage, o.completedSteps, o.totalSteps, percentage))
+	o.spinner.StopWithMessage(
+		fmt.Sprintf(
+			"%s [%d/%d - %d%%]",
+			stepMessage,
+			o.completedSteps,
+			o.totalSteps,
+			percentage,
+		),
+	)
 }
 
 // UpdateStep updates the current step message without stopping the spinner
@@ -341,8 +389,17 @@ func (o *OverallProgress) UpdateStep(stepMessage string) {
 
 	o.currentStep = stepMessage
 	percentage := o.calculatePercentage()
+	elapsed := int(time.Since(o.stepStartTime).Seconds())
 
-	message := fmt.Sprintf("%s [%d/%d - %d%%]", stepMessage, o.completedSteps+1, o.totalSteps, percentage)
+	message := fmt.Sprintf(
+		"%s [%d/%d - %d%%] (%ds elapsed)",
+		stepMessage,
+		o.completedSteps+1,
+		o.totalSteps,
+		percentage,
+		elapsed,
+	)
+
 	o.spinner.Update(message)
 }
 

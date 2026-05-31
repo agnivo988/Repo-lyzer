@@ -27,19 +27,26 @@ const (
 	viewDependencies
 	viewSecurity
 	viewRecruiter
+	viewMaintainer
 	viewAPIStatus
 )
 
 type DashboardModel struct {
-	data        AnalysisResult
-	BackToMenu  bool
-	width       int
-	height      int
-	showExport  bool
-	statusMsg   string
-	currentView dashboardView
-	showHelp    bool
-	cacheStatus string // "fresh", "cached", or ""
+	data              AnalysisResult
+	BackToMenu        bool
+	width             int
+	height            int
+	showExport        bool
+	statusMsg         string
+	currentView       dashboardView
+	showHelp          bool
+	cacheStatus       string // "fresh", "cached", or ""
+	
+	// Precalculated fields for performance
+	// Precalculated fields for performance
+	precalcActivity map[string]int
+	apiStatusMsg    string
+	isFetchingAPI        bool
 }
 
 func NewDashboardModel() DashboardModel {
@@ -52,11 +59,21 @@ func (m DashboardModel) Init() tea.Cmd { return nil }
 
 func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
+	// Precalculate heavy charts
+	m.precalcActivity = analyzer.CommitsPerDay(m.data.Commits)
+	
+	if m.data.ContributorInsights == nil && len(m.data.Contributors) > 0 {
+		m.data.ContributorInsights = analyzer.AnalyzeContributors(m.data.Contributors)
+	}
+	
+	m.apiStatusMsg = ""
+	m.isFetchingAPI = false
 }
 
 func (m *DashboardModel) SetCacheStatus(status string) {
 	m.cacheStatus = status
 }
+
 
 type exportMsg struct {
 	err error
@@ -65,6 +82,11 @@ type exportMsg struct {
 
 func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case fetchedAPIStatusMsg:
+		m.apiStatusMsg = string(msg)
+		m.isFetchingAPI = false
+		return m, nil
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -193,6 +215,8 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.currentView = viewDependencies
 		case "0":
 			m.currentView = viewSecurity
+		case "u":
+			m.currentView = viewMaintainer
 
 		case "right", "l":
 			if !m.showHelp && !m.showExport {
@@ -214,6 +238,11 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return "clear_status"
 			})
 		}
+	}
+
+	if m.currentView == viewAPIStatus && m.apiStatusMsg == "" && !m.isFetchingAPI {
+		m.isFetchingAPI = true
+		return m, fetchAPIStatusCmd()
 	}
 
 	return m, nil
@@ -255,6 +284,8 @@ func (m DashboardModel) View() string {
 		content = m.securityView()
 	case viewRecruiter:
 		content = m.recruiterView()
+	case viewMaintainer:
+		content = m.maintainerView()
 	case viewAPIStatus:
 		content = m.apiStatusView()
 	}
@@ -297,7 +328,7 @@ func (m DashboardModel) View() string {
 }
 
 func (m DashboardModel) renderTabs() string {
-	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "API"}
+	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "Maintainer", "API"}
 
 	var renderedTabs []string
 
@@ -341,13 +372,53 @@ func (m DashboardModel) overviewView() string {
 		"\n"+metrics,
 	))
 
-	activity := analyzer.CommitsPerDay(m.data.Commits)
-	chart := RenderCommitActivity(activity, 15)
 	chartBox := CardStyle.Render(lipgloss.JoinVertical(lipgloss.Left,
 		lipgloss.NewStyle().Bold(true).Render("Activity Trend"),
-		"\n"+chart,
+		"\n"+RenderCommitActivity(m.precalcActivity, 15),
 	))
 	riskPanel := m.riskAlertsView()
+
+	contrib := m.data.ContributionScore
+	var contribDetails string
+	if contrib.Level != "" {
+		contribDetails = fmt.Sprintf("Score: %.1f/10 (%s)\n\n", contrib.Score, contrib.Level)
+		if len(contrib.Strengths) > 0 {
+			contribDetails += "Strengths:\n"
+			for _, s := range contrib.Strengths {
+				if len(s) > 30 {
+					s = s[:27] + "..."
+				}
+				contribDetails += "  ✓ " + s + "\n"
+			}
+		}
+		if len(contrib.Weaknesses) > 0 {
+			if len(contrib.Strengths) > 0 {
+				contribDetails += "\n"
+			}
+			contribDetails += "Weaknesses:\n"
+			for _, w := range contrib.Weaknesses {
+				if len(w) > 30 {
+					w = w[:27] + "..."
+				}
+				contribDetails += "  ✗ " + w + "\n"
+			}
+		}
+	}
+
+	var bottomPanel string
+	if contrib.Level != "" {
+		contribBox := CardStyle.Render(lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.NewStyle().Bold(true).Render("🤝 Contribution Friendliness"),
+			"\n"+contribDetails,
+		))
+		if riskPanel == "" {
+			bottomPanel = contribBox
+		} else {
+			bottomPanel = lipgloss.JoinHorizontal(lipgloss.Top, riskPanel, contribBox)
+		}
+	} else {
+		bottomPanel = riskPanel
+	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
@@ -355,7 +426,7 @@ func (m DashboardModel) overviewView() string {
 		"\n",
 		lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
 		"\n",
-		riskPanel,
+		bottomPanel,
 	)
 
 }
@@ -427,8 +498,7 @@ func (m DashboardModel) languagesView() string {
 
 func (m DashboardModel) activityView() string {
 	header := TitleStyle.Render(" Commit Activity ")
-	activity := analyzer.CommitsPerDay(m.data.Commits)
-	chart := RenderCommitActivity(activity, 40) // Wider chart
+	chart := RenderCommitActivity(m.precalcActivity, 40)
 	totalCommits := len(m.data.Commits)
 	stats := fmt.Sprintf("\nTotal Commits (Last Year): %d", totalCommits)
 
@@ -582,11 +652,8 @@ func (m DashboardModel) contributorInsightsView() string {
 	header := TitleStyle.Render(" Insights ")
 
 	insights := m.data.ContributorInsights
-	if insights == nil {
-		insights = analyzer.AnalyzeContributors(m.data.Contributors)
-	}
 
-	if insights.TotalContributors == 0 {
+	if insights == nil || insights.TotalContributors == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("No contributor data available"))
 	}
 
@@ -727,45 +794,55 @@ func (m DashboardModel) riskAlertsView() string {
 	)
 }
 
+type fetchedAPIStatusMsg string
+
+func fetchAPIStatusCmd() tea.Cmd {
+	return func() tea.Msg {
+		client := github.NewClient()
+		rateLimit, err := client.GetRateLimit()
+
+		var rateLimitInfo string
+		if err != nil {
+			rateLimitInfo = "⚠️ Could not fetch rate limit info"
+		} else {
+			status := rateLimit.GetRateLimitStatus()
+			resetTime := rateLimit.FormatResetTime()
+			usage := rateLimit.UsagePercent()
+
+			rateLimitInfo = fmt.Sprintf(
+				"Status:    %s\n"+
+					"Remaining: %d / %d\n"+
+					"Used:      %.1f%%\n"+
+					"Reset:     %s",
+				status,
+				rateLimit.Resources.Core.Remaining,
+				rateLimit.Resources.Core.Limit,
+				usage,
+				resetTime,
+			)
+		}
+
+		mode := "🔴 Unauthenticated"
+		if client.HasToken() {
+			mode = "🟢 Authenticated"
+		}
+
+		msg := fmt.Sprintf("Authentication: %s\n\n%s", mode, rateLimitInfo)
+		return fetchedAPIStatusMsg(msg)
+	}
+}
+
 func (m DashboardModel) apiStatusView() string {
 	header := TitleStyle.Render(" API Status ")
 
-	client := github.NewClient()
-	rateLimit, err := client.GetRateLimit()
-
-	var rateLimitInfo string
-	if err != nil {
-		rateLimitInfo = "⚠️ Could not fetch rate limit info"
-	} else {
-		status := rateLimit.GetRateLimitStatus()
-		resetTime := rateLimit.FormatResetTime()
-		usage := rateLimit.UsagePercent()
-
-		rateLimitInfo = fmt.Sprintf(
-			"Status:    %s\n"+
-				"Remaining: %d / %d\n"+
-				"Used:      %.1f%%\n"+
-				"Reset:     %s",
-			status,
-			rateLimit.Resources.Core.Limit-rateLimit.Resources.Core.Remaining,
-			rateLimit.Resources.Core.Limit,
-			usage,
-			resetTime,
-		)
+	if m.apiStatusMsg == "" {
+		if !m.isFetchingAPI {
+			return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("Press R to reload or switch back/forth to fetch status..."))
+		}
+		return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("Loading API Status..."))
 	}
 
-	mode := "🔴 Unauthenticated"
-	if client.HasToken() {
-		mode = "🟢 Authenticated"
-	}
-
-	info := fmt.Sprintf(
-		"Mode: %s\n\n%s",
-		mode,
-		rateLimitInfo,
-	)
-
-	return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(info))
+	return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(m.apiStatusMsg))
 }
 
 func (m DashboardModel) qualityDashboardView() string {
@@ -892,5 +969,103 @@ ACTIONS
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
 		lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(help)),
+	)
+}
+
+func (m DashboardModel) maintainerView() string {
+	header := TitleStyle.Render(" 🛠️ Maintainer Dashboard: Suggestions & Insights ")
+
+	analysis := m.data.MaintainerAnalysis
+	if analysis == nil {
+		// Calculate dynamically as fallback
+		hasLockFile := m.data.Dependencies != nil && m.data.Dependencies.HasLockFile
+		analysis = analyzer.AnalyzeMaintainerDashboard(
+			m.data.Repo,
+			m.data.PRs,
+			m.data.Issues,
+			m.data.HealthScore,
+			m.data.BusFactor,
+			hasLockFile,
+			m.data.Contributors,
+		)
+	}
+
+	// Calculate panel width
+	w := 50
+	if m.width > 100 {
+		w = (m.width / 2) - 4
+	}
+
+	// 1. Suggested Next Actions Panel
+	actionsContent := lipgloss.NewStyle().Bold(true).Render("📋 Suggested Next Actions") + "\n\n"
+	if len(analysis.SuggestedActions) == 0 {
+		actionsContent += SuccessStyle.Render("✓ No actions required! Repository is in great health.")
+	} else {
+		for i, action := range analysis.SuggestedActions {
+			priorityColor := "#f1fa8c" // Yellow/Medium
+			if action.Priority == "High" {
+				priorityColor = "#ff5555" // Red
+			} else if action.Priority == "Low" {
+				priorityColor = "#bd93f9" // Purple
+			}
+			prioStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(priorityColor)).Bold(true)
+			actionsContent += fmt.Sprintf("%d. [%s] %s\n   %s\n\n",
+				i+1, prioStyle.Render(action.Priority), lipgloss.NewStyle().Bold(true).Render(action.Title), SubtleStyle.Render(action.Description))
+		}
+	}
+	actionsBox := CardStyle.Copy().Width(w).Render(actionsContent)
+
+	// 2. PRs Stuck in Review Panel
+	prsContent := lipgloss.NewStyle().Bold(true).Render("⏳ Stuck Pull Requests") + "\n\n"
+	if len(analysis.PRsStuck) == 0 {
+		prsContent += SuccessStyle.Render("✓ No stuck PRs in review!")
+	} else {
+		for _, pr := range analysis.PRsStuck {
+			prsContent += fmt.Sprintf("• #%d: %s\n  Author: %s • Days: %d • Reason: %s\n\n",
+				pr.Number, lipgloss.NewStyle().Bold(true).Render(pr.Title), pr.Author, pr.DaysOpen, ErrorStyle.Render(pr.Reason))
+		}
+	}
+	prsBox := CardStyle.Copy().Width(w).Render(prsContent)
+
+	// 3. Issue Candidates Panel
+	issuesContent := lipgloss.NewStyle().Bold(true).Render("🗑️ Issue Candidates (Close/Label)") + "\n\n"
+	if len(analysis.IssueCandidates) == 0 {
+		issuesContent += SuccessStyle.Render("✓ All issues active and labeled!")
+	} else {
+		for _, issue := range analysis.IssueCandidates {
+			issuesContent += fmt.Sprintf("• #%d: %s\n  Comments: %d • Open: %d days • Reason: %s\n\n",
+				issue.Number, lipgloss.NewStyle().Bold(true).Render(issue.Title), issue.Comments, issue.DaysOpen, ErrorStyle.Render(issue.Reason))
+		}
+	}
+	issuesBox := CardStyle.Copy().Width(w).Render(issuesContent)
+
+	// 4. Contributors Deserving Appreciation
+	contribsContent := lipgloss.NewStyle().Bold(true).Render("🏆 Contributor Appreciation") + "\n\n"
+	if len(analysis.ContributorsToAppreciate) == 0 {
+		contribsContent += SubtleStyle.Render("No active contributors to display.")
+	} else {
+		for _, c := range analysis.ContributorsToAppreciate {
+			contribsContent += fmt.Sprintf("👑 %-15s - %d commits (%s)\n",
+				c.Login, c.Commits, lipgloss.NewStyle().Foreground(lipgloss.Color("#50fa7b")).Render(c.Contribution))
+		}
+	}
+	contribsBox := CardStyle.Copy().Width(w).Render(contribsContent)
+
+	// Layout columns
+	leftCol := lipgloss.JoinVertical(lipgloss.Left, actionsBox, issuesBox)
+	rightCol := lipgloss.JoinVertical(lipgloss.Left, prsBox, contribsBox)
+
+	var panels string
+	if m.width > 100 {
+		panels = lipgloss.JoinHorizontal(lipgloss.Top, leftCol, rightCol)
+	} else {
+		panels = lipgloss.JoinVertical(lipgloss.Left, actionsBox, prsBox, issuesBox, contribsBox)
+	}
+
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		"\n",
+		panels,
 	)
 }

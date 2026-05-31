@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"encoding/base64"
 	"math"
 	"sort"
 	"strings"
@@ -99,25 +100,30 @@ func AnalyzeHotspots(
 			defer wg.Done()
 			hotspot := &topCandidates[idx]
 
-			content, err := client.GetFileContent(repo.Owner.Login, repo.Name, hotspot.FilePath)
-			if err == nil {
-				hotspot.Complexity = calculateComplexity(content, hotspot.FilePath)
-
-				// Update score with actual complexity
-				// Map complexity 1-50 to 0-100
-				compScore := hotspot.Complexity * 2
-				if compScore > 100 {
-					compScore = 100
-				}
-
-				// Refine total score
-				// Churn: 40%, Size: 20%, Complexity: 40%
-				hotspot.Score = (hotspot.ChurnScore * 40 / 100) +
-					(hotspot.SizeScore * 20 / 100) +
-					(compScore * 40 / 100)
-
-				hotspot.Reason = generateReason(hotspot)
+			raw, err := client.GetFileContent(repo.Owner.Login, repo.Name, hotspot.FilePath)
+			if err != nil {
+				return
 			}
+			decoded, err := base64.StdEncoding.DecodeString(raw)
+			if err != nil {
+				return
+			}
+			hotspot.Complexity = calculateComplexity(string(decoded), hotspot.FilePath)
+
+			// Update score with actual complexity
+			// Map complexity 1-50 to 0-100
+			compScore := hotspot.Complexity * 2
+			if compScore > 100 {
+				compScore = 100
+			}
+
+			// Refine total score
+			// Churn: 40%, Size: 20%, Complexity: 40%
+			hotspot.Score = (hotspot.ChurnScore * 40 / 100) +
+				(hotspot.SizeScore * 20 / 100) +
+				(compScore * 40 / 100)
+
+			hotspot.Reason = generateReason(hotspot)
 		}(i)
 	}
 	wg.Wait()

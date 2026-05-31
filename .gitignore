@@ -17,5 +17,11 @@ repo-lyzer
 
 # Go workspace file
 go.work
+
 analysis.json
 package-lock.json
+
+
+# Local session memory files (Copilot/assistant notes)
+/memories/
+

@@ -1,0 +1,71 @@
+name: Release Binaries
+
+# Triggers ONLY on version tags (e.g. v1.0.7), never on branch pushes.
+"on":
+  push:
+    tags:
+      - 'v*'
+
+# Required for creating/uploading GitHub Releases and their assets.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release (${{ matrix.suffix }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Keep going with other platforms even if one fails.
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+          - goos: darwin
+            goarch: amd64
+            suffix: macos-amd64
+          - goos: darwin
+            goarch: arm64
+            suffix: macos-arm64
+          - goos: windows
+            goarch: amd64
+            suffix: windows-amd64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          # Keep in sync with the go directive in go.mod.
+          go-version: '1.24'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build \
+            -ldflags="-s -w -X github.com/agnivo988/Repo-lyzer/cmd.version=${{ github.ref_name }}" \
+            -o repo-lyzer-${{ matrix.suffix }} \
+            .
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: repo-lyzer-${{ matrix.suffix }}
+          # Auto-generate changelog from commit messages since the last tag.
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

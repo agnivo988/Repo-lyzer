@@ -173,10 +173,22 @@ func aggregateMonthlyData(commits []github.Commit, issues []github.Issue, prs []
 		}
 	}
 
-	// Aggregate issues (simplified - actual implementation would need more data)
+	// Aggregate issues
 	for _, issue := range issues {
-		// Issues only have state, need more data for proper tracking
-		_ = issue
+		created := issue.CreatedAt
+		if created.Before(since) {
+			continue
+		}
+		monthKey := created.Format("2006-01")
+		if m, ok := monthlyData[monthKey]; ok {
+			m.IssuesOpened++
+		}
+		if issue.State == "closed" && issue.ClosedAt != nil && !issue.ClosedAt.Before(since) {
+			closedKey := issue.ClosedAt.Format("2006-01")
+			if m, ok := monthlyData[closedKey]; ok {
+				m.IssuesClosed++
+			}
+		}
 	}
 
 	// Aggregate PRs
@@ -324,8 +336,20 @@ func analyzeIssueTrendsForTrends(issues []github.Issue, monthlyData []MonthlyMet
 		trend = TrendStable
 	}
 
-	// Average resolution time (simplified - would need actual issue timestamps)
-	avgResolution := 7 * 24 * time.Hour // Default to 7 days
+	// Compute average resolution time from closed issues with valid timestamps.
+	// Fall back to a 7-day estimate only when no closed-issue data is available.
+	avgResolution := 7 * 24 * time.Hour // fallback when there is no data
+	var totalDuration time.Duration
+	var closedCount int
+	for _, issue := range issues {
+		if issue.State == "closed" && issue.ClosedAt != nil {
+			totalDuration += issue.ClosedAt.Sub(issue.CreatedAt)
+			closedCount++
+		}
+	}
+	if closedCount > 0 {
+		avgResolution = totalDuration / time.Duration(closedCount)
+	}
 
 	return trend, avgResolution, resolutionRate
 }
