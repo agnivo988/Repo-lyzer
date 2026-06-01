@@ -85,4 +85,3 @@ tempfile = { version = "3.3" }
 		t.Errorf("parseCargoToml() =\n%v\nwant:\n%v", got, expected)
 	}
 }
-

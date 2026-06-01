@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	
 	gocache "github.com/patrickmn/go-cache"
 	"golang.org/x/sync/singleflight"
 )
@@ -291,4 +290,18 @@ func (c *Client) GetFileContent(owner, repo, path string) (string, error) {
 		return "", err
 	}
 	return v.(string), nil
+}
+func NewClientWithContext(ctx context.Context) *Client {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return &Client{
+		http:  &http.Client{Timeout: 30 * time.Second},
+		token: os.Getenv("GITHUB_TOKEN"),
+		ctx:   ctx,
+		cache: gocache.New(
+			5*time.Minute,  // default expiration
+			10*time.Minute, // cleanup interval
+		),
+	}
 }

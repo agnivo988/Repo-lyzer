@@ -47,9 +47,7 @@ Examples:
 		}
 
 		// Start the scheduler
-		if err := sched.Start(); err != nil {
-			return fmt.Errorf("failed to start scheduler: %w", err)
-		}
+		sched.Start()
 
 		// Get job count
 		jobs := sched.ListJobs()
@@ -209,9 +207,7 @@ func RunDaemon() error {
 		return fmt.Errorf("failed to create scheduler: %w", err)
 	}
 
-	if err := sched.Start(); err != nil {
-		return fmt.Errorf("failed to start scheduler: %w", err)
-	}
+	sched.Start()
 
 	jobs := sched.ListJobs()
 	enabledJobs := 0
