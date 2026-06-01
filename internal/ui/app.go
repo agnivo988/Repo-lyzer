@@ -1239,7 +1239,7 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		languages1, _ := client.GetLanguages(parts1[0], parts1[1])
 		fileTree1, err := client.GetFileTree(parts1[0], parts1[1], repo1.DefaultBranch)
 		if err != nil {
-			fmt.Printf("⚠️ %v\n", err)
+			fmt.Printf("⚠️  %s: %v\n", repo1Name, err)
 		}
 		score1 := analyzer.CalculateHealth(repo1, commits1)
 		busFactor1, busRisk1 := analyzer.BusFactor(contributors1)
@@ -1268,7 +1268,7 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		languages2, _ := client.GetLanguages(parts2[0], parts2[1])
 		fileTree2, err := client.GetFileTree(parts2[0], parts2[1], repo2.DefaultBranch)
 		if err != nil {
-			fmt.Printf("⚠️ %v\n", err)
+			fmt.Printf("⚠️  %s: %v\n", repo2Name, err)
 		}
 		score2 := analyzer.CalculateHealth(repo2, commits2)
 		busFactor2, busRisk2 := analyzer.BusFactor(contributors2)
