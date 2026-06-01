@@ -148,6 +148,7 @@ var analyzeCmd = &cobra.Command{
 		summary, _ := cmd.Flags().GetBool("summary")
 		incremental, _ := cmd.Flags().GetBool("incremental")
 		contribute, _ := cmd.Flags().GetBool("contribute")
+		risk, _ := cmd.Flags().GetBool("risk")
 		format, _ := cmd.Flags().GetString("format")
 
 		if dryRun {
@@ -421,6 +422,15 @@ var analyzeCmd = &cobra.Command{
 		}
 		output.PrintRecruiterSummary(recruiterSummary)
 
+		// Run the risk analyzer when the --risk flag is set.
+		// We pass the 365-day commit slice; AnalyzeRisk checks whether it is
+		// non-empty, which serves the "recent activity" signal.
+		// fileTree is already in memory from the hotspot fetch above.
+		if risk {
+			riskReport := analyzer.AnalyzeRisk(repoInfo, contributors, commits, fileTree)
+			output.PrintRiskReport(riskReport)
+		}
+
 		// Mark analysis as complete
 		overallProgress.Finish()
 
@@ -630,6 +640,11 @@ func init() {
 		"contribute",
 		false,
 		"Show Contribution Friendliness Score inside the overview/cli output",
+	)
+	analyzeCmd.Flags().Bool(
+		"risk",
+		false,
+		"Show Repository Risk Report with weighted risk signals",
 	)
 	analyzeCmd.Flags().String(
 		"format",
