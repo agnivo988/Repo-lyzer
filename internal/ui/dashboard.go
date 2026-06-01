@@ -32,21 +32,21 @@ const (
 )
 
 type DashboardModel struct {
-	data              AnalysisResult
-	BackToMenu        bool
-	width             int
-	height            int
-	showExport        bool
-	statusMsg         string
-	currentView       dashboardView
-	showHelp          bool
-	cacheStatus       string // "fresh", "cached", or ""
-	
+	data        AnalysisResult
+	BackToMenu  bool
+	width       int
+	height      int
+	showExport  bool
+	statusMsg   string
+	currentView dashboardView
+	showHelp    bool
+	cacheStatus string // "fresh", "cached", or ""
+
 	// Precalculated fields for performance
 	// Precalculated fields for performance
 	precalcActivity map[string]int
 	apiStatusMsg    string
-	isFetchingAPI        bool
+	isFetchingAPI   bool
 }
 
 func NewDashboardModel() DashboardModel {
@@ -61,11 +61,11 @@ func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
 	// Precalculate heavy charts
 	m.precalcActivity = analyzer.CommitsPerDay(m.data.Commits)
-	
+
 	if m.data.ContributorInsights == nil && len(m.data.Contributors) > 0 {
 		m.data.ContributorInsights = analyzer.AnalyzeContributors(m.data.Contributors)
 	}
-	
+
 	m.apiStatusMsg = ""
 	m.isFetchingAPI = false
 }
@@ -73,7 +73,6 @@ func (m *DashboardModel) SetData(data AnalysisResult) {
 func (m *DashboardModel) SetCacheStatus(status string) {
 	m.cacheStatus = status
 }
-
 
 type exportMsg struct {
 	err error
