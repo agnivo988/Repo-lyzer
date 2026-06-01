@@ -60,7 +60,7 @@ The analysis includes:
 }
 
 // forecastCmd generates predictions for repository metrics
-var forecastCmd = &cobra.Command{
+var forecastTemporalCmd = &cobra.Command{
 	Use:   "forecast <owner>/<repo>",
 	Short: "Forecast repository health and risk metrics",
 	Long: `Generates predictions for repository evolution and risk trajectories:
@@ -194,7 +194,7 @@ func init() {
 
 	// Add subcommands to temporal
 	temporalCmd.AddCommand(analyzeTemporalCmd)
-	temporalCmd.AddCommand(forecastCmd)
+	temporalCmd.AddCommand(forecastTemporalCmd)
 	temporalCmd.AddCommand(contributorsCmd)
 	temporalCmd.AddCommand(driftCmd)
 	temporalCmd.AddCommand(simulateCmd)

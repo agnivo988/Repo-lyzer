@@ -41,10 +41,10 @@ type CompareRepository struct {
 
 // CompareReport is the complete comparison payload used by every output format.
 type CompareReport struct {
-	GeneratedAt time.Time        `json:"generated_at"`
+	GeneratedAt time.Time         `json:"generated_at"`
 	Repo1       CompareRepository `json:"repo1"`
 	Repo2       CompareRepository `json:"repo2"`
-	Verdict     string           `json:"verdict"`
+	Verdict     string            `json:"verdict"`
 }
 
 // IsIdentical reports whether the key terminal metrics are equivalent.

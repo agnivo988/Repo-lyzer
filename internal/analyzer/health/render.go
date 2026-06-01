@@ -10,8 +10,8 @@ import (
 
 // TerminalRenderer provides stylized terminal output for health metrics
 type TerminalRenderer struct {
-	CriticalColor *color.Color
-	WarningColor  *color.Color
+	CriticalColor  *color.Color
+	WarningColor   *color.Color
 	HealthyColor   *color.Color
 	ExcellentColor *color.Color
 }
@@ -19,8 +19,8 @@ type TerminalRenderer struct {
 // NewTerminalRenderer initializes a customized terminal renderer
 func NewTerminalRenderer() *TerminalRenderer {
 	return &TerminalRenderer{
-		CriticalColor: color.New(color.FgRed, color.Bold),
-		WarningColor:  color.New(color.FgYellow, color.Bold),
+		CriticalColor:  color.New(color.FgRed, color.Bold),
+		WarningColor:   color.New(color.FgYellow, color.Bold),
 		HealthyColor:   color.New(color.FgGreen, color.Bold),
 		ExcellentColor: color.New(color.FgHiCyan, color.Bold),
 	}
