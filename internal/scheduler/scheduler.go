@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync" // SECURITY FIX: Imported sync for RWMutex
+	"sync" // SECURITY FIX: Imported sync for Mutex
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
@@ -24,7 +24,7 @@ import (
 
 // Scheduler manages scheduled analysis report jobs
 type Scheduler struct {
-	mu             sync.RWMutex // SECURITY FIX: Mutex to prevent concurrent map read/write panic
+	mu             sync.Mutex // SECURITY FIX: Mutex to prevent concurrent map read/write panic
 	cron           *cron.Cron
 	settings       *config.AppSettings
 	jobEntries     map[string]cron.EntryID
@@ -91,10 +91,10 @@ func (s *Scheduler) scheduleJob(job config.ScheduledJob) error {
 		return fmt.Errorf("failed to add cron job: %w", err)
 	}
 
-	// SECURITY FIX: Lock map before writing
+	// SECURITY FIX: Lock map before writing (using defer for safety)
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.jobEntries[job.ID] = entryID
-	s.mu.Unlock()
 
 	log.Printf("Job %s scheduled with spec: %s", job.ID, spec)
 	return nil
@@ -318,11 +318,11 @@ func (s *Scheduler) AddJob(job config.ScheduledJob) error {
 func (s *Scheduler) RemoveJob(jobID string) error {
 	// SECURITY FIX: Lock map before read/delete
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	if entryID, ok := s.jobEntries[jobID]; ok {
 		s.cron.Remove(entryID)
 		delete(s.jobEntries, jobID)
 	}
-	s.mu.Unlock()
 
 	return s.settings.RemoveScheduledJob(jobID)
 }
@@ -353,11 +353,11 @@ func (s *Scheduler) EnableJob(jobID string, enabled bool) error {
 	} else {
 		// SECURITY FIX: Lock map before read/delete
 		s.mu.Lock()
+		defer s.mu.Unlock()
 		if entryID, ok := s.jobEntries[jobID]; ok {
 			s.cron.Remove(entryID)
 			delete(s.jobEntries, jobID)
 		}
-		s.mu.Unlock()
 	}
 
 	return s.settings.EnableScheduledJob(jobID, enabled)
