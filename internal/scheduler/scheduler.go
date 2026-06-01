@@ -5,18 +5,26 @@ package scheduler
 
 import (
 	"bytes"
+	"context"
+
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/config"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
+	"github.com/agnivo988/Repo-lyzer/internal/monitor"
 	"github.com/agnivo988/Repo-lyzer/internal/output"
 	"github.com/robfig/cron/v3"
 )
@@ -27,6 +35,22 @@ type Scheduler struct {
 	settings       *config.AppSettings
 	jobEntries     map[string]cron.EntryID
 	reportExporter *ReportExporter
+
+	// New fields for stabilization
+	taskTimeout    time.Duration             // default 2m
+	quotaTicker    *time.Ticker              // 1s ticker for adaptive quota
+	stopChan       chan struct{}             // for graceful shutdown of ticker
+	maxWorkers     int32                     // maximum concurrent workers
+	activeWorkers  int32                     // current active workers (atomic)
+	quotaTokens    int64                     // adaptive quota tokens
+	maxQuota       int64                     // max quota tokens
+	retryAttempts  map[string]int            // track retry count per job ID
+	metrics        *monitor.SchedulerMetrics // telemetry counters
+	wg             sync.WaitGroup            // wait for active jobs
+	failureStreak  int                       // consecutive failures
+	cooldownActive bool                      // indicates cooldown state
+	cooldownUntil  time.Time                 // cooldown expiry
+	mutex          sync.Mutex
 }
 
 // ReportExporter handles exporting analysis reports to various formats
@@ -39,37 +63,63 @@ func NewScheduler() (*Scheduler, error) {
 		return nil, fmt.Errorf("failed to load settings: %w", err)
 	}
 
+	// Default values
+	defaultTimeout := 2 * time.Minute
+	maxWorkers := int32(10) // sensible default, can be overridden via config later
+
+	maxQuota := int64(maxWorkers)
+
 	return &Scheduler{
 		cron:           cron.New(),
 		settings:       settings,
 		jobEntries:     make(map[string]cron.EntryID),
 		reportExporter: &ReportExporter{},
+		taskTimeout:    defaultTimeout,
+		quotaTicker:    nil,
+		stopChan:       make(chan struct{}),
+		maxWorkers:     maxWorkers,
+		activeWorkers:  0,
+		quotaTokens:    maxQuota,
+		maxQuota:       maxQuota,
+		retryAttempts:  make(map[string]int),
+		metrics:        monitor.NewSchedulerMetrics(),
 	}, nil
 }
 
 // Start initializes and starts the scheduler with all registered jobs
-func (s *Scheduler) Start() error {
-	log.Println("Starting scheduler...")
+func (s *Scheduler) Start() {
+	// Start quota recovery
+	s.quotaTicker = time.NewTicker(1 * time.Second)
+	go s.runQuotaRecovery()
 
-	// Load jobs from settings
-	jobs := s.settings.GetScheduledJobs()
-	for _, job := range jobs {
+	// Schedule existing jobs
+	for _, job := range s.settings.GetScheduledJobs() {
 		if job.Enabled {
-			if err := s.scheduleJob(job); err != nil {
-				log.Printf("Failed to schedule job %s: %v", job.ID, err)
-			}
+			_ = s.scheduleJob(job)
 		}
 	}
-
 	s.cron.Start()
-	log.Printf("Scheduler started with %d enabled jobs", len(jobs))
-	return nil
+	log.Println("Scheduler started")
 }
 
 // Stop stops the scheduler gracefully
 func (s *Scheduler) Stop() {
 	log.Println("Stopping scheduler...")
 	s.cron.Stop()
+	// Stop quota ticker gracefully
+	if s.quotaTicker != nil {
+		s.quotaTicker.Stop()
+		close(s.stopChan)
+	}
+	// Wait for all running jobs to finish
+	done := make(chan struct{})
+	go func() { s.wg.Wait(); close(done) }()
+	select {
+	case <-done:
+		log.Println("All jobs completed during shutdown")
+	case <-time.After(10 * time.Second):
+		log.Println("Timeout waiting for jobs, proceeding with shutdown")
+	}
 	log.Println("Scheduler stopped")
 }
 
@@ -78,9 +128,18 @@ func (s *Scheduler) scheduleJob(job config.ScheduledJob) error {
 	spec := job.GetCronExpression()
 
 	jobFunc := func() {
+		// Check cooldown before execution
+		if s.isInCooldown() {
+			log.Printf("Scheduler in cooldown, skipping job %s", job.ID)
+			return
+		}
 		log.Printf("Executing scheduled job: %s for %s/%s", job.ID, job.Owner, job.Repo)
-		if err := s.executeJob(job); err != nil {
-			log.Printf("Job execution failed: %v", err)
+
+		s.wg.Add(1)
+		defer s.wg.Done()
+
+		if err := s.executeJobWithRetry(job); err != nil {
+			log.Printf("Job execution failed after retries: %v", err)
 		}
 	}
 
@@ -98,8 +157,23 @@ func (s *Scheduler) scheduleJob(job config.ScheduledJob) error {
 func (s *Scheduler) executeJob(job config.ScheduledJob) error {
 	startTime := time.Now()
 
+	// Context with timeout for the whole job execution
+	ctx, cancel := context.WithTimeout(context.Background(), s.taskTimeout)
+	defer cancel()
+
+	// Increment active workers counter
+	atomic.AddInt32(&s.activeWorkers, 1)
+	defer func() {
+		atomic.AddInt32(&s.activeWorkers, -1)
+	}()
+
+	// Increment telemetry metric for active workers
+	if s.metrics != nil {
+		s.metrics.IncActiveWorkers()
+	}
+
 	// Initialize GitHub client
-	client := github.NewClient()
+	client := github.NewClientWithContext(ctx)
 
 	// Fetch repository information
 	repoInfo, err := client.GetRepo(job.Owner, job.Repo)
@@ -179,7 +253,16 @@ func (s *Scheduler) executeJob(job config.ScheduledJob) error {
 	job.NextRun = s.calculateNextRunTime(job.GetCronExpression())
 	s.settings.UpdateScheduledJob(job)
 
+	// Telemetry: record latency
+	if s.metrics != nil {
+		s.metrics.RecordLatency(time.Since(startTime))
+	}
+
 	log.Printf("Job %s completed successfully", job.ID)
+	// Increment successful job metric
+	if s.metrics != nil {
+		s.metrics.IncSuccess()
+	}
 	return nil
 }
 
@@ -362,11 +445,117 @@ func (s *Scheduler) calculateNextRunTime(cronExpr string) time.Time {
 	return sched.Next(time.Now())
 }
 
+// runQuotaRecovery handles adaptive quota recovery logic.
+func (s *Scheduler) runQuotaRecovery() {
+	for {
+		select {
+		case <-s.quotaTicker.C:
+			// Adaptive refill scaling based on current load
+			load := float64(atomic.LoadInt32(&s.activeWorkers)) / float64(s.maxWorkers)
+			// Refill rate decreases as load approaches capacity
+			refill := int64(math.Max(1, float64(s.maxQuota)*(1.0-load)))
+			// Add tokens up to maxQuota
+			newTokens := atomic.AddInt64(&s.quotaTokens, refill)
+			if newTokens > s.maxQuota {
+				atomic.StoreInt64(&s.quotaTokens, s.maxQuota)
+			}
+			if s.metrics != nil {
+				s.metrics.IncQuotaRecovery()
+			}
+		case <-s.stopChan:
+			return
+		}
+	}
+}
+
 // ValidateCronExpression validates a cron expression
 func ValidateCronExpression(expr string) error {
 	parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 	_, err := parser.Parse(expr)
 	return err
+}
+
+// isInCooldown checks if the scheduler is currently in a cooldown period.
+func (s *Scheduler) isInCooldown() bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if s.cooldownActive && time.Now().Before(s.cooldownUntil) {
+		return true
+	}
+	// Reset cooldown if expired
+	if s.cooldownActive && time.Now().After(s.cooldownUntil) {
+		s.cooldownActive = false
+		s.failureStreak = 0
+	}
+	return false
+}
+
+// recordFailure increments failure streak and triggers cooldown if threshold exceeded.
+func (s *Scheduler) recordFailure() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.failureStreak++
+	if s.failureStreak >= 3 { // threshold
+		if s.metrics != nil {
+			s.metrics.IncCooldownTrigger()
+		}
+		s.cooldownActive = true
+		s.cooldownUntil = time.Now().Add(10 * time.Second) // cooldown duration
+	}
+}
+
+// resetFailureStreak resets failure counters after a successful job.
+func (s *Scheduler) resetFailureStreak() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.failureStreak = 0
+	s.cooldownActive = false
+}
+
+// executeJobWithRetry wraps executeJob with bounded retries and backoff.
+func (s *Scheduler) executeJobWithRetry(job config.ScheduledJob) error {
+	const maxRetries = 5
+	baseBackoff := 200 * time.Millisecond
+	maxBackoff := 5 * time.Second
+
+	var attempt int
+	backoff := baseBackoff
+
+	for {
+		err := s.executeJob(job)
+		if err == nil {
+			// success
+			s.resetFailureStreak()
+			return nil
+		}
+
+		// Check for timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			if s.metrics != nil {
+				s.metrics.IncTimeoutCount()
+			}
+			s.recordFailure()
+			return err
+		}
+
+		attempt++
+		if attempt > maxRetries {
+			s.recordFailure()
+			return err
+		}
+
+		// Record retry metric
+		if s.metrics != nil {
+			s.metrics.IncRetryCount()
+		}
+		// Backoff with jitter
+		jitter := time.Duration(rand.Int63n(int64(backoff)))
+		time.Sleep(backoff + jitter)
+		backoff *= 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
+		}
+	}
 }
 
 // FormatScheduleInterval returns available schedule intervals

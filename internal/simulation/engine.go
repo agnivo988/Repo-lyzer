@@ -53,7 +53,7 @@ func (s *ScenarioRunner) RunScenario(scenario SimulationScenario, timeline Timel
 		RiskChange:   0,
 
 		Success: true,
-}, nil
+	}, nil
 }
 
 // RunMultipleScenarios executes multiple scenarios and returns all results.
@@ -222,5 +222,5 @@ func (s *ScenarioRunner) CompareScenarios(scenarios []SimulationScenario, timeli
 
 	// TODO: Implement scenario comparison logic
 	fmt.Println("[EXPERIMENTAL] Scenario comparison engine is under development")
-return "Scenario comparison functionality is currently experimental", nil
+	return "Scenario comparison functionality is currently experimental", nil
 }
