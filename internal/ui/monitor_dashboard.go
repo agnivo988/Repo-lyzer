@@ -100,7 +100,9 @@ func (m *MonitorDashboardModel) StopMonitoring() {
 }
 
 // ClearToken propagates a token clear to the active monitor so it no longer
-// sends the old token on in-flight or future API requests.
+// sends the old token on future API requests. Requests that are already in
+// flight retain their Authorization header because it was set when the request
+// was built; only subsequent calls to get() will omit it.
 func (m *MonitorDashboardModel) ClearToken() {
 	if m.monitor != nil {
 		m.monitor.ClearToken()

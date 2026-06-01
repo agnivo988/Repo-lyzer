@@ -8,9 +8,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	
 	gocache "github.com/patrickmn/go-cache"
 	"golang.org/x/sync/singleflight"
 )
@@ -18,6 +18,7 @@ import (
 // Client handles GitHub API requests
 type Client struct {
 	http  *http.Client
+	mu    sync.RWMutex // guards token
 	token string
 	ctx   context.Context
 	cache *gocache.Cache
@@ -55,13 +56,17 @@ func (c *Client) SetContext(ctx context.Context) {
 
 // HasToken returns true if a GitHub token is configured
 func (c *Client) HasToken() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.token != ""
 }
 
 // SetToken sets the GitHub token for authentication.
 // The previous token value is overwritten so subsequent requests use the new token.
 func (c *Client) SetToken(token string) {
+	c.mu.Lock()
 	c.token = token
+	c.mu.Unlock()
 	c.cache.Flush()
 }
 
@@ -69,8 +74,12 @@ func (c *Client) SetToken(token string) {
 // requests are made without authentication. Call this on every live Client after
 // ClearGitHubToken() is invoked on the settings, otherwise the old token
 // persists in memory and continues to be sent in API request headers.
+// This does not affect requests already in flight; only future calls to get()
+// will omit the Authorization header.
 func (c *Client) ClearToken() {
+	c.mu.Lock()
 	c.token = ""
+	c.mu.Unlock()
 }
 
 // get performs a GET request to the GitHub API and decodes the JSON response.
@@ -87,8 +96,11 @@ func (c *Client) get(url string, target interface{}) error {
 		}
 
 		req.Header.Set("Accept", "application/vnd.github+json")
-		if c.token != "" {
-			req.Header.Set("Authorization", "Bearer "+c.token)
+		c.mu.RLock()
+		tok := c.token
+		c.mu.RUnlock()
+		if tok != "" {
+			req.Header.Set("Authorization", "Bearer "+tok)
 		}
 
 		resp, err := c.http.Do(req)
@@ -131,7 +143,10 @@ func (c *Client) get(url string, target interface{}) error {
 
 				resp.Body.Close()
 				// If unauthenticated, return informative error after waiting once
-				if c.token == "" {
+				c.mu.RLock()
+				noToken := c.token == ""
+				c.mu.RUnlock()
+				if noToken {
 					select {
 					case <-time.After(waitTime + time.Second):
 						return fmt.Errorf("rate limit exceeded and no token configured; consider setting GITHUB_TOKEN")
