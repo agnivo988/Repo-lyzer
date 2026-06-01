@@ -961,59 +961,50 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 				commitsLast90Days++
 			}
 		}
-		riskAlerts := analyzer.AnalyzeRiskAlerts(
-			busFactor,
-			score,
-			commitsLast90Days,
-			security != nil && security.CriticalCount > 0,
-		)
-
-		// Analyze Hotspots
-		hotspots, hotspotsErr := analyzer.AnalyzeHotspots(repo, commits, fileTree, client)
-		if hotspotsErr != nil && errors.Is(hotspotsErr, context.Canceled) {
-			return hotspotsErr
-		}
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		// Recompute detailed health using PRs and issues, then generate quality dashboard
-		detailedScore := analyzer.CalculateHealthDetailed(repo, commits, contributors, prs, issues)
-
-		qualityDashboard := analyzer.GenerateQualityDashboard(
-			repo,
-			commits,
-			contributors,
-			detailedScore,
-			busFactor,
-			maturityLevel,
-			maturityScore,
-			security,
-			nil, // codeQuality - not implemented yet
-			deps,
-			hotspots,
-		)
-
-		// Fetch issues and PRs
-		issues, issuesErr := client.GetIssues(parts[0], parts[1], "open")
-		if issuesErr != nil {
-			issues = []github.Issue{}
-		}
-
-		prs, prsErr := client.GetPullRequests(parts[0], parts[1], "open")
-		if prsErr != nil {
-			prs = []github.PullRequest{}
-		}
-
-		hasLockFile := deps != nil && deps.HasLockFile
-		maintainerAnalysis := analyzer.AnalyzeMaintainerDashboard(
-			repo,
-			prs,
-			issues,
-			score,
-			busFactor,
-			hasLockFile,
-			contributors,
+ 
+ 		// Fetch issues and PRs first so detailed health can use both data sources
+ 		issues, issuesErr := client.GetIssues(parts[0], parts[1], "open")
+ 		if issuesErr != nil {
+ 			issues = []github.Issue{}
+ 		}
+ 
+ 		prs, prsErr := client.GetPullRequests(parts[0], parts[1], "open")
+ 		if prsErr != nil {
+ 			prs = []github.PullRequest{}
+ 		}
+ 
+ 		// Analyze Hotspots
+ 		hotspots, hotspotsErr := analyzer.AnalyzeHotspots(repo, commits, fileTree, client)
+ 		if hotspotsErr != nil && errors.Is(hotspotsErr, context.Canceled) {
+ 			return hotspotsErr
+ 		}
+ 		if err := ctx.Err(); err != nil {
+ 			return err
+ 		}
+ 
+ 		// Recompute detailed health using PRs and issues, then generate quality dashboard
+ 		detailedScore := analyzer.CalculateHealthDetailed(repo, commits, contributors, prs, issues)
+ 
+ 		qualityDashboard := analyzer.GenerateQualityDashboard(
+ 			repo,
+ 			commits,
+ 			contributors,
+ 			detailedScore,
+ 			busFactor,
+ 			maturityLevel,
+ 			maturityScore,
+ 			security,
+ 			nil, // codeQuality - not implemented yet
+ 			deps,
+ 			hotspots,
+ 		)
+ 
+ 		riskAlerts := analyzer.AnalyzeRiskAlerts(
+ 			busFactor,
+ 			detailedScore,
+ 			commitsLast90Days,
+ 			security != nil && security.CriticalCount > 0,
+ 		)
 		)
 
 		// Fetch README content and calculate contribution score

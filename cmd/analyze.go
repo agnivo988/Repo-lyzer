@@ -298,7 +298,11 @@ var analyzeCmd = &cobra.Command{
 			)
 		overallProgress.CompleteStep("Maturity score calculated")
 
-		// Fetch pull requests (limited to recent) to improve health computation
+// Fetch issue activity and pull requests to improve health computation
+ 		overallProgress.StartStep("🐛 Fetching issue activity")
+ 		issues, _ := client.GetIssues(owner, repo, "open")
+ 		overallProgress.CompleteStep(fmt.Sprintf("Issues fetched (%d)", len(issues)))
+ 
 		overallProgress.StartStep("🔀 Fetching recent pull requests")
 		prs, _ := client.GetPullRequestsWithLimit(owner, repo, "all", 200)
 		overallProgress.CompleteStep(fmt.Sprintf("Pull requests fetched (%d)", len(prs)))
@@ -312,7 +316,7 @@ var analyzeCmd = &cobra.Command{
 		if compact {
 			return output.PrintCompactJSON(output.CompactConfig{
 				Repo:            repoInfo,
-				HealthScore:     score,
+				HealthScore:     detailedScore,
 				BusFactor:       busFactor,
 				BusRisk:         busRisk,
 				MaturityScore:   maturityScore,
