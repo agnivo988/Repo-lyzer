@@ -12,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync" // SECURITY FIX: Imported sync for Mutex
+	"sync" // SECURITY FIX: Imported sync for RWMutex
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
@@ -24,7 +24,7 @@ import (
 
 // Scheduler manages scheduled analysis report jobs
 type Scheduler struct {
-	mu             sync.Mutex // SECURITY FIX: Mutex to prevent concurrent map read/write panic
+	mu             sync.RWMutex // SECURITY FIX: RWMutex as explicitly required by Issue #415
 	cron           *cron.Cron
 	settings       *config.AppSettings
 	jobEntries     map[string]cron.EntryID
@@ -91,7 +91,7 @@ func (s *Scheduler) scheduleJob(job config.ScheduledJob) error {
 		return fmt.Errorf("failed to add cron job: %w", err)
 	}
 
-	// SECURITY FIX: Lock map before writing (using defer for safety)
+	// SECURITY FIX: Write lock map before writing
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.jobEntries[job.ID] = entryID
@@ -316,12 +316,17 @@ func (s *Scheduler) AddJob(job config.ScheduledJob) error {
 
 // RemoveJob removes a scheduled job
 func (s *Scheduler) RemoveJob(jobID string) error {
-	// SECURITY FIX: Lock map before read/delete
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if entryID, ok := s.jobEntries[jobID]; ok {
+	// SECURITY FIX: Read lock map before checking existence
+	s.mu.RLock()
+	entryID, ok := s.jobEntries[jobID]
+	s.mu.RUnlock()
+
+	if ok {
+		// SECURITY FIX: Write lock map before modifying
+		s.mu.Lock()
 		s.cron.Remove(entryID)
 		delete(s.jobEntries, jobID)
+		s.mu.Unlock()
 	}
 
 	return s.settings.RemoveScheduledJob(jobID)
@@ -351,12 +356,17 @@ func (s *Scheduler) EnableJob(jobID string, enabled bool) error {
 			return fmt.Errorf("failed to schedule job: %w", err)
 		}
 	} else {
-		// SECURITY FIX: Lock map before read/delete
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		if entryID, ok := s.jobEntries[jobID]; ok {
+		// SECURITY FIX: Read lock map before checking existence
+		s.mu.RLock()
+		entryID, ok := s.jobEntries[jobID]
+		s.mu.RUnlock()
+
+		if ok {
+			// SECURITY FIX: Write lock map before modifying
+			s.mu.Lock()
 			s.cron.Remove(entryID)
 			delete(s.jobEntries, jobID)
+			s.mu.Unlock()
 		}
 	}
 
