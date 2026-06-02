@@ -456,6 +456,12 @@ func (m DashboardModel) overviewView() string {
 		bottomPanel,
 	)
 
+	trendSeries := m.buildMonthlyTrendSeries(4)
+	trendsPanel := m.repositoryTrendsSummaryCard(trendSeries)
+	if trendsPanel != "" {
+		sections = append(sections, trendsPanel)
+	}
+
 	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 
 }

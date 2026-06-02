@@ -1070,7 +1070,7 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 
 		// Check cache first
 		if allowCache && m.cache != nil {
-			if entry, found := m.cache.Get(repoName); found {
+			if entry, found := m.cache.Get(cacheKey); found {
 				// Unmarshal cached analysis
 				var result AnalysisResult
 				if err := json.Unmarshal(entry.Analysis, &result); err == nil {
@@ -1142,7 +1142,7 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 		changedFiles := []string{}
 
 		if allowCache && m.cache != nil {
-			if entry, found := m.cache.GetWithoutTTLExpiration(repoName); found {
+			if entry, found := m.cache.GetWithoutTTLExpiration(cacheKey); found {
 				if entry.IncrementalMetadata != nil {
 
 					for path, currentMeta := range currentHashes {
@@ -1154,12 +1154,8 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 						}
 					}
 
-					fmt.Printf("🔄 Incremental analysis enabled\n")
-					fmt.Printf("📂 Changed files detected: %d\n", len(changedFiles))
-
 					// No changes detected
 					if len(changedFiles) == 0 {
-						fmt.Println("✅ No repository changes detected. Using cached analysis.")
 						var result AnalysisResult
 						if err := json.Unmarshal(entry.Analysis, &result); err == nil {
 							// Return cached result with status
@@ -1377,7 +1373,11 @@ func (m MainModel) syncRepo(ctx context.Context, repoName string) tea.Cmd {
 			return fmt.Errorf("invalid repository name: %s", repoName)
 		}
 
-		client := github.NewClient()
+		token := ""
+		if m.appConfig != nil {
+			token = m.appConfig.GitHubToken
+		}
+		client := github.NewClientWithToken(token)
 		client.SetContext(ctx)
 
 		repo, err := client.GetRepo(parts[0], parts[1])
@@ -1459,7 +1459,12 @@ func (m MainModel) syncRepo(ctx context.Context, repoName string) tea.Cmd {
 		)
 
 		if m.cache != nil {
-			if err := m.cache.Set(repoName, result); err != nil {
+			cacheKey := analysisCacheKey(repoName, m.analysisType)
+			var currentHashes map[string]cache.FileMetadata
+			if entry, found := m.cache.GetWithoutTTLExpiration(cacheKey); found {
+				currentHashes = entry.IncrementalMetadata
+			}
+			if err := m.cache.SetWithMetadata(cacheKey, result, currentHashes); err != nil {
 				return fmt.Errorf("failed to update cache after sync: %w", err)
 			}
 		}
