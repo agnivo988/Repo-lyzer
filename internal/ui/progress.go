@@ -1,8 +1,9 @@
 package ui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
 	"time"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // ProgressStage represents a step in the analysis process
