@@ -1245,7 +1245,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string, tracker *Pr
 		// Add success notification
 		AddAnalysisNotification(repoName, true)
 
-		tracker.NextStage() // Mark Final Report complete
+		tracker.NextStage() // Complete Issues & Pull Requests, activate Final Report
+		tracker.NextStage() // Mark Final Report complete (reaches 100%)
 
 		return result
 	}
