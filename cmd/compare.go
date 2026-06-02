@@ -116,6 +116,20 @@ Examples:
 			rendered, err = output.RenderCompareMarkdown(report)
 		case "html":
 			rendered, err = output.RenderCompareHTML(report)
+		case "pdf":
+			if savePath == "" {
+				// Generate default filename
+				repo1Name := strings.ReplaceAll(side1.Repo.FullName, "/", "-")
+				repo2Name := strings.ReplaceAll(side2.Repo.FullName, "/", "-")
+				savePath = fmt.Sprintf("%s-vs-%s-comparison.pdf", repo1Name, repo2Name)
+			}
+			fmt.Printf("📄 Generating PDF comparison report: %s\n", savePath)
+			err := output.GenerateComparePDF(&report, savePath, nil)
+			if err != nil {
+				return fmt.Errorf("failed to generate comparison PDF: %w", err)
+			}
+			fmt.Printf("✅ PDF comparison report saved to: %s\n", savePath)
+			return nil
 		default:
 			return fmt.Errorf("unsupported compare format: %s", format)
 		}
@@ -175,6 +189,6 @@ func saveCompareOutput(path string, data []byte) error {
 
 func init() {
 	rootCmd.AddCommand(compareCmd)
-	compareCmd.Flags().String("format", "terminal", "Output format: terminal, html, json, markdown")
+	compareCmd.Flags().String("format", "terminal", "Output format: terminal, html, json, markdown, pdf")
 	compareCmd.Flags().String("save", "", "Write the comparison output to a file")
 }
