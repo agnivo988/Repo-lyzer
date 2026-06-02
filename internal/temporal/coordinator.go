@@ -5,9 +5,41 @@ import (
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/evolution"
-	"github.com/agnivo988/Repo-lyzer/internal/predictive"
 	"github.com/agnivo988/Repo-lyzer/internal/simulation"
 )
+
+// ForecastResult is the temporal package's forecast summary shape.
+// It mirrors the predictive package data without introducing an import cycle.
+type ForecastResult struct {
+	Metric          string
+	Predictions     []Prediction
+	Trend           string
+	RiskLevel       string
+	Recommendations []string
+	ConfidenceScore float64
+	BaselineMean    float64
+	BaselineStdDev  float64
+}
+
+// Prediction is the temporal package's forecast point shape.
+type Prediction struct {
+	Timestamp  time.Time
+	Value      float64
+	LowerBound float64
+	UpperBound float64
+	Confidence float64
+	Method     string
+}
+
+// ContributorRiskForecast captures contributor risk outputs for temporal analysis.
+type ContributorRiskForecast struct {
+	ContributorID     string
+	BurnoutRisk       float64
+	AttritionRisk     float64
+	KnowledgeLossRisk float64
+	Trajectory        string
+	Recommendations   []string
+}
 
 // Coordinator orchestrates temporal analysis operations across all temporal modules.
 // It manages the workflow from data reconstruction through evolution detection to forecasting and simulation.
@@ -19,7 +51,7 @@ type Coordinator struct {
 	Detector *evolution.Detector
 
 	// Predictor performs forecasting and risk prediction
-	Predictor *predictive.Predictor
+	Predictor any
 
 	// SimulationRunner executes what-if scenarios
 	SimulationRunner *simulation.ScenarioRunner
@@ -28,8 +60,8 @@ type Coordinator struct {
 	EvolutionPatterns []evolution.EvolutionPattern
 	DriftIndicators   []evolution.DriftIndicator
 	RiskIndicators    []evolution.RiskIndicator
-	HealthForecast    *predictive.ForecastResult
-	ContributorRisks  []predictive.ContributorRiskForecast
+	HealthForecast    *ForecastResult
+	ContributorRisks  []ContributorRiskForecast
 	SimulationResults []simulation.SimulationResult
 }
 
@@ -50,8 +82,8 @@ type AnalysisResult struct {
 	RiskIndicators    []evolution.RiskIndicator
 
 	// Predictions
-	HealthForecast   *predictive.ForecastResult
-	ContributorRisks []predictive.ContributorRiskForecast
+	HealthForecast   *ForecastResult
+	ContributorRisks []ContributorRiskForecast
 
 	// Simulation results (if run)
 	SimulationResults []simulation.SimulationResult
@@ -68,7 +100,6 @@ func NewCoordinator(owner, repoName string) *Coordinator {
 	return &Coordinator{
 		Timeline:          NewTimeline(owner, repoName),
 		Detector:          evolution.NewDetector(),
-		Predictor:         predictive.NewPredictor(),
 		SimulationRunner:  simulation.NewScenarioRunner(owner, repoName),
 		EvolutionPatterns: make([]evolution.EvolutionPattern, 0),
 		DriftIndicators:   make([]evolution.DriftIndicator, 0),
@@ -149,9 +180,9 @@ func (c *Coordinator) ForecastHealth(monthsAhead int) error {
 	// 3. Generating forecasts with confidence intervals
 	// 4. Computing trend and risk level
 
-	c.HealthForecast = &predictive.ForecastResult{
+	c.HealthForecast = &ForecastResult{
 		Metric:          "repository_health",
-		Predictions:     make([]predictive.Prediction, 0),
+		Predictions:     make([]Prediction, 0),
 		Trend:           "stable",
 		RiskLevel:       "low",
 		Recommendations: make([]string, 0),
@@ -174,7 +205,7 @@ func (c *Coordinator) ForecastContributorRisks() error {
 	// 3. Identifying critical knowledge holders
 	// 4. Recommending retention actions
 
-	c.ContributorRisks = make([]predictive.ContributorRiskForecast, 0)
+	c.ContributorRisks = make([]ContributorRiskForecast, 0)
 
 	return nil
 }

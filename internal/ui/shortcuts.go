@@ -48,7 +48,7 @@ func GetInputShortcuts() []KeyboardShortcut {
 func GetDashboardShortcuts() []KeyboardShortcut {
 	return []KeyboardShortcut{
 		{Key: "←/→", AltKey: "h/l", Description: "Switch tabs", Category: "Navigation"},
-		{Key: "1-8", AltKey: "", Description: "Jump to tab", Category: "Navigation"},
+		{Key: "1-8", AltKey: "", Description: "Jump to visible tabs", Category: "Navigation"},
 		{Key: "e", AltKey: "", Description: "Export menu", Category: "Actions"},
 		{Key: "j", AltKey: "", Description: "Export JSON", Category: "Actions"},
 		{Key: "m", AltKey: "", Description: "Export Markdown", Category: "Actions"},
@@ -56,6 +56,7 @@ func GetDashboardShortcuts() []KeyboardShortcut {
 		{Key: "x", AltKey: "", Description: "Export HTML", Category: "Actions"},
 		{Key: "p", AltKey: "", Description: "Export PDF", Category: "Actions"},
 		{Key: "f", AltKey: "", Description: "File tree", Category: "Actions"},
+		{Key: "z", AltKey: "", Description: "Show trends", Category: "Actions"},
 		{Key: "r", AltKey: "F5", Description: "Refresh data", Category: "Actions"},
 		{Key: "b", AltKey: "", Description: "Toggle bookmark", Category: "Actions"},
 		{Key: "t", AltKey: "", Description: "Cycle theme", Category: "Display"},

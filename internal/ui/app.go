@@ -206,6 +206,19 @@ func helpContentForSubmenu(index int) string {
 	}
 }
 
+func normalizeAnalysisType(analysisType string) string {
+	switch analysisType {
+	case "detailed", "custom":
+		return analysisType
+	default:
+		return "quick"
+	}
+}
+
+func analysisCacheKey(repoName, analysisType string) string {
+	return fmt.Sprintf("%s#%s", repoName, normalizeAnalysisType(analysisType))
+}
+
 // Init initializes the Bubble Tea program
 func (m MainModel) Init() tea.Cmd {
 	return m.initialCmd
@@ -1052,6 +1065,9 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 			return fmt.Errorf("invalid repository URL: must be in owner/repo format or a valid GitHub URL")
 		}
 
+		analysisType := normalizeAnalysisType(m.analysisType)
+		cacheKey := analysisCacheKey(repoName, analysisType)
+
 		// Check cache first
 		if allowCache && m.cache != nil {
 			if entry, found := m.cache.Get(repoName); found {
@@ -1072,7 +1088,11 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 		tracker := NewProgressTracker()
 
 		// Stage 1: Fetch repository
-		client := github.NewClient()
+		token := ""
+		if m.appConfig != nil {
+			token = m.appConfig.GitHubToken
+		}
+		client := github.NewClientWithToken(token)
 		client.SetContext(ctx)
 		repo, err := client.GetRepo(parts[0], parts[1])
 		if err != nil {
@@ -1161,6 +1181,64 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 		score := analyzer.CalculateHealth(repo, commits)
 		busFactor, busRisk := analyzer.BusFactor(contributors)
 		maturityScore, maturityLevel := analyzer.RepoMaturityScore(repo, len(commits), len(contributors), false)
+		contributorInsights := analyzer.AnalyzeContributors(contributors)
+
+		commitsLast90Days := 0
+		cutoff := time.Now().AddDate(0, 0, -90)
+
+		for _, c := range commits {
+			if c.Commit.Author.Date.After(cutoff) {
+				commitsLast90Days++
+			}
+		}
+
+		riskAlerts := analyzer.AnalyzeRiskAlerts(
+			busFactor,
+			score,
+			commitsLast90Days,
+			false,
+		)
+
+		if analysisType == "quick" {
+			qualityDashboard := analyzer.GenerateQualityDashboard(
+				repo,
+				commits,
+				contributors,
+				score,
+				busFactor,
+				maturityLevel,
+				maturityScore,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			result := AnalysisResult{
+				Repo:                repo,
+				Commits:             commits,
+				Contributors:        contributors,
+				FileTree:            fileTree,
+				Languages:           languages,
+				HealthScore:         score,
+				BusFactor:           busFactor,
+				BusRisk:             busRisk,
+				MaturityScore:       maturityScore,
+				MaturityLevel:       maturityLevel,
+				ContributorInsights: contributorInsights,
+				ContributorActivity: analyzer.AnalyzeContributorActivity(commits),
+				RiskAlerts:          riskAlerts,
+				QualityDashboard:    qualityDashboard,
+			}
+
+			if m.cache != nil {
+				m.cache.SetWithMetadata(cacheKey, result, currentHashes)
+			}
+
+			AddAnalysisNotification(repoName, true)
+
+			return result
+		}
 
 		// Stage 6: Analyze dependencies and contributor insights
 		deps, depsErr := analyzer.AnalyzeDependencies(client, parts[0], parts[1], repo.DefaultBranch, fileTree)
@@ -1170,7 +1248,6 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		contributorInsights := analyzer.AnalyzeContributors(contributors)
 
 		// Stage 7: Security vulnerability scan
 		security, securityErr := analyzer.ScanDependencies(deps)
@@ -1184,15 +1261,7 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 
 		// Mark complete
 		tracker.NextStage()
-		commitsLast90Days := 0
-		cutoff := time.Now().AddDate(0, 0, -90)
-
-		for _, c := range commits {
-			if c.Commit.Author.Date.After(cutoff) {
-				commitsLast90Days++
-			}
-		}
-		riskAlerts := analyzer.AnalyzeRiskAlerts(
+		riskAlerts = analyzer.AnalyzeRiskAlerts(
 			busFactor,
 			score,
 			commitsLast90Days,
@@ -1285,7 +1354,7 @@ func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, al
 
 		// Save to cache with file tree hashes metadata
 		if m.cache != nil {
-			m.cache.SetWithMetadata(repoName, result, currentHashes)
+			m.cache.SetWithMetadata(cacheKey, result, currentHashes)
 		}
 
 		// Add success notification
@@ -1462,7 +1531,11 @@ func countNewContributors(cached, current []github.Contributor) int {
 }
 
 func (m MainModel) checkOwnership() bool {
-	client := github.NewClient()
+	token := ""
+	if m.appConfig != nil {
+		token = m.appConfig.GitHubToken
+	}
+	client := github.NewClientWithToken(token)
 	user, err := client.GetUser()
 	if err != nil {
 		return false // If we can't get user, assume not owner
@@ -1624,7 +1697,11 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 			return fmt.Errorf("invalid repository URL: second repository must be in owner/repo format or a valid GitHub URL")
 		}
 
-		client := github.NewClient()
+		token := ""
+		if m.appConfig != nil {
+			token = m.appConfig.GitHubToken
+		}
+		client := github.NewClientWithToken(token)
 
 		// Analyze first repo
 		repo1, err := client.GetRepo(parts1[0], parts1[1])

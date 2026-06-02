@@ -102,3 +102,51 @@ func TestMainModelPreservesAnalyzeSubmenuChoice(t *testing.T) {
 		t.Fatalf("loading.analysisType = %q, want detailed", model.loading.analysisType)
 	}
 }
+
+func TestAnalysisCacheKeyIncludesNormalizedAnalysisType(t *testing.T) {
+	tests := []struct {
+		name         string
+		repoName     string
+		analysisType string
+		want         string
+	}{
+		{
+			name:         "empty defaults to quick",
+			repoName:     "owner/repo",
+			analysisType: "",
+			want:         "owner/repo#quick",
+		},
+		{
+			name:         "quick stays quick",
+			repoName:     "owner/repo",
+			analysisType: "quick",
+			want:         "owner/repo#quick",
+		},
+		{
+			name:         "detailed stays detailed",
+			repoName:     "owner/repo",
+			analysisType: "detailed",
+			want:         "owner/repo#detailed",
+		},
+		{
+			name:         "custom stays custom",
+			repoName:     "owner/repo",
+			analysisType: "custom",
+			want:         "owner/repo#custom",
+		},
+		{
+			name:         "unknown defaults to quick",
+			repoName:     "owner/repo",
+			analysisType: "unexpected",
+			want:         "owner/repo#quick",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := analysisCacheKey(tt.repoName, tt.analysisType); got != tt.want {
+				t.Fatalf("analysisCacheKey() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

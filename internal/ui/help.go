@@ -49,9 +49,10 @@ Repository Input:
 
 Dashboard Navigation:
   ←→/hl         Switch between views
-  1-7           Jump to specific view
+  1-8           Jump to visible tabs
   e             Toggle export menu
   f             Open file tree
+  z             Show repository trends
   r             Refresh data
   ?/h           Toggle help
   q/ESC         Go back
