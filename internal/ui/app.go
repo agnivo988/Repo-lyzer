@@ -1133,6 +1133,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string, tracker *Pr
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		tracker.NextStage() // Move to Security Scan
 
 		// Stage 7: Security vulnerability scan
 		security, securityErr := analyzer.ScanDependencies(deps)
@@ -1142,10 +1143,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string, tracker *Pr
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		tracker.NextStage()
+		tracker.NextStage() // Move to Quality Analysis
 
-		// Mark complete
-		tracker.NextStage()
 		riskAlerts = analyzer.AnalyzeRiskAlerts(
 			busFactor,
 			score,
@@ -1176,6 +1175,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string, tracker *Pr
 			deps,
 			hotspots,
 		)
+		tracker.NextStage() // Move to Issues & Pull Requests
 
 		// Fetch issues and PRs
 		issues, issuesErr := client.GetIssues(parts[0], parts[1], "open")
@@ -1244,6 +1244,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string, tracker *Pr
 
 		// Add success notification
 		AddAnalysisNotification(repoName, true)
+
+		tracker.NextStage() // Mark Final Report complete
 
 		return result
 	}

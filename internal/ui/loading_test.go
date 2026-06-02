@@ -16,13 +16,13 @@ func TestLoadingModelView_RendersProgressAndProgressBar(t *testing.T) {
 
 	view := m.View(80, 20)
 
-	// Since 1 of 11 stages is completed, the percentage should be 9%
-	expectedPercentage := "9%"
+	// Since 1 of 9 stages is completed, the percentage should be 11%
+	expectedPercentage := "11%"
 	if !strings.Contains(view, expectedPercentage) {
 		t.Errorf("expected view to contain %q, but did not. Got:\n%s", expectedPercentage, view)
 	}
 
-	expectedProgressLine := "Progress: 9%"
+	expectedProgressLine := "Progress: 11%"
 	if !strings.Contains(view, expectedProgressLine) {
 		t.Errorf("expected view to contain %q, but did not. Got:\n%s", expectedProgressLine, view)
 	}

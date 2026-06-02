@@ -67,11 +67,11 @@ func (m LoadingModel) View(width, height int) string {
 		stages := m.progress.GetAllStages()
 		statusView += "\n\n"
 		for _, stage := range stages {
-			prefix := "⏳ "
+			prefix := "○ "
 			if stage.IsComplete {
-				prefix = "✅ "
+				prefix = "✓ "
 			} else if stage.IsActive {
-				prefix = "⚙️  "
+				prefix = "⏳ "
 			}
 			statusView += prefix + stage.Name + "\n"
 		}
