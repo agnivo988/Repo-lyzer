@@ -236,7 +236,7 @@ repo-lyzer analyze kubernetes/kubernetes --format pdf --save reports/k8s-analysi
 
 ### Example 2: Compare Web Frameworks
 ```bash
-repo-lyzer compare react vue svelte --format pdf --save reports/framework-comparison.pdf
+repo-lyzer compare react vue --format pdf --save output.pdf
 ```
 
 ### Example 3: Monitor Project Health
