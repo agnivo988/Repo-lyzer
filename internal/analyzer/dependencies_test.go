@@ -57,3 +57,32 @@ func TestParseRequirementsTxt(t *testing.T) {
 		})
 	}
 }
+
+func TestParseCargoToml(t *testing.T) {
+	content := `
+[dependencies]
+serde = "1.0"
+tokio = { version = "1.15", features = ["full"] }
+rand = { version = '0.8.5' }
+other-pkg = { path = "../other" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = { version = "3.3" }
+`
+
+	expected := []Dependency{
+		{Name: "serde", Version: "1.0", Type: "production"},
+		{Name: "tokio", Version: "1.15", Type: "production"},
+		{Name: "rand", Version: "0.8.5", Type: "production"},
+		{Name: "other-pkg", Version: "*", Type: "production"},
+		{Name: "tokio-test", Version: "0.4", Type: "dev"},
+		{Name: "tempfile", Version: "3.3", Type: "dev"},
+	}
+
+	got, _ := parseCargoToml([]byte(content))
+	if !reflect.DeepEqual(got, expected) {
+		t.Errorf("parseCargoToml() =\n%v\nwant:\n%v", got, expected)
+	}
+}
+

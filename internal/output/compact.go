@@ -2,6 +2,7 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"sort"
 	"time"
@@ -21,6 +22,60 @@ type CompactConfig struct {
 	Contributors    int
 	Duration        time.Duration
 	Languages       map[string]int
+}
+
+// SaveJSON writes the compact analysis summary to a JSON file.
+func SaveJSON(cfg CompactConfig, path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("cannot create save file: %w", err)
+	}
+	defer f.Close()
+
+	if cfg.Repo == nil {
+		cfg.Repo = &github.Repo{}
+	}
+
+	topLangs := buildTopLanguages(cfg.Languages, 3)
+	primaryLanguage := cfg.Repo.Language
+	if primaryLanguage == "" && len(topLangs) > 0 {
+		primaryLanguage = topLangs[0].Name
+	}
+
+	summary := compactAnalysis{
+		Repository: compactRepository{
+			FullName:        cfg.Repo.FullName,
+			Description:     cfg.Repo.Description,
+			URL:             cfg.Repo.HTMLURL,
+			PrimaryLanguage: primaryLanguage,
+			Stars:           cfg.Repo.Stars,
+			Forks:           cfg.Repo.Forks,
+			OpenIssues:      cfg.Repo.OpenIssues,
+		},
+		Metrics: compactMetrics{
+			HealthScore:     cfg.HealthScore,
+			BusFactor:       cfg.BusFactor,
+			BusRisk:         cfg.BusRisk,
+			MaturityScore:   cfg.MaturityScore,
+			MaturityLevel:   cfg.MaturityLevel,
+			CommitsLastYear: cfg.CommitsLastYear,
+			Contributors:    cfg.Contributors,
+		},
+		Metadata: compactMetadata{
+			DurationSeconds: cfg.Duration.Seconds(),
+			TopLanguages:    topLangs,
+		},
+	}
+
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(summary); err != nil {
+		return fmt.Errorf("failed to encode JSON: %w", err)
+	}
+
+	fmt.Printf("✅ Analysis saved to %s\n", path)
+	return nil
 }
 
 // PrintCompactJSON writes the compact analysis summary to stdout.

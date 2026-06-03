@@ -5,14 +5,13 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
-	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/cobra"
-
-	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
+	"github.com/agnivo988/Repo-lyzer/internal/output"
 	"github.com/agnivo988/Repo-lyzer/internal/progress"
+	"github.com/spf13/cobra"
 )
 
 // RunCompare executes the compare command for two GitHub repositories.
@@ -36,164 +35,146 @@ var compareCmd = &cobra.Command{
 of their key metrics and health indicators.
 
 Comparison includes:
-  • Stars, Forks, and Open Issues
-  • Commit activity (past year)
-  • Contributor count and engagement
-  • Bus Factor and risk assessment  
-  • Repository maturity scores
-  • Verdict on which repository is more mature/stable
+	• Stars, Forks, and Open Issues
+	• Commit activity (past year)
+	• Contributor count and engagement
+	• Bus Factor and risk assessment  
+	• Repository maturity scores
+	• Verdict on which repository is more mature/stable
 
 Examples:
-  # Compare popular frameworks
-  repo-lyzer compare facebook/react vuejs/vue
+	# Compare popular frameworks
+	repo-lyzer compare facebook/react vuejs/vue
 
-  # Compare similar tools
-  repo-lyzer compare golang/go rust-lang/rust
+	# Compare similar tools
+	repo-lyzer compare golang/go rust-lang/rust
 
-  # Compare forks
-  repo-lyzer compare original/repo fork/repo`,
+	# Compare forks
+	repo-lyzer compare original/repo fork/repo
+
+	# Export as HTML
+	repo-lyzer compare golang/go microsoft/vscode --format html --save report.html
+
+	# Export as JSON
+	repo-lyzer compare golang/go facebook/react --format json --save compare.json
+
+	# Export as Markdown to stdout
+	repo-lyzer compare golang/go rust-lang/rust --format markdown`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		format, _ := cmd.Flags().GetString("format")
+		savePath, _ := cmd.Flags().GetString("save")
+		format = strings.ToLower(strings.TrimSpace(format))
+		if format == "" {
+			format = "terminal"
+		}
 
-		// Parse repo names
-		r1 := strings.Split(args[0], "/")
-		r2 := strings.Split(args[1], "/")
+		// Validate and parse repo names using shared helper
+		owner1, repo1, err := validateRepoURL(args[0])
+		if err != nil {
+			return fmt.Errorf("invalid repository '%s': %w", args[0], err)
+		}
 
-		if len(r1) != 2 || len(r2) != 2 {
-			return fmt.Errorf("repositories must be in owner/repo format")
+		owner2, repo2, err := validateRepoURL(args[1])
+		if err != nil {
+			return fmt.Errorf("invalid repository '%s': %w", args[1], err)
 		}
 
 		client := github.NewClient()
-
-		// Create progress spinner
 		spinner := progress.NewSpinner()
 
-		// Fetch first repository
-		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", r1[0], r1[1]))
-		repo1, err := client.GetRepo(r1[0], r1[1])
+		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", owner1, repo1))
+		side1, err := fetchCompareInput(client, owner1, repo1)
 		if err != nil {
 			spinner.Stop()
 			return err
 		}
+		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", owner1, repo1))
 
-		_, _ = client.GetLanguages(r1[0], r1[1])
-		commits1, _ := client.GetCommits(r1[0], r1[1], 365)
-		contributors1, err := client.GetContributorsWithAvatars(r1[0], r1[1], 15)
-		if err != nil {
-			spinner.Stop()
-			fmt.Printf("Error fetching contributors for %s/%s: %v\n", r1[0], r1[1], err)
-			return err
-		}
-		_, _ = client.GetFileTree(r1[0], r1[1], repo1.DefaultBranch)
-		bus1, risk1 := analyzer.BusFactor(contributors1)
-
-		maturityScore1, maturityLevel1 :=
-			analyzer.RepoMaturityScore(repo1, len(commits1), len(contributors1), false)
-
-		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", r1[0], r1[1]))
-
-		// ---------- Fetch Repo 2 ----------
-		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", r2[0], r2[1]))
-		repo2, err := client.GetRepo(r2[0], r2[1])
+		spinner.Start(fmt.Sprintf("🔍 Analyzing %s/%s...", owner2, repo2))
+		side2, err := fetchCompareInput(client, owner2, repo2)
 		if err != nil {
 			spinner.Stop()
 			return err
 		}
+		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", owner2, repo2))
 
-		_, _ = client.GetLanguages(r2[0], r2[1])
-		commits2, _ := client.GetCommits(r2[0], r2[1], 365)
-		contributors2, err := client.GetContributorsWithAvatars(r2[0], r2[1], 15)
+		report := output.BuildCompareReport(side1, side2)
+
+		var rendered []byte
+		switch format {
+		case "terminal":
+			terminalOutput := output.RenderCompareTerminal(report)
+			fmt.Print(terminalOutput)
+			if savePath != "" {
+				return saveCompareOutput(savePath, []byte(terminalOutput))
+			}
+			return nil
+		case "json":
+			rendered, err = output.RenderCompareJSON(report)
+		case "markdown":
+			rendered, err = output.RenderCompareMarkdown(report)
+		case "html":
+			rendered, err = output.RenderCompareHTML(report)
+		default:
+			return fmt.Errorf("unsupported compare format: %s", format)
+		}
 		if err != nil {
-			spinner.Stop()
-			fmt.Printf("Error fetching contributors for %s/%s: %v\n", r2[0], r2[1], err)
 			return err
 		}
-		_, _ = client.GetFileTree(r2[0], r2[1], repo2.DefaultBranch)
-		bus2, risk2 := analyzer.BusFactor(contributors2)
 
-		maturityScore2, maturityLevel2 :=
-			analyzer.RepoMaturityScore(repo2, len(commits2), len(contributors2), false)
-
-		spinner.StopWithMessage(fmt.Sprintf("Analyzed %s/%s", r2[0], r2[1]))
-
-		// ---------- Output Table ----------
-		fmt.Println("\n📊 Repository Comparison")
-
-		table := tablewriter.NewWriter(os.Stdout)
-		table.Header([]string{"Metric", repo1.FullName, repo2.FullName})
-
-		table.Append([]string{"⭐ Stars",
-			fmt.Sprintf("%d", repo1.Stars),
-			fmt.Sprintf("%d", repo2.Stars),
-		})
-
-		table.Append([]string{"🍴 Forks",
-			fmt.Sprintf("%d", repo1.Forks),
-			fmt.Sprintf("%d", repo2.Forks),
-		})
-
-		table.Append([]string{"📦 Commits (1y)",
-			fmt.Sprintf("%d", len(commits1)),
-			fmt.Sprintf("%d", len(commits2)),
-		})
-
-		table.Append([]string{"👥 Contributors",
-			fmt.Sprintf("%d", len(contributors1)),
-			fmt.Sprintf("%d", len(contributors2)),
-		})
-
-		table.Append([]string{"⚠️ Bus Factor",
-			fmt.Sprintf("%d (%s)", bus1, risk1),
-			fmt.Sprintf("%d (%s)", bus2, risk2),
-		})
-
-		table.Append([]string{"🏗️ Maturity",
-			fmt.Sprintf("%s (%d)", maturityLevel1, maturityScore1),
-			fmt.Sprintf("%s (%d)", maturityLevel2, maturityScore2),
-		})
-
-		// Check if repositories are identical
-		if repo1.Stars == repo2.Stars &&
-			repo1.Forks == repo2.Forks &&
-			len(commits1) == len(commits2) &&
-			len(contributors1) == len(contributors2) &&
-			bus1 == bus2 &&
-			maturityScore1 == maturityScore2 {
-
-			fmt.Println("\n✅ No differences found between the two repositories.")
-			fmt.Println("Both repositories have identical metrics.")
+		if savePath != "" {
+			if err := saveCompareOutput(savePath, rendered); err != nil {
+				return err
+			}
+			fmt.Printf("Saved comparison report to %s\n", savePath)
 			return nil
 		}
 
-		table.Render()
-
-		// ---------- Verdict ----------
-		fmt.Println("\n Verdict")
-		if maturityScore1 > maturityScore2 {
-			fmt.Printf("➡️ %s appears more mature and stable.\n", repo1.FullName)
-		} else if maturityScore2 > maturityScore1 {
-			fmt.Printf("➡️ %s appears more mature and stable.\n", repo2.FullName)
-		} else {
-			fmt.Println("➡️ Both repositories are similarly mature.")
-		}
-
+		fmt.Print(string(rendered))
 		return nil
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(compareCmd)
+func fetchCompareInput(client *github.Client, owner, repo string) (output.CompareInput, error) {
+	repoInfo, err := client.GetRepo(owner, repo)
+	if err != nil {
+		return output.CompareInput{}, err
+	}
+
+	languages, err := client.GetLanguages(owner, repo)
+	if err != nil {
+		return output.CompareInput{}, fmt.Errorf("error fetching languages for %s/%s: %w", owner, repo, err)
+	}
+
+	commits, err := client.GetCommits(owner, repo, 365)
+	if err != nil {
+		return output.CompareInput{}, fmt.Errorf("error fetching commits for %s/%s: %w", owner, repo, err)
+	}
+
+	contributors, err := client.GetContributorsWithAvatars(owner, repo, 15)
+	if err != nil {
+		return output.CompareInput{}, fmt.Errorf("error fetching contributors for %s/%s: %w", owner, repo, err)
+	}
+
+	return output.CompareInput{
+		Repo:         repoInfo,
+		Commits:      commits,
+		Contributors: contributors,
+		Languages:    languages,
+	}, nil
 }
 
-// countTreeStats counts files, directories, and total size from tree entries
-func countTreeStats(tree []github.TreeEntry) (files, dirs, totalSize int) {
-	for _, entry := range tree {
-		if entry.Type == "blob" {
-			files++
-			totalSize += entry.Size
-		} else if entry.Type == "tree" {
-			dirs++
-		}
+func saveCompareOutput(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
 	}
-	return
+
+	return os.WriteFile(path, data, 0644)
+}
+
+func init() {
+	rootCmd.AddCommand(compareCmd)
+	compareCmd.Flags().String("format", "terminal", "Output format: terminal, html, json, markdown")
+	compareCmd.Flags().String("save", "", "Write the comparison output to a file")
 }

@@ -122,7 +122,9 @@ func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	return MainModel{
+
+	// Restore last analysis result so it persists across page refreshes
+	model := MainModel{
 		state:          stateMenu,
 		menu:           NewMenuModel(),
 		input:          NewInputModel(),
@@ -143,6 +145,74 @@ func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
 		appConfig:      config,
 		spinner:        s,
 	}
+
+	// Restore previous analysis result from disk so it survives refreshes
+	if saved, err := LoadCurrentAnalysis(); err == nil && saved != nil {
+		model.dashboard.SetData(*saved)
+		model.dashboard.SetCacheStatus("cached")
+		model.state = stateDashboard
+		model.cacheStatus = "cached"
+	}
+
+	return model
+}
+
+func analysisTypeForSubmenu(index int) string {
+	switch index {
+	case 0:
+		return "quick"
+	case 1:
+		return "detailed"
+	case 2:
+		return "custom"
+	default:
+		return ""
+	}
+}
+
+func settingsOptionForSubmenu(index int) string {
+	switch index {
+	case 0:
+		return "theme"
+	case 1:
+		return "cache"
+	case 2:
+		return "export"
+	case 3:
+		return "token"
+	case 4:
+		return "reset"
+	default:
+		return ""
+	}
+}
+
+func helpContentForSubmenu(index int) string {
+	switch index {
+	case 0:
+		return "shortcuts"
+	case 1:
+		return "getting-started"
+	case 2:
+		return "features"
+	case 3:
+		return "troubleshooting"
+	default:
+		return ""
+	}
+}
+
+func normalizeAnalysisType(analysisType string) string {
+	switch analysisType {
+	case "detailed", "custom":
+		return analysisType
+	default:
+		return "quick"
+	}
+}
+
+func analysisCacheKey(repoName, analysisType string) string {
+	return fmt.Sprintf("%s#%s", repoName, normalizeAnalysisType(analysisType))
 }
 
 // Init initializes the Bubble Tea program
@@ -182,6 +252,20 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ErrorMsg:
 		m.err = error(msg)
 		return m, nil
+
+	case string:
+		// Global string messages from sub-models (dashboard returns "switch_to_tree")
+		if msg == "switch_to_tree" {
+			if len(m.dashboard.data.FileTree) > 0 {
+				m.tree = NewTreeModel(&m.dashboard.data)
+			} else {
+				m.tree = NewTreeModel(nil)
+			}
+			m.tree.width = m.windowWidth
+			m.tree.height = m.windowHeight
+			m.state = stateTree
+			return m, nil
+		}
 	}
 
 	// Delegate to current state's sub-model
@@ -192,6 +276,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.menu.Done {
 			switch m.menu.SelectedOption {
 			case 0: // Analyze Repository
+				m.analysisType = analysisTypeForSubmenu(m.menu.SelectedSubmenuOption)
+				m.loading.SetAnalysisType(m.analysisType)
 				m.state = stateInput
 			case 1: // Favorites
 				m.state = stateFavorites
@@ -206,8 +292,16 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 6: // Monitoring
 				m.state = stateMonitorDashboard
 			case 7: // Settings
+				m.settingsOption = settingsOptionForSubmenu(m.menu.SelectedSubmenuOption)
+				m.settings.settingsOption = m.settingsOption
+				m.inTokenInput = false
+				m.tokenInput = ""
+				m.settings.inTokenInput = false
+				m.settings.tokenInput = ""
 				m.state = stateSettings
 			case 8: // Help
+				m.helpContent = helpContentForSubmenu(m.menu.SelectedSubmenuOption)
+				m.help.SetHelpContent(m.helpContent)
 				m.state = stateHelp
 			case 9: // Exit
 				return m, tea.Quit
@@ -334,6 +428,10 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.history.Entries = history.Entries
 			m.history.AddEntry(result)
 			m.history.Save()
+			// Persist current analysis so it survives refresh
+			if err := SaveCurrentAnalysis(result); err != nil {
+				log.Printf("Failed to persist current analysis: %v", err)
+			}
 		}
 		if cachedResult, ok := msg.(CachedAnalysisResult); ok {
 			m.dashboard.SetData(cachedResult.Result)
@@ -347,6 +445,10 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.history.Entries = history.Entries
 			m.history.AddEntry(cachedResult.Result)
 			m.history.Save()
+			// Persist current analysis so it survives refresh
+			if err := SaveCurrentAnalysis(cachedResult.Result); err != nil {
+				log.Printf("Failed to persist cached analysis: %v", err)
+			}
 		}
 		if err, ok := msg.(error); ok {
 			m.progress = nil
@@ -488,6 +590,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case tea.KeyRunes:
 					m.tokenInput += string(msg.Runes)
 				}
+				m.settings.inTokenInput = m.inTokenInput
+				m.settings.tokenInput = m.tokenInput
 				return m, tea.Batch(cmds...)
 			}
 
@@ -563,6 +667,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.settingsOption == "token" {
 					m.inTokenInput = true
 					m.tokenInput = ""
+					m.settings.inTokenInput = true
+					m.settings.tokenInput = ""
 				}
 			case "y":
 				// Confirm reset (reset settings)
@@ -688,7 +794,11 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.dashboard.data.Repo != nil && m.dashboard.data.Repo.FullName != "" {
 					repoName = m.dashboard.data.Repo.FullName
 				}
-				m.fileEdit = NewFileEditModel(m.tree.SelectedPath, repoName)
+				defaultBranch := "main"
+				if m.dashboard.data.Repo != nil && m.dashboard.data.Repo.DefaultBranch != "" {
+					defaultBranch = m.dashboard.data.Repo.DefaultBranch
+				}
+				m.fileEdit = NewFileEditModel(m.tree.SelectedPath, repoName, defaultBranch)
 
 				// Check ownership
 				isOwner := m.checkOwnership()
@@ -835,9 +945,12 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			return fmt.Errorf("invalid repository URL: must be in owner/repo format or a valid GitHub URL")
 		}
 
+		analysisType := normalizeAnalysisType(m.analysisType)
+		cacheKey := analysisCacheKey(repoName, analysisType)
+
 		// Check cache first
 		if m.cache != nil {
-			if entry, found := m.cache.Get(repoName); found {
+			if entry, found := m.cache.Get(cacheKey); found {
 				// Unmarshal cached analysis
 				var result AnalysisResult
 				if err := json.Unmarshal(entry.Analysis, &result); err == nil {
@@ -854,7 +967,11 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		tracker := NewProgressTracker()
 
 		// Stage 1: Fetch repository
-		client := github.NewClient()
+		token := ""
+		if m.appConfig != nil {
+			token = m.appConfig.GitHubToken
+		}
+		client := github.NewClientWithToken(token)
 		client.SetContext(ctx)
 		repo, err := client.GetRepo(parts[0], parts[1])
 		if err != nil {
@@ -887,39 +1004,51 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		}
 
 		// Build current file hash map for incremental analysis
-		currentHashes := make(map[string]string)
+		currentHashes := make(map[string]cache.FileMetadata)
 
 		for _, file := range fileTree {
-			// Skip directories
 			if file.Type != "blob" {
 				continue
 			}
 
-			// Store filepath -> SHA mapping
-			currentHashes[file.Path] = file.Sha
+			currentHashes[file.Path] = cache.FileMetadata{
+				SHA:        file.Sha,
+				AnalyzedAt: time.Now(),
+			}
 		}
 
 		// Compare with cached incremental metadata
 		changedFiles := []string{}
 
-		if entry, found := m.cache.Get(repoName); found {
-			if entry.IncrementalMetadata != nil {
+		if m.cache != nil {
+			if entry, found := m.cache.GetWithoutTTLExpiration(cacheKey); found {
+				if entry.IncrementalMetadata != nil {
 
-				for path, hash := range currentHashes {
-					cachedHash, exists := entry.IncrementalMetadata[path]
+					for path, currentMeta := range currentHashes {
+						cachedMeta, exists := entry.IncrementalMetadata[path]
 
-					// File is new or modified
-					if !exists || cachedHash != hash {
-						changedFiles = append(changedFiles, path)
+						// File is new or modified
+						if !exists || cachedMeta.SHA != currentMeta.SHA {
+							changedFiles = append(changedFiles, path)
+						}
 					}
-				}
 
-				fmt.Printf("🔄 Incremental analysis enabled\n")
-				fmt.Printf("📂 Changed files detected: %d\n", len(changedFiles))
+					fmt.Printf("🔄 Incremental analysis enabled\n")
+					fmt.Printf("📂 Changed files detected: %d\n", len(changedFiles))
 
-				// No changes detected
-				if len(changedFiles) == 0 {
-					fmt.Println("✅ No repository changes detected. Using cached analysis.")
+					// No changes detected
+					if len(changedFiles) == 0 {
+						fmt.Println("✅ No repository changes detected. Using cached analysis.")
+						var result AnalysisResult
+						if err := json.Unmarshal(entry.Analysis, &result); err == nil {
+							// Return cached result with status
+							return CachedAnalysisResult{
+								Result:   result,
+								IsCached: true,
+								CachedAt: entry.CachedAt,
+							}
+						}
+					}
 				}
 			}
 		}
@@ -930,6 +1059,64 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		score := analyzer.CalculateHealth(repo, commits)
 		busFactor, busRisk := analyzer.BusFactor(contributors)
 		maturityScore, maturityLevel := analyzer.RepoMaturityScore(repo, len(commits), len(contributors), false)
+		contributorInsights := analyzer.AnalyzeContributors(contributors)
+
+		commitsLast90Days := 0
+		cutoff := time.Now().AddDate(0, 0, -90)
+
+		for _, c := range commits {
+			if c.Commit.Author.Date.After(cutoff) {
+				commitsLast90Days++
+			}
+		}
+
+		riskAlerts := analyzer.AnalyzeRiskAlerts(
+			busFactor,
+			score,
+			commitsLast90Days,
+			false,
+		)
+
+		if analysisType == "quick" {
+			qualityDashboard := analyzer.GenerateQualityDashboard(
+				repo,
+				commits,
+				contributors,
+				score,
+				busFactor,
+				maturityLevel,
+				maturityScore,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			result := AnalysisResult{
+				Repo:                repo,
+				Commits:             commits,
+				Contributors:        contributors,
+				FileTree:            fileTree,
+				Languages:           languages,
+				HealthScore:         score,
+				BusFactor:           busFactor,
+				BusRisk:             busRisk,
+				MaturityScore:       maturityScore,
+				MaturityLevel:       maturityLevel,
+				ContributorInsights: contributorInsights,
+				ContributorActivity: analyzer.AnalyzeContributorActivity(commits),
+				RiskAlerts:          riskAlerts,
+				QualityDashboard:    qualityDashboard,
+			}
+
+			if m.cache != nil {
+				m.cache.SetWithMetadata(cacheKey, result, currentHashes)
+			}
+
+			AddAnalysisNotification(repoName, true)
+
+			return result
+		}
 
 		// Stage 6: Analyze dependencies and contributor insights
 		deps, depsErr := analyzer.AnalyzeDependencies(client, parts[0], parts[1], repo.DefaultBranch, fileTree)
@@ -939,7 +1126,6 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		contributorInsights := analyzer.AnalyzeContributors(contributors)
 
 		// Stage 7: Security vulnerability scan
 		security, securityErr := analyzer.ScanDependencies(deps)
@@ -1005,6 +1191,57 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
  			commitsLast90Days,
  			security != nil && security.CriticalCount > 0,
  		)
+		riskAlerts = analyzer.AnalyzeRiskAlerts(
+			busFactor,
+			score,
+			commitsLast90Days,
+			security != nil && security.CriticalCount > 0,
+		)
+
+		// Analyze Hotspots
+		hotspots, hotspotsErr := analyzer.AnalyzeHotspots(repo, commits, fileTree, client)
+		if hotspotsErr != nil && errors.Is(hotspotsErr, context.Canceled) {
+			return hotspotsErr
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		// Generate quality dashboard
+		qualityDashboard := analyzer.GenerateQualityDashboard(
+			repo,
+			commits,
+			contributors,
+			score,
+			busFactor,
+			maturityLevel,
+			maturityScore,
+			security,
+			nil, // codeQuality - not implemented yet
+			deps,
+			hotspots,
+		)
+
+		// Fetch issues and PRs
+		issues, issuesErr := client.GetIssues(parts[0], parts[1], "open")
+		if issuesErr != nil {
+			issues = []github.Issue{}
+		}
+
+		prs, prsErr := client.GetPullRequests(parts[0], parts[1], "open")
+		if prsErr != nil {
+			prs = []github.PullRequest{}
+		}
+
+		hasLockFile := deps != nil && deps.HasLockFile
+		maintainerAnalysis := analyzer.AnalyzeMaintainerDashboard(
+			repo,
+			prs,
+			issues,
+			score,
+			busFactor,
+			hasLockFile,
+			contributors,
 		)
 
 		// Fetch README content and calculate contribution score
@@ -1045,9 +1282,9 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			ContributionScore:   contribScore,
 		}
 
-		// Save to cache
+		// Save to cache with file tree hashes metadata
 		if m.cache != nil {
-			m.cache.Set(repoName, result)
+			m.cache.SetWithMetadata(cacheKey, result, currentHashes)
 		}
 
 		// Add success notification
@@ -1058,7 +1295,11 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 }
 
 func (m MainModel) checkOwnership() bool {
-	client := github.NewClient()
+	token := ""
+	if m.appConfig != nil {
+		token = m.appConfig.GitHubToken
+	}
+	client := github.NewClientWithToken(token)
 	user, err := client.GetUser()
 	if err != nil {
 		return false // If we can't get user, assume not owner
@@ -1220,7 +1461,11 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 			return fmt.Errorf("invalid repository URL: second repository must be in owner/repo format or a valid GitHub URL")
 		}
 
-		client := github.NewClient()
+		token := ""
+		if m.appConfig != nil {
+			token = m.appConfig.GitHubToken
+		}
+		client := github.NewClientWithToken(token)
 
 		// Analyze first repo
 		repo1, err := client.GetRepo(parts1[0], parts1[1])

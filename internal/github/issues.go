@@ -1,6 +1,10 @@
 package github
 
-import "time"
+import (
+	"time"
+
+	gocache "github.com/patrickmn/go-cache"
+)
 
 type IssueLabel struct {
 	Name  string `json:"name"`
@@ -21,8 +25,27 @@ type Issue struct {
 }
 
 func (c *Client) GetIssues(owner, repo string, state string) ([]Issue, error) {
-	var issues []Issue
-	url := "https://api.github.com/repos/" + owner + "/" + repo + "/issues?state=" + state + "&per_page=100"
-	err := c.get(url, &issues)
-	return issues, err
+	cacheKey := "issues:" + owner + "/" + repo + ":" + state
+	if cached, found := c.cache.Get(cacheKey); found {
+		return copyIssues(cached.([]Issue)), nil
+	}
+
+	v, err, _ := c.sf.Do(cacheKey, func() (interface{}, error) {
+		if cached, found := c.cache.Get(cacheKey); found {
+			return copyIssues(cached.([]Issue)), nil
+		}
+
+		var issues []Issue
+		url := "https://api.github.com/repos/" + owner + "/" + repo + "/issues?state=" + state + "&per_page=100"
+		if err := c.get(url, &issues); err != nil {
+			return nil, err
+		}
+
+		c.cache.Set(cacheKey, issues, gocache.DefaultExpiration)
+		return copyIssues(issues), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.([]Issue), nil
 }

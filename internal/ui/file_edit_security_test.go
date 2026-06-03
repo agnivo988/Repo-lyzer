@@ -8,7 +8,7 @@ import (
 func TestBuildBlobURL_EscapesUntrustedPathSegments(t *testing.T) {
 	t.Parallel()
 
-	got, err := buildBlobURL("github.com", "owner", "repo", "/dir/a&b?.go")
+	got, err := buildBlobURL("github.com", "owner", "repo", "main", "/dir/a&b?.go")
 	if err != nil {
 		t.Fatalf("buildBlobURL returned error: %v", err)
 	}
@@ -22,7 +22,7 @@ func TestBuildBlobURL_EscapesUntrustedPathSegments(t *testing.T) {
 func TestBuildVSCodeBlobURL_EscapesPathAndUsesVSCodeHost(t *testing.T) {
 	t.Parallel()
 
-	got, err := buildVSCodeBlobURL("owner", "repo", "/folder/name with spaces.ts")
+	got, err := buildVSCodeBlobURL("owner", "repo", "main", "/folder/name with spaces.ts")
 	if err != nil {
 		t.Fatalf("buildVSCodeBlobURL returned error: %v", err)
 	}
@@ -30,6 +30,20 @@ func TestBuildVSCodeBlobURL_EscapesPathAndUsesVSCodeHost(t *testing.T) {
 	want := "https://vscode.dev/github/owner/repo/blob/main/folder/name%20with%20spaces.ts"
 	if got != want {
 		t.Fatalf("buildVSCodeBlobURL() = %q, want %q", got, want)
+	}
+}
+
+func TestBuildBlobURL_CustomBranch(t *testing.T) {
+	t.Parallel()
+
+	got, err := buildBlobURL("github.com", "owner", "repo", "master", "/dir/file.go")
+	if err != nil {
+		t.Fatalf("buildBlobURL returned error: %v", err)
+	}
+
+	want := "https://github.com/owner/repo/blob/master/dir/file.go"
+	if got != want {
+		t.Fatalf("buildBlobURL() = %q, want %q", got, want)
 	}
 }
 
@@ -41,19 +55,20 @@ func TestBuildBlobURL_RejectsInvalidInputs(t *testing.T) {
 		host     string
 		owner    string
 		repo     string
+		branch   string
 		filePath string
 	}{
-		{name: "empty owner", host: "github.com", owner: "", repo: "repo", filePath: "/main.go"},
-		{name: "empty repo", host: "github.com", owner: "owner", repo: "", filePath: "/main.go"},
-		{name: "empty file path", host: "github.com", owner: "owner", repo: "repo", filePath: ""},
-		{name: "slash-only file path", host: "github.com", owner: "owner", repo: "repo", filePath: "/"},
+		{name: "empty owner", host: "github.com", owner: "", repo: "repo", branch: "main", filePath: "/main.go"},
+		{name: "empty repo", host: "github.com", owner: "owner", repo: "", branch: "main", filePath: "/main.go"},
+		{name: "empty file path", host: "github.com", owner: "owner", repo: "repo", branch: "main", filePath: ""},
+		{name: "slash-only file path", host: "github.com", owner: "owner", repo: "repo", branch: "main", filePath: "/"},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, err := buildBlobURL(tt.host, tt.owner, tt.repo, tt.filePath)
+			_, err := buildBlobURL(tt.host, tt.owner, tt.repo, tt.branch, tt.filePath)
 			if err == nil {
 				t.Fatalf("expected error for case %q", tt.name)
 			}

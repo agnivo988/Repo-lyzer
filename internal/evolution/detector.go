@@ -1,5 +1,9 @@
 package evolution
 
+import (
+	"fmt"
+)
+
 // TimelineView is the minimal timeline surface needed by evolution analysis.
 // It avoids a package cycle with internal/temporal.
 type TimelineView interface {
@@ -21,7 +25,7 @@ func (d *Detector) DetectPatterns(timeline TimelineView) []EvolutionPattern {
 
 	patterns := make([]EvolutionPattern, 0)
 	// TODO: Implement pattern detection logic
-
+	fmt.Println("[EXPERIMENTAL] Pattern detection logic is incomplete")
 	return patterns
 }
 
@@ -39,7 +43,7 @@ func (d *Detector) DetectArchitecturalDrift(timeline TimelineView) []DriftIndica
 
 	indicators := make([]DriftIndicator, 0)
 	// TODO: Implement drift detection logic
-
+	fmt.Println("[EXPERIMENTAL] Architectural drift analysis is incomplete")
 	return indicators
 }
 
@@ -69,7 +73,7 @@ func (d *Detector) AnalyzeComplexityGrowth(timeline TimelineView) ComplexityRepo
 	}
 
 	// TODO: Implement complexity growth analysis
-
+	fmt.Println("[PARTIAL] Complexity growth analysis is under development")
 	return report
 }
 
@@ -107,7 +111,7 @@ func (d *Detector) DetectKnowledgeSilos(timeline TimelineView) []Bottleneck {
 
 	bottlenecks := make([]Bottleneck, 0)
 	// TODO: Implement knowledge silo detection
-
+	fmt.Println("[EXPERIMENTAL] Knowledge silo detection is not finalized")
 	return bottlenecks
 }
 

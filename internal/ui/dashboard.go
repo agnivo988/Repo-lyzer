@@ -21,6 +21,7 @@ const (
 	viewRepo
 	viewLanguages
 	viewActivity
+	viewTrends
 	viewContributors
 	viewContributorInsights
 	viewContributorActivity
@@ -41,6 +42,12 @@ type DashboardModel struct {
 	currentView dashboardView
 	showHelp    bool
 	cacheStatus string // "fresh", "cached", or ""
+
+	// Precalculated fields for performance
+	// Precalculated fields for performance
+	precalcActivity map[string]int
+	apiStatusMsg    string
+	isFetchingAPI   bool
 }
 
 func NewDashboardModel() DashboardModel {
@@ -53,6 +60,15 @@ func (m DashboardModel) Init() tea.Cmd { return nil }
 
 func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
+	// Precalculate heavy charts
+	m.precalcActivity = analyzer.CommitsPerDay(m.data.Commits)
+
+	if m.data.ContributorInsights == nil && len(m.data.Contributors) > 0 {
+		m.data.ContributorInsights = analyzer.AnalyzeContributors(m.data.Contributors)
+	}
+
+	m.apiStatusMsg = ""
+	m.isFetchingAPI = false
 }
 
 func (m *DashboardModel) SetCacheStatus(status string) {
@@ -66,6 +82,11 @@ type exportMsg struct {
 
 func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case fetchedAPIStatusMsg:
+		m.apiStatusMsg = string(msg)
+		m.isFetchingAPI = false
+		return m, nil
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -164,6 +185,9 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "f":
 			return m, func() tea.Msg { return "switch_to_tree" }
 
+		case "z":
+			m.currentView = viewTrends
+
 		case "r":
 			if m.data.Repo != nil {
 				return m, func() tea.Msg { return "refresh_data" }
@@ -185,15 +209,11 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "5":
 			m.currentView = viewActivity
 		case "6":
-			m.currentView = viewContributors
+			m.currentView = viewTrends
 		case "7":
-			m.currentView = viewContributorInsights
+			m.currentView = viewContributors
 		case "8":
-			m.currentView = viewContributorActivity
-		case "9":
-			m.currentView = viewDependencies
-		case "0":
-			m.currentView = viewSecurity
+			m.currentView = viewContributorInsights
 		case "u":
 			m.currentView = viewMaintainer
 
@@ -217,6 +237,11 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return "clear_status"
 			})
 		}
+	}
+
+	if m.currentView == viewAPIStatus && m.apiStatusMsg == "" && !m.isFetchingAPI {
+		m.isFetchingAPI = true
+		return m, fetchAPIStatusCmd()
 	}
 
 	return m, nil
@@ -244,6 +269,8 @@ func (m DashboardModel) View() string {
 		content = m.languagesView()
 	case viewActivity:
 		content = m.activityView()
+	case viewTrends:
+		content = m.repositoryTrendsView()
 	case viewContributors:
 		content = m.contributorsView()
 	case viewContributorInsights:
@@ -302,7 +329,7 @@ func (m DashboardModel) View() string {
 }
 
 func (m DashboardModel) renderTabs() string {
-	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "Maintainer", "API"}
+	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Trends", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "Maintainer", "API"}
 
 	var renderedTabs []string
 
@@ -346,11 +373,9 @@ func (m DashboardModel) overviewView() string {
 		"\n"+metrics,
 	))
 
-	activity := analyzer.CommitsPerDay(m.data.Commits)
-	chart := RenderCommitActivity(activity, 15)
 	chartBox := CardStyle.Render(lipgloss.JoinVertical(lipgloss.Left,
 		lipgloss.NewStyle().Bold(true).Render("Activity Trend"),
-		"\n"+chart,
+		"\n"+RenderCommitActivity(m.precalcActivity, 15),
 	))
 	riskPanel := m.riskAlertsView()
 
@@ -396,14 +421,24 @@ func (m DashboardModel) overviewView() string {
 		bottomPanel = riskPanel
 	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader),
-		"\n",
-		lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
-		"\n",
-		bottomPanel,
-	)
+	trendSeries := m.buildMonthlyTrendSeries(4)
+	trendsPanel := m.repositoryTrendsSummaryCard(trendSeries)
+
+	panels := []string{
+		lipgloss.JoinVertical(
+			lipgloss.Left,
+			lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader),
+			"\n",
+			lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
+			"\n",
+			bottomPanel,
+		),
+	}
+	if trendsPanel != "" {
+		panels = append(panels, "\n", trendsPanel)
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, panels...)
 
 }
 
@@ -474,8 +509,7 @@ func (m DashboardModel) languagesView() string {
 
 func (m DashboardModel) activityView() string {
 	header := TitleStyle.Render(" Commit Activity ")
-	activity := analyzer.CommitsPerDay(m.data.Commits)
-	chart := RenderCommitActivity(activity, 40) // Wider chart
+	chart := RenderCommitActivity(m.precalcActivity, 40)
 	totalCommits := len(m.data.Commits)
 	stats := fmt.Sprintf("\nTotal Commits (Last Year): %d", totalCommits)
 
@@ -629,11 +663,8 @@ func (m DashboardModel) contributorInsightsView() string {
 	header := TitleStyle.Render(" Insights ")
 
 	insights := m.data.ContributorInsights
-	if insights == nil {
-		insights = analyzer.AnalyzeContributors(m.data.Contributors)
-	}
 
-	if insights.TotalContributors == 0 {
+	if insights == nil || insights.TotalContributors == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("No contributor data available"))
 	}
 
@@ -774,45 +805,55 @@ func (m DashboardModel) riskAlertsView() string {
 	)
 }
 
+type fetchedAPIStatusMsg string
+
+func fetchAPIStatusCmd() tea.Cmd {
+	return func() tea.Msg {
+		client := github.NewClient()
+		rateLimit, err := client.GetRateLimit()
+
+		var rateLimitInfo string
+		if err != nil {
+			rateLimitInfo = "⚠️ Could not fetch rate limit info"
+		} else {
+			status := rateLimit.GetRateLimitStatus()
+			resetTime := rateLimit.FormatResetTime()
+			usage := rateLimit.UsagePercent()
+
+			rateLimitInfo = fmt.Sprintf(
+				"Status:    %s\n"+
+					"Remaining: %d / %d\n"+
+					"Used:      %.1f%%\n"+
+					"Reset:     %s",
+				status,
+				rateLimit.Resources.Core.Remaining,
+				rateLimit.Resources.Core.Limit,
+				usage,
+				resetTime,
+			)
+		}
+
+		mode := "🔴 Unauthenticated"
+		if client.HasToken() {
+			mode = "🟢 Authenticated"
+		}
+
+		msg := fmt.Sprintf("Authentication: %s\n\n%s", mode, rateLimitInfo)
+		return fetchedAPIStatusMsg(msg)
+	}
+}
+
 func (m DashboardModel) apiStatusView() string {
 	header := TitleStyle.Render(" API Status ")
 
-	client := github.NewClient()
-	rateLimit, err := client.GetRateLimit()
-
-	var rateLimitInfo string
-	if err != nil {
-		rateLimitInfo = "⚠️ Could not fetch rate limit info"
-	} else {
-		status := rateLimit.GetRateLimitStatus()
-		resetTime := rateLimit.FormatResetTime()
-		usage := rateLimit.UsagePercent()
-
-		rateLimitInfo = fmt.Sprintf(
-			"Status:    %s\n"+
-				"Remaining: %d / %d\n"+
-				"Used:      %.1f%%\n"+
-				"Reset:     %s",
-			status,
-			rateLimit.Resources.Core.Limit-rateLimit.Resources.Core.Remaining,
-			rateLimit.Resources.Core.Limit,
-			usage,
-			resetTime,
-		)
+	if m.apiStatusMsg == "" {
+		if !m.isFetchingAPI {
+			return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("Press R to reload or switch back/forth to fetch status..."))
+		}
+		return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render("Loading API Status..."))
 	}
 
-	mode := "🔴 Unauthenticated"
-	if client.HasToken() {
-		mode = "🟢 Authenticated"
-	}
-
-	info := fmt.Sprintf(
-		"Mode: %s\n\n%s",
-		mode,
-		rateLimitInfo,
-	)
-
-	return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(info))
+	return lipgloss.JoinVertical(lipgloss.Left, header, CardStyle.Render(m.apiStatusMsg))
 }
 
 func (m DashboardModel) qualityDashboardView() string {
@@ -926,7 +967,7 @@ func (m DashboardModel) helpView() string {
 	help := `
 NAVIGATION
   ←/→       Switch view
-  1-0       Jump to view
+	1-8       Jump to visible tabs
   
 ACTIONS
   e         Export menu

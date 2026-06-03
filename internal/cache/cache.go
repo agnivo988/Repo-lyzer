@@ -30,6 +30,7 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+	github "github.com/agnivo988/Repo-lyzer/internal/github"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,11 +41,15 @@ import (
 // Each entry contains the full analysis data along with timing information
 // for TTL-based expiration.
 type CacheEntry struct {
-	RepoName            string            `json:"repo_name"`  // Repository identifier (owner/repo)
-	CachedAt            time.Time         `json:"cached_at"`  // When the entry was cached
-	ExpiresAt           time.Time         `json:"expires_at"` // When the entry expires
-	Analysis            json.RawMessage   `json:"analysis"`   // Serialized AnalysisResult
-	IncrementalMetadata map[string]string `json:"incremental_metadata,omitempty"`
+	RepoName            string                  `json:"repo_name"`  // Repository identifier (owner/repo)
+	CachedAt            time.Time               `json:"cached_at"`  // When the entry was cached
+	ExpiresAt           time.Time               `json:"expires_at"` // When the entry expires
+	Analysis            json.RawMessage         `json:"analysis"`   // Serialized AnalysisResult
+	IncrementalMetadata map[string]FileMetadata `json:"incremental_metadata,omitempty"`
+}
+type FileMetadata struct {
+	SHA        string    `json:"sha"`
+	AnalyzedAt time.Time `json:"analyzed_at"`
 }
 
 // CacheIndex stores metadata about all cached repositories.
@@ -197,6 +202,35 @@ func (c *Cache) Get(repoName string) (*CacheEntry, bool) {
 
 	// Check if expired
 	if time.Now().After(entry.ExpiresAt) {
+		c.Delete(repoName)
+		return nil, false
+	}
+
+	// Load full entry from file
+	filename := repoToFilename(repoName)
+	filePath := filepath.Join(c.cacheDir, "repos", filename)
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, false
+	}
+
+	var cacheEntry CacheEntry
+	if err := json.Unmarshal(data, &cacheEntry); err != nil {
+		return nil, false
+	}
+
+	return &cacheEntry, true
+}
+
+// GetWithoutTTLExpiration retrieves a cached analysis if available on disk, ignoring expiration checks
+func (c *Cache) GetWithoutTTLExpiration(repoName string) (*CacheEntry, bool) {
+	if !c.config.Enabled {
+		return nil, false
+	}
+
+	_, exists := c.index.Entries[repoName]
+	if !exists {
 		return nil, false
 	}
 
@@ -222,8 +256,18 @@ func (c *Cache) Set(repoName string, analysis interface{}) error {
 	return c.SetWithTTL(repoName, analysis, c.config.TTL)
 }
 
+// SetWithMetadata stores an analysis result and incremental metadata in the cache.
+func (c *Cache) SetWithMetadata(repoName string, analysis interface{}, metadata map[string]FileMetadata) error {
+	return c.SetWithTTLAndMetadata(repoName, analysis, c.config.TTL, metadata)
+}
+
 // SetWithTTL stores an analysis result in the cache with an explicit TTL.
 func (c *Cache) SetWithTTL(repoName string, analysis interface{}, ttl time.Duration) error {
+	return c.SetWithTTLAndMetadata(repoName, analysis, ttl, nil)
+}
+
+// SetWithTTLAndMetadata stores an analysis result and incremental metadata in the cache with an explicit TTL.
+func (c *Cache) SetWithTTLAndMetadata(repoName string, analysis interface{}, ttl time.Duration, metadata map[string]FileMetadata) error {
 	if !c.config.Enabled || !c.config.AutoCache {
 		return nil
 	}
@@ -235,12 +279,16 @@ func (c *Cache) SetWithTTL(repoName string, analysis interface{}, ttl time.Durat
 	}
 
 	now := time.Now()
+	if metadata == nil {
+		metadata = make(map[string]FileMetadata)
+	}
+
 	entry := CacheEntry{
 		RepoName:            repoName,
 		CachedAt:            now,
 		ExpiresAt:           now.Add(ttl),
 		Analysis:            analysisData,
-		IncrementalMetadata: make(map[string]string),
+		IncrementalMetadata: metadata,
 	}
 
 	// Save to file
@@ -389,11 +437,14 @@ func (c *Cache) CleanExpired() int {
 
 	for repoName, entry := range c.index.Entries {
 		if now.After(entry.ExpiresAt) {
-			c.Delete(repoName)
+			delete(c.index.Entries, repoName)
+			os.Remove(filepath.Join(c.cacheDir, "repos", repoToFilename(repoName)))
 			removed++
 		}
 	}
-
+	if removed > 0 {
+		c.saveIndex()
+	}
 	return removed
 }
 
@@ -418,4 +469,102 @@ func FormatTTL(d time.Duration) string {
 		return "1 minute"
 	}
 	return fmt.Sprintf("%d minutes", minutes)
+}
+
+func BuildFileMetadata(
+	files []github.TreeEntry,
+) map[string]FileMetadata {
+
+	metadata := make(map[string]FileMetadata)
+
+	for _, file := range files {
+		if file.Type != "blob" {
+			continue
+		}
+
+		metadata[file.Path] = FileMetadata{
+			SHA:        file.Sha,
+			AnalyzedAt: time.Now(),
+		}
+	}
+
+	return metadata
+}
+
+func (c *Cache) UpdateFileMetadata(
+	repoName string,
+	metadata map[string]FileMetadata,
+) error {
+
+	entry, found := c.Get(repoName)
+
+	if !found {
+
+		now := time.Now()
+
+		newEntry := CacheEntry{
+			RepoName:            repoName,
+			CachedAt:            now,
+			ExpiresAt:           now.Add(c.config.TTL),
+			IncrementalMetadata: metadata,
+		}
+
+		filename := repoToFilename(repoName)
+		filePath := filepath.Join(c.cacheDir, "repos", filename)
+
+		data, err := json.MarshalIndent(newEntry, "", "  ")
+		if err != nil {
+			return err
+		}
+
+		if err := os.WriteFile(filePath, data, 0644); err != nil {
+			return err
+		}
+
+		fileInfo, _ := os.Stat(filePath)
+
+		fileSize := int64(0)
+		if fileInfo != nil {
+			fileSize = fileInfo.Size()
+		}
+
+		c.index.Entries[repoName] = CacheIndexEntry{
+			RepoName:  repoName,
+			CachedAt:  now,
+			ExpiresAt: now.Add(c.config.TTL),
+			FileSize:  fileSize,
+		}
+
+		return c.saveIndex()
+	}
+
+	entry.IncrementalMetadata = metadata
+
+	filename := repoToFilename(repoName)
+	filePath := filepath.Join(c.cacheDir, "repos", filename)
+
+	data, err := json.MarshalIndent(entry, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
+		return err
+	}
+
+	fileInfo, _ := os.Stat(filePath)
+
+	fileSize := int64(0)
+	if fileInfo != nil {
+		fileSize = fileInfo.Size()
+	}
+
+	c.index.Entries[repoName] = CacheIndexEntry{
+		RepoName:  repoName,
+		CachedAt:  entry.CachedAt,
+		ExpiresAt: entry.ExpiresAt,
+		FileSize:  fileSize,
+	}
+
+	return c.saveIndex()
 }
