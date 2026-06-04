@@ -41,7 +41,7 @@ func (c *Client) GetRepo(owner, repo string) (*Repo, error) {
 		}
 
 		var r Repo
-		if err := c.get("https://api.github.com/repos/"+owner+"/"+repo, &r); err != nil {
+		if err := c.get(c.BaseURL+"/repos/"+owner+"/"+repo, &r); err != nil {
 			return nil, err
 		}
 

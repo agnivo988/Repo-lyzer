@@ -17,11 +17,12 @@ import (
 
 // Client handles GitHub API requests
 type Client struct {
-	http  *http.Client
-	token string
-	ctx   context.Context
-	cache *gocache.Cache
-	sf    singleflight.Group
+	http    *http.Client
+	token   string
+	ctx     context.Context
+	cache   *gocache.Cache
+	sf      singleflight.Group
+	BaseURL string
 }
 
 // User represents a GitHub user
@@ -41,6 +42,7 @@ func NewClient() *Client {
 			5*time.Minute,  // default expiration
 			10*time.Minute, // cleanup interval
 		),
+		BaseURL: "https://api.github.com",
 	}
 }
 
@@ -225,7 +227,7 @@ func (c *Client) GetUser() (*User, error) {
 		}
 
 		var u User
-		if err := c.get("https://api.github.com/user", &u); err != nil {
+		if err := c.get(c.BaseURL+"/user", &u); err != nil {
 			return nil, err
 		}
 
@@ -252,7 +254,7 @@ func (c *Client) GetUserByLogin(login string) (*User, error) {
 			return &u, nil
 		}
 
-		url := fmt.Sprintf("https://api.github.com/users/%s", login)
+		url := fmt.Sprintf("%s/users/%s", c.BaseURL, login)
 		var u User
 		if err := c.get(url, &u); err != nil {
 			return nil, err
@@ -280,7 +282,7 @@ func (c *Client) GetFileContent(owner, repo, path string) (string, error) {
 			return cached.(string), nil
 		}
 
-		url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path)
+		url := fmt.Sprintf("%s/repos/%s/%s/contents/%s", c.BaseURL, owner, repo, path)
 
 		var result struct {
 			Content  string `json:"content"`

@@ -30,7 +30,7 @@ func (c *Client) GetFileTree(owner, repo, branch string) ([]TreeEntry, error) {
 
 		var t TreeResponse
 		// recursive=1 to get full tree
-		if err := c.get("https://api.github.com/repos/"+owner+"/"+repo+"/git/trees/"+branch+"?recursive=1", &t); err != nil {
+		if err := c.get(c.BaseURL+"/repos/"+owner+"/"+repo+"/git/trees/"+branch+"?recursive=1", &t); err != nil {
 			return nil, err
 		}
 

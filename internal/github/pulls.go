@@ -52,8 +52,8 @@ func (c *Client) GetPullRequests(owner, repo, state string) ([]PullRequest, erro
 
 		for {
 			url := fmt.Sprintf(
-				"https://api.github.com/repos/%s/%s/pulls?state=%s&per_page=%d&page=%d&sort=created&direction=desc",
-				owner, repo, state, perPage, page,
+				"%s/repos/%s/%s/pulls?state=%s&per_page=%d&page=%d&sort=created&direction=desc",
+				c.BaseURL, owner, repo, state, perPage, page,
 			)
 
 			var prs []PullRequest
@@ -107,8 +107,8 @@ func (c *Client) GetPullRequestsWithLimit(owner, repo, state string, limit int) 
 
 		for {
 			url := fmt.Sprintf(
-				"https://api.github.com/repos/%s/%s/pulls?state=%s&per_page=%d&page=%d&sort=created&direction=desc",
-				owner, repo, state, perPage, page,
+				"%s/repos/%s/%s/pulls?state=%s&per_page=%d&page=%d&sort=created&direction=desc",
+				c.BaseURL, owner, repo, state, perPage, page,
 			)
 
 			var prs []PullRequest
@@ -168,8 +168,8 @@ func (c *Client) GetPullRequestReviews(owner, repo string, prNumber int) ([]Revi
 
 		for {
 			url := fmt.Sprintf(
-				"https://api.github.com/repos/%s/%s/pulls/%d/reviews?per_page=%d&page=%d",
-				owner, repo, prNumber, perPage, page,
+				"%s/repos/%s/%s/pulls/%d/reviews?per_page=%d&page=%d",
+				c.BaseURL, owner, repo, prNumber, perPage, page,
 			)
 
 			var reviews []Review
@@ -218,8 +218,8 @@ func (c *Client) GetPullRequestDetails(owner, repo string, prNumber int) (*PullR
 		}
 
 		url := fmt.Sprintf(
-			"https://api.github.com/repos/%s/%s/pulls/%d",
-			owner, repo, prNumber,
+			"%s/repos/%s/%s/pulls/%d",
+			c.BaseURL, owner, repo, prNumber,
 		)
 
 		var pr PullRequest
