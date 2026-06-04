@@ -169,11 +169,17 @@ func getSeverity(o osvVuln) string {
 
 	for _, s := range o.Severity {
 		if s.Type == "CVSS_V3" {
-			v3Score = parseCvssScore(s.Score)
-			hasV3 = true
+			score := parseCvssScore(s.Score)
+			if score > 0 {
+				v3Score = score
+				hasV3 = true
+			}
 		} else if s.Type == "CVSS_V2" {
-			v2Score = parseCvssScore(s.Score)
-			hasV2 = true
+			score := parseCvssScore(s.Score)
+			if score > 0 {
+				v2Score = score
+				hasV2 = true
+			}
 		}
 	}
 

@@ -103,6 +103,32 @@ func TestGetSeverity(t *testing.T) {
 			},
 			expected: "UNKNOWN",
 		},
+		{
+			name: "CVSS V3 Unparseable Fallback to V2",
+			vuln: osvVuln{
+				Severity: []struct {
+					Type  string `json:"type"`
+					Score string `json:"score"`
+				}{
+					{Type: "CVSS_V3", Score: "INVALID"},
+					{Type: "CVSS_V2", Score: "7.5"},
+				},
+			},
+			expected: "HIGH",
+		},
+		{
+			name: "Both Unparseable Unknown",
+			vuln: osvVuln{
+				Severity: []struct {
+					Type  string `json:"type"`
+					Score string `json:"score"`
+				}{
+					{Type: "CVSS_V3", Score: "INVALID"},
+					{Type: "CVSS_V2", Score: "INVALID"},
+				},
+			},
+			expected: "UNKNOWN",
+		},
 	}
 
 	for _, tt := range tests {
