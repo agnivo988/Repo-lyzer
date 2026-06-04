@@ -164,22 +164,38 @@ func convertVuln(o osvVuln, pkg, ver string) Vulnerability {
 }
 
 func getSeverity(o osvVuln) string {
+	var v3Score, v2Score float64
+	var hasV3, hasV2 bool
+
 	for _, s := range o.Severity {
 		if s.Type == "CVSS_V3" {
-			score := parseCvssScore(s.Score)
-			if score >= 9.0 {
-				return "CRITICAL"
-			} else if score >= 7.0 {
-				return "HIGH"
-			} else if score >= 4.0 {
-				return "MEDIUM"
-			} else if score > 0.0 {
-				return "LOW"
-			}
-			return "NONE"
+			v3Score = parseCvssScore(s.Score)
+			hasV3 = true
+		} else if s.Type == "CVSS_V2" {
+			v2Score = parseCvssScore(s.Score)
+			hasV2 = true
 		}
 	}
-	return "MEDIUM"
+
+	var score float64
+	if hasV3 {
+		score = v3Score
+	} else if hasV2 {
+		score = v2Score
+	} else {
+		return "UNKNOWN"
+	}
+
+	if score >= 9.0 {
+		return "CRITICAL"
+	} else if score >= 7.0 {
+		return "HIGH"
+	} else if score >= 4.0 {
+		return "MEDIUM"
+	} else if score > 0.0 {
+		return "LOW"
+	}
+	return "NONE"
 }
 
 func parseCvssScore(scoreStr string) float64 {
@@ -244,7 +260,7 @@ func calcSecurityScore(r *SecurityScanResult) int {
 
 // GetSeverityEmoji returns emoji for severity
 func GetSeverityEmoji(sev string) string {
-	m := map[string]string{"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢"}
+	m := map[string]string{"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢", "UNKNOWN": "⚪"}
 	if e, ok := m[sev]; ok {
 		return e
 	}
