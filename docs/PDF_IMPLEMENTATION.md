@@ -139,7 +139,7 @@ cd Repo-lyzer && go build -o repo-lyzer.exe main.go
 
 ## Data Flow
 
-```
+```text
 User Command
     ↓
 cmd/analyze.go or cmd/compare.go (format=pdf handler)

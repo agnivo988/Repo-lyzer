@@ -191,7 +191,7 @@ func (g *ComparisonPDFGenerator) addDetailedComparison() {
 	g.pdf.SetFont("Arial", "", 10)
 	winner := g.getWinner()
 	g.pdf.MultiCell(0, 6, fmt.Sprintf(
-		"%s appears to be %s based on health metrics, community engagement, and maturity levels.",
+		"Maturity comparison favors %s. %s",
 		winner,
 		g.report.Verdict,
 	), "", "L", false)

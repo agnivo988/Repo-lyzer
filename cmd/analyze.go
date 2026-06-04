@@ -370,6 +370,7 @@ var analyzeCmd = &cobra.Command{
 				return fmt.Errorf("failed to generate PDF: %w", err)
 			}
 			fmt.Printf("✅ PDF report saved to: %s\n", savePath)
+			overallProgress.Finish()
 			return nil
 		}
 

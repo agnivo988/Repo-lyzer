@@ -26,7 +26,7 @@ Get-Item repo-lyzer.exe
 ```
 
 **Expected Output:**
-```
+```text
 🔍 Fetching repository information
 📚 Fetching programming languages
 📝 Analyzing commit history (365d)
@@ -54,7 +54,7 @@ Get-Item repo-lyzer.exe
 ```
 
 **Expected Output:**
-```
+```text
 ...analysis steps...
 📄 Generating PDF report: ./reports/ml-analysis.pdf
 ✅ PDF report saved to: ./reports/ml-analysis.pdf
@@ -75,7 +75,7 @@ Get-Item repo-lyzer.exe
 ```
 
 **Expected Output:**
-```
+```text
 🔍 Analyzing tensorflow/tensorflow...
 Analyzed tensorflow/tensorflow
 🔍 Analyzing pytorch/pytorch...
@@ -99,7 +99,7 @@ Analyzed pytorch/pytorch
 ```
 
 **Expected Output:**
-```
+```text
 ...comparison steps...
 📄 Generating PDF comparison report: ./comparisons/frontend-frameworks.pdf
 ✅ PDF comparison report saved to: ./comparisons/frontend-frameworks.pdf
@@ -117,9 +117,6 @@ Analyzed pytorch/pytorch
 All these commands should still work without errors:
 
 ```bash
-# YAML format (existing)
-./repo-lyzer.exe analyze owner/repo --format yaml
-
 # JSON format (existing)
 ./repo-lyzer.exe analyze owner/repo --format json --save output.json
 
@@ -322,9 +319,10 @@ fi
 
 # Test 4: Backward compatibility
 echo "Test 4: Backward compatibility..."
-./repo-lyzer analyze owner/repo --format yaml > /dev/null 2>&1
-if [ $? -eq 0 ] || [ $? -eq 1 ]; then
-    echo "✅ Test 4 passed (YAML still works)"
+./repo-lyzer analyze owner/repo --format pdf > /dev/null 2>&1
+pdf_exit=$?
+if [ "$pdf_exit" -eq 0 ] || [ "$pdf_exit" -eq 1 ]; then
+    echo "✅ Test 4 passed (PDF export works)"
 else
     echo "❌ Test 4 failed"
 fi

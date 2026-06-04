@@ -42,7 +42,7 @@ repo-lyzer analyze owner/repository --format pdf --save reports/my-report.pdf
 ```
 
 **Example Output:**
-```
+```text
 🔍 Fetching repository information
 📚 Fetching programming languages
 📝 Analyzing commit history (365d)
@@ -66,7 +66,7 @@ repo-lyzer compare owner1/repo1 owner2/repo2 --format pdf --save reports/compari
 ```
 
 **Example Output:**
-```
+```text
 🔍 Analyzing owner1/repo1...
 Analyzed owner1/repo1
 🔍 Analyzing owner2/repo2...
@@ -111,13 +111,11 @@ PDF reports use sensible defaults:
 
 ### Advanced Configuration (Future)
 
-While not implemented yet, the framework supports YAML-based configuration for:
+While not implemented yet, the framework is designed to support file-based configuration for:
 - Custom color schemes
 - Company branding and logo
 - Section visibility control
 - Custom footer text
-
-Configuration files would be placed at `.repo-lyzer/pdf-config.yml`.
 
 ## Supported Data
 
@@ -170,7 +168,7 @@ The PDF export feature uses:
 
 ### File Structure
 
-```
+```text
 internal/output/
 ├── pdf.go                 # Main PDF export functions
 ├── pdf_enhanced.go        # EnhancedPDFGenerator implementation
@@ -258,7 +256,7 @@ repo-lyzer analyze myorg/myproject --format pdf --save reports/health-$(date +%Y
 
 Potential improvements for future versions:
 
-1. **Configuration Files**: YAML-based PDF configuration
+1. **Configuration Files**: File-based PDF configuration
 2. **Themes**: Multiple color schemes (corporate, dark, light)
 3. **Branding**: Company logo and custom headers/footers
 4. **Scheduling**: Automated PDF report generation
@@ -301,7 +299,6 @@ The PDF export feature is fully backward compatible:
 repo-lyzer analyze --help
 
 # Other export formats still available
-repo-lyzer analyze owner/repo --format yaml
 repo-lyzer analyze owner/repo --format json --save output.json
 repo-lyzer compare repo1 repo2 --format html --save comparison.html
 repo-lyzer compare repo1 repo2 --format markdown

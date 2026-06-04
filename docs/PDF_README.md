@@ -87,13 +87,13 @@ Store analysis reports in a portable, immutable PDF format.
 ## 📦 File Output
 
 ### Analysis PDF Filename Pattern
-```
+```text
 {owner}-{repository}-report.pdf
 ```
 Example: `tensorflow-tensorflow-report.pdf`
 
 ### Comparison PDF Filename Pattern
-```
+```text
 {owner1}-{repo1}-vs-{owner2}-{repo2}-comparison.pdf
 ```
 Example: `facebook-react-vs-vuejs-vue-comparison.pdf`

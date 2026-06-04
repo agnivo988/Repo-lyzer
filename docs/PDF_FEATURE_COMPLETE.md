@@ -89,7 +89,7 @@ repo-lyzer compare react vue --format pdf --save ./comparisons/frameworks.pdf
 - All existing commands work unchanged
 - No breaking changes to API
 - Default behavior preserved
-- All other export formats (JSON, HTML, YAML, Markdown, CSV) continue to work
+- All other export formats (JSON, HTML, Markdown, CSV) continue to work
 
 ## Performance Characteristics
 
@@ -119,7 +119,7 @@ repo-lyzer compare react vue --format pdf --save ./comparisons/frameworks.pdf
 
 ## File Structure
 
-```
+```text
 Repo-lyzer/
 ├── cmd/
 │   ├── analyze.go          (modified)
