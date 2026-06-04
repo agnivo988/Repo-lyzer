@@ -1,9 +1,10 @@
 package scheduler
 
 import (
+	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 )
@@ -23,9 +24,12 @@ func TestSendToWebhookTimeout(t *testing.T) {
 		t.Fatal("Expected timeout error, but got nil")
 	}
 
-	// Check if the error is a timeout error
-	if !strings.Contains(err.Error(), "Client.Timeout exceeded") && !strings.Contains(err.Error(), "timeout") {
-		t.Errorf("Expected timeout error message, but got: %v", err)
+	// Check if the error is a timeout error using net.Error assertion
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		// Valid timeout path
+	} else {
+		t.Errorf("Expected timeout error, but got: %v", err)
 	}
 }
 
@@ -45,7 +49,8 @@ func TestSendToWebhookSuccess(t *testing.T) {
 
 func TestSendToWebhookInvalidURL(t *testing.T) {
 	s := &Scheduler{}
-	err := s.sendToWebhook("http://invalid-url-that-does-not-exist.local", "test_report.json", []byte(`{"status":"ok"}`))
+	// Use an explicitly malformed URL to guarantee immediate failure
+	err := s.sendToWebhook("http://invalid url with spaces", "test_report.json", []byte(`{"status":"ok"}`))
 
 	if err == nil {
 		t.Fatal("Expected error for invalid URL, but got nil")
