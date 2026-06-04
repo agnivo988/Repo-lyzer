@@ -52,9 +52,14 @@ func (c *Client) GetCommits(owner, repo string, days int) ([]Commit, error) {
 
 		for {
 			url := fmt.Sprintf(
-				"https://api.github.com/repos/%s/%s/commits?since=%s&per_page=%d&page=%d",
-				owner, repo, since, perPage, page,
+				"%s/repos/%s/%s/commits",
+				c.BaseURL, owner, repo,
 			)
+			if since != "" {
+				url += "?since=" + since + "&per_page=" + strconv.Itoa(perPage) + "&page=" + strconv.Itoa(page)
+			} else {
+				url += "?per_page=" + strconv.Itoa(perPage) + "&page=" + strconv.Itoa(page)
+			}
 
 			var commits []Commit
 			if err := c.get(url, &commits); err != nil {
@@ -100,7 +105,7 @@ func (c *Client) GetCommit(owner, repo, sha string) (*CommitDetail, error) {
 			return &d, nil
 		}
 
-		url := fmt.Sprintf("https://api.github.com/repos/%s/%s/commits/%s", owner, repo, sha)
+		url := fmt.Sprintf("%s/repos/%s/%s/commits/%s", c.BaseURL, owner, repo, sha)
 		var commit CommitDetail
 		if err := c.get(url, &commit); err != nil {
 			return nil, err

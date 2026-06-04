@@ -1,6 +1,7 @@
 package github
 
 import (
+	"fmt"
 	"time"
 
 	gocache "github.com/patrickmn/go-cache"
@@ -35,14 +36,38 @@ func (c *Client) GetIssues(owner, repo string, state string) ([]Issue, error) {
 			return copyIssues(cached.([]Issue)), nil
 		}
 
-		var issues []Issue
-		url := "https://api.github.com/repos/" + owner + "/" + repo + "/issues?state=" + state + "&per_page=100"
-		if err := c.get(url, &issues); err != nil {
-			return nil, err
+		var allIssues []Issue
+		page := 1
+		perPage := 100
+
+		for {
+			url := fmt.Sprintf(
+				"%s/repos/%s/%s/issues?state=%s&per_page=%d&page=%d",
+				c.BaseURL, owner, repo, state, perPage, page,
+			)
+
+			var issues []Issue
+			if err := c.get(url, &issues); err != nil {
+				return nil, err
+			}
+
+			// Stop when no more issues
+			if len(issues) == 0 {
+				break
+			}
+
+			allIssues = append(allIssues, issues...)
+
+			// Stop when fewer than per_page (last page)
+			if len(issues) < perPage {
+				break
+			}
+
+			page++
 		}
 
-		c.cache.Set(cacheKey, issues, gocache.DefaultExpiration)
-		return copyIssues(issues), nil
+		c.cache.Set(cacheKey, allIssues, gocache.DefaultExpiration)
+		return copyIssues(allIssues), nil
 	})
 	if err != nil {
 		return nil, err
