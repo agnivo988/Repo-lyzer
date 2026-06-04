@@ -5,6 +5,7 @@ package scheduler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -285,7 +286,17 @@ func (s *Scheduler) sendToWebhook(webhookURL, filename string, data []byte) erro
 		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	resp, err := http.Post(webhookURL, "application/json", bytes.NewBuffer(jsonData))
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	req, err := http.NewRequestWithContext(context.Background(), "POST", webhookURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send webhook: %w", err)
 	}
