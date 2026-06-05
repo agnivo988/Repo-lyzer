@@ -2,6 +2,7 @@ package github
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,8 +27,8 @@ func TestGetFileTree_Truncated(t *testing.T) {
 	c.BaseURL = srv.URL
 
 	tree, err := c.GetFileTree("owner", "repo", "main")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if !errors.Is(err, ErrTreeTruncated) {
+		t.Fatalf("expected ErrTreeTruncated, got %v", err)
 	}
 
 	if len(tree) != 1 {

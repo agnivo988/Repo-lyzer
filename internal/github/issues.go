@@ -36,7 +36,7 @@ func (c *Client) GetIssues(owner, repo string, state string) ([]Issue, error) {
 		}
 
 		var issues []Issue
-		url := "https://api.github.com/repos/" + owner + "/" + repo + "/issues?state=" + state + "&per_page=100"
+		url := c.BaseURL + "/repos/" + owner + "/" + repo + "/issues?state=" + state + "&per_page=100"
 		if err := c.get(url, &issues); err != nil {
 			return nil, err
 		}

@@ -14,7 +14,7 @@ func (c *Client) GetLanguages(owner, repo string) (map[string]int, error) {
 		}
 
 		var langs map[string]int
-		if err := c.get("https://api.github.com/repos/"+owner+"/"+repo+"/languages", &langs); err != nil {
+		if err := c.get(c.BaseURL+"/repos/"+owner+"/"+repo+"/languages", &langs); err != nil {
 			return nil, err
 		}
 
