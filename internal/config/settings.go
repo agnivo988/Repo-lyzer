@@ -428,9 +428,9 @@ func (s *AppSettings) GetScheduledJobs() []ScheduledJob {
 
 // GetScheduledJobByID returns a scheduled job by ID
 func (s *AppSettings) GetScheduledJobByID(jobID string) *ScheduledJob {
-	for _, job := range s.ScheduledJobs {
-		if job.ID == jobID {
-			return &job
+	for i := range s.ScheduledJobs {
+		if s.ScheduledJobs[i].ID == jobID {
+			return &s.ScheduledJobs[i]
 		}
 	}
 	return nil
