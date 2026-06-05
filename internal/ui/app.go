@@ -115,6 +115,10 @@ type MainModel struct {
 	progress        *ProgressTracker
 	cacheStatus     string
 	initialCmd      tea.Cmd
+
+	// Analysis state and debounce
+	analysisInProgress bool
+	lastSubmitTime     time.Time
 }
 
 // NewMainModel creates a new MainModel with initialized sub-models
@@ -236,6 +240,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.analysisCancel()
 			m.analysisCancel = nil
 		}
+		m.analysisInProgress = false
 		m.state = stateMenu
 		return m, nil
 
@@ -320,6 +325,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Handle messages from input model
 		switch msg := msg.(type) {
 		case AnalyzeRepoMsg:
+			// Duplicate Request Guard & Debounce
+			if m.analysisInProgress || (time.Since(m.lastSubmitTime) < 2*time.Second) {
+				return m, nil
+			}
+
+			m.analysisInProgress = true
+			m.lastSubmitTime = time.Now()
 			m.state = stateLoading
 			m.loading.SetRepoName(msg.repoName)
 			ctx, cancel := context.WithCancel(context.Background())
@@ -339,6 +351,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Handle messages from compare input model
 		switch msg := msg.(type) {
 		case CompareReposMsg:
+			// Duplicate Request Guard & Debounce
+			if m.analysisInProgress || (time.Since(m.lastSubmitTime) < 2*time.Second) {
+				return m, nil
+			}
+
+			m.analysisInProgress = true
+			m.lastSubmitTime = time.Now()
 			m.state = stateCompareLoading
 			cmds = append(cmds, m.compareRepos(msg.Repo1, msg.Repo2), TickProgressCmd())
 		case BackToMenuMsg:
@@ -352,15 +371,18 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg := msg.(type) {
 		case CompareResult:
+			m.analysisInProgress = false
 			m.compareResult.result = &msg
 			m.state = stateCompareResult
 			m.err = nil
 		case error:
+			m.analysisInProgress = false
 			m.err = msg
 			m.state = stateCompareInput
 			m.compareStep = 0
 		case tea.KeyMsg:
 			if msg.String() == "esc" {
+				m.analysisInProgress = false
 				m.state = stateMenu
 				m.compareInput1 = ""
 				m.compareInput2 = ""
@@ -417,6 +439,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if result, ok := msg.(AnalysisResult); ok {
+			m.analysisInProgress = false
 			m.dashboard.SetData(result)
 			m.dashboard.SetCacheStatus("fresh")
 			m.state = stateDashboard
@@ -434,6 +457,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		if cachedResult, ok := msg.(CachedAnalysisResult); ok {
+			m.analysisInProgress = false
 			m.dashboard.SetData(cachedResult.Result)
 			m.dashboard.SetCacheStatus("cached")
 			m.state = stateDashboard
@@ -451,6 +475,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		if err, ok := msg.(error); ok {
+			m.analysisInProgress = false
 			m.progress = nil
 			if errors.Is(err, context.Canceled) {
 				m.err = nil
@@ -480,12 +505,19 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter":
 				// Analyze selected favorite
 				if m.favorites.favorites != nil && len(m.favorites.favorites.Items) > 0 {
+					// Duplicate Request Guard & Debounce
+					if m.analysisInProgress || (time.Since(m.lastSubmitTime) < 2*time.Second) {
+						return m, nil
+					}
+
 					repoName := m.favorites.favorites.Items[m.favoritesCursor].RepoName
 					m.favorites.favorites.UpdateUsage(repoName)
 					if err := m.favorites.Save(); err != nil {
 						log.Printf("Failed to save favorites: %v", err)
 						m.err = fmt.Errorf("Failed to save favorites: %v", err)
 					} else {
+						m.analysisInProgress = true
+						m.lastSubmitTime = time.Now()
 						m.input.input = repoName
 						m.state = stateLoading
 						m.loading.SetRepoName(repoName)
@@ -530,7 +562,14 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter":
 				// Re-analyze selected repo
 				if len(m.history.Entries) > 0 {
+					// Duplicate Request Guard & Debounce
+					if m.analysisInProgress || (time.Since(m.lastSubmitTime) < 2*time.Second) {
+						return m, nil
+					}
+
 					repoName := m.history.Entries[m.historyCursor].RepoName
+					m.analysisInProgress = true
+					m.lastSubmitTime = time.Now()
 					m.input.input = repoName
 					m.state = stateLoading
 					m.loading.SetRepoName(repoName)
@@ -762,6 +801,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if key, ok := msg.(tea.KeyMsg); ok {
 			if key.String() == "." {
 				if m.dashboard.data.Repo != nil {
+					// Duplicate Request Guard & Debounce
+					if m.analysisInProgress || (time.Since(m.lastSubmitTime) < 2*time.Second) {
+						return m, nil
+					}
+
+					m.analysisInProgress = true
+					m.lastSubmitTime = time.Now()
 					m.input.input = m.dashboard.data.Repo.FullName
 					m.state = stateLoading
 					m.loading.SetRepoName(m.input.input)
