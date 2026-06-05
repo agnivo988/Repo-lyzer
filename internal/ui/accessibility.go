@@ -57,13 +57,13 @@ var KeyBindings = []KeyBinding{
 
 	// Quick Jump - Numbers
 	{Key: "1", AltKeys: []string{}, Action: "jump_1", Description: "Jump to tab 1 (Overview)", Context: "dashboard", Category: "Quick Jump"},
-	{Key: "2", AltKeys: []string{}, Action: "jump_2", Description: "Jump to tab 2 (Repo)", Context: "dashboard", Category: "Quick Jump"},
-	{Key: "3", AltKeys: []string{}, Action: "jump_3", Description: "Jump to tab 3 (Languages)", Context: "dashboard", Category: "Quick Jump"},
-	{Key: "4", AltKeys: []string{}, Action: "jump_4", Description: "Jump to tab 4 (Activity)", Context: "dashboard", Category: "Quick Jump"},
-	{Key: "5", AltKeys: []string{}, Action: "jump_5", Description: "Jump to tab 5 (Contributors)", Context: "dashboard", Category: "Quick Jump"},
-	{Key: "6", AltKeys: []string{}, Action: "jump_6", Description: "Jump to tab 6 (Insights)", Context: "dashboard", Category: "Quick Jump"},
-	{Key: "7", AltKeys: []string{}, Action: "jump_7", Description: "Jump to tab 7 (Recruiter)", Context: "dashboard", Category: "Quick Jump"},
-	{Key: "8", AltKeys: []string{}, Action: "jump_8", Description: "Jump to tab 8 (API Status)", Context: "dashboard", Category: "Quick Jump"},
+	{Key: "2", AltKeys: []string{}, Action: "jump_2", Description: "Jump to tab 2 (Quality)", Context: "dashboard", Category: "Quick Jump"},
+	{Key: "3", AltKeys: []string{}, Action: "jump_3", Description: "Jump to tab 3 (Repo)", Context: "dashboard", Category: "Quick Jump"},
+	{Key: "4", AltKeys: []string{}, Action: "jump_4", Description: "Jump to tab 4 (Languages)", Context: "dashboard", Category: "Quick Jump"},
+	{Key: "5", AltKeys: []string{}, Action: "jump_5", Description: "Jump to tab 5 (Activity)", Context: "dashboard", Category: "Quick Jump"},
+	{Key: "6", AltKeys: []string{}, Action: "jump_6", Description: "Jump to tab 6 (Trends)", Context: "dashboard", Category: "Quick Jump"},
+	{Key: "7", AltKeys: []string{}, Action: "jump_7", Description: "Jump to tab 7 (Contributors)", Context: "dashboard", Category: "Quick Jump"},
+	{Key: "8", AltKeys: []string{}, Action: "jump_8", Description: "Jump to tab 8 (Insights)", Context: "dashboard", Category: "Quick Jump"},
 
 	// Actions
 	{Key: "e", AltKeys: []string{}, Action: "export", Description: "Export results", Context: "dashboard", Category: "Actions"},

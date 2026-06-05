@@ -99,7 +99,11 @@ func (s *Scheduler) executeJob(job config.ScheduledJob) error {
 	startTime := time.Now()
 
 	// Initialize GitHub client
-	client := github.NewClient()
+	token := ""
+	if s.settings != nil {
+		token = s.settings.GitHubToken
+	}
+	client := github.NewClientWithToken(token)
 
 	// Fetch repository information
 	repoInfo, err := client.GetRepo(job.Owner, job.Repo)

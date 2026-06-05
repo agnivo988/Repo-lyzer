@@ -21,6 +21,7 @@ const (
 	viewRepo
 	viewLanguages
 	viewActivity
+	viewTrends
 	viewContributors
 	viewContributorInsights
 	viewContributorActivity
@@ -32,21 +33,21 @@ const (
 )
 
 type DashboardModel struct {
-	data              AnalysisResult
-	BackToMenu        bool
-	width             int
-	height            int
-	showExport        bool
-	statusMsg         string
-	currentView       dashboardView
-	showHelp          bool
-	cacheStatus       string // "fresh", "cached", or ""
-	
+	data        AnalysisResult
+	BackToMenu  bool
+	width       int
+	height      int
+	showExport  bool
+	statusMsg   string
+	currentView dashboardView
+	showHelp    bool
+	cacheStatus string // "fresh", "cached", or ""
+
 	// Precalculated fields for performance
 	// Precalculated fields for performance
 	precalcActivity map[string]int
 	apiStatusMsg    string
-	isFetchingAPI        bool
+	isFetchingAPI   bool
 }
 
 func NewDashboardModel() DashboardModel {
@@ -61,11 +62,11 @@ func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
 	// Precalculate heavy charts
 	m.precalcActivity = analyzer.CommitsPerDay(m.data.Commits)
-	
+
 	if m.data.ContributorInsights == nil && len(m.data.Contributors) > 0 {
 		m.data.ContributorInsights = analyzer.AnalyzeContributors(m.data.Contributors)
 	}
-	
+
 	m.apiStatusMsg = ""
 	m.isFetchingAPI = false
 }
@@ -73,7 +74,6 @@ func (m *DashboardModel) SetData(data AnalysisResult) {
 func (m *DashboardModel) SetCacheStatus(status string) {
 	m.cacheStatus = status
 }
-
 
 type exportMsg struct {
 	err error
@@ -185,6 +185,9 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "f":
 			return m, func() tea.Msg { return "switch_to_tree" }
 
+		case "z":
+			m.currentView = viewTrends
+
 		case "r":
 			if m.data.Repo != nil {
 				return m, func() tea.Msg { return "refresh_data" }
@@ -206,15 +209,11 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "5":
 			m.currentView = viewActivity
 		case "6":
-			m.currentView = viewContributors
+			m.currentView = viewTrends
 		case "7":
-			m.currentView = viewContributorInsights
+			m.currentView = viewContributors
 		case "8":
-			m.currentView = viewContributorActivity
-		case "9":
-			m.currentView = viewDependencies
-		case "0":
-			m.currentView = viewSecurity
+			m.currentView = viewContributorInsights
 		case "u":
 			m.currentView = viewMaintainer
 
@@ -270,6 +269,8 @@ func (m DashboardModel) View() string {
 		content = m.languagesView()
 	case viewActivity:
 		content = m.activityView()
+	case viewTrends:
+		content = m.repositoryTrendsView()
 	case viewContributors:
 		content = m.contributorsView()
 	case viewContributorInsights:
@@ -328,7 +329,7 @@ func (m DashboardModel) View() string {
 }
 
 func (m DashboardModel) renderTabs() string {
-	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "Maintainer", "API"}
+	views := []string{"Overview", "Quality", "Repo", "Langs", "Activity", "Trends", "Contribs", "Insights", "Engagement", "Deps", "Security", "Recruiter", "Maintainer", "API"}
 
 	var renderedTabs []string
 
@@ -420,14 +421,24 @@ func (m DashboardModel) overviewView() string {
 		bottomPanel = riskPanel
 	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader),
-		"\n",
-		lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
-		"\n",
-		bottomPanel,
-	)
+	trendSeries := m.buildMonthlyTrendSeries(4)
+	trendsPanel := m.repositoryTrendsSummaryCard(trendSeries)
+
+	panels := []string{
+		lipgloss.JoinVertical(
+			lipgloss.Left,
+			lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader),
+			"\n",
+			lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
+			"\n",
+			bottomPanel,
+		),
+	}
+	if trendsPanel != "" {
+		panels = append(panels, "\n", trendsPanel)
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, panels...)
 
 }
 
@@ -956,7 +967,7 @@ func (m DashboardModel) helpView() string {
 	help := `
 NAVIGATION
   ←/→       Switch view
-  1-0       Jump to view
+	1-8       Jump to visible tabs
   
 ACTIONS
   e         Export menu

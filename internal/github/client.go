@@ -44,6 +44,16 @@ func NewClient() *Client {
 	}
 }
 
+// NewClientWithToken creates a client pre-configured with the given token.
+// If token is empty, behaves identically to NewClient().
+func NewClientWithToken(token string) *Client {
+	c := NewClient()
+	if token != "" {
+		c.SetToken(token)
+	}
+	return c
+}
+
 // SetContext sets the context used to cancel in-flight HTTP requests.
 func (c *Client) SetContext(ctx context.Context) {
 	if ctx == nil {
