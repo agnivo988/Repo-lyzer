@@ -1,6 +1,13 @@
 package github
 
-import gocache "github.com/patrickmn/go-cache"
+import (
+	"errors"
+	"fmt"
+
+	gocache "github.com/patrickmn/go-cache"
+)
+
+var ErrTreeTruncated = errors.New("repository file tree is truncated by the GitHub API (>100k files)")
 
 type TreeEntry struct {
 	Path string `json:"path"`
@@ -30,18 +37,25 @@ func (c *Client) GetFileTree(owner, repo, branch string) ([]TreeEntry, error) {
 
 		var t TreeResponse
 		// recursive=1 to get full tree
-		if err := c.get("https://api.github.com/repos/"+owner+"/"+repo+"/git/trees/"+branch+"?recursive=1", &t); err != nil {
+		url := fmt.Sprintf("%s/repos/%s/%s/git/trees/%s?recursive=1", c.BaseURL, owner, repo, branch)
+		if err := c.get(url, &t); err != nil {
 			return nil, err
 		}
 
+		var truncationErr error
+		if t.Truncated {
+			fmt.Println("⚠️ Warning: Repository file tree is truncated by the GitHub API (>100k files). Downstream analysis may be incomplete.")
+			truncationErr = ErrTreeTruncated
+		}
+
 		c.cache.Set(cacheKey, t.Tree, gocache.DefaultExpiration)
-		return copyTreeEntries(t.Tree), nil
+		return copyTreeEntries(t.Tree), truncationErr
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrTreeTruncated) {
 		return nil, err
 	}
 	src := v.([]TreeEntry)
 	out := make([]TreeEntry, len(src))
 	copy(out, src)
-	return out, nil
+	return out, err
 }

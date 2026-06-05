@@ -33,8 +33,8 @@ func (c *Client) GetContributors(owner, repo string) ([]Contributor, error) {
 
 		for {
 			url := fmt.Sprintf(
-				"https://api.github.com/repos/%s/%s/contributors?per_page=%d&page=%d",
-				owner, repo, perPage, page,
+				"%s/repos/%s/%s/contributors?per_page=%d&page=%d",
+				c.BaseURL, owner, repo, perPage, page,
 			)
 
 			var contributors []Contributor

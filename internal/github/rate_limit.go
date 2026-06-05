@@ -25,7 +25,7 @@ type RateLimit struct {
 // GetRateLimit fetches current rate limit status from GitHub API
 func (c *Client) GetRateLimit() (*RateLimit, error) {
 	var rateLimit RateLimit
-	err := c.get("https://api.github.com/rate_limit", &rateLimit)
+	err := c.get(c.BaseURL+"/rate_limit", &rateLimit)
 	if err != nil {
 		return nil, err
 	}
