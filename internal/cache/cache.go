@@ -34,6 +34,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -79,6 +80,7 @@ type CacheConfig struct {
 // Cache manages the local cache for analysis results.
 // It provides thread-safe operations for storing and retrieving cached data.
 type Cache struct {
+	mu       sync.RWMutex
 	cacheDir string      // Base directory for cache files
 	config   CacheConfig // Current configuration
 	index    *CacheIndex // In-memory index of cached repos
@@ -181,6 +183,12 @@ func (c *Cache) loadConfig() {
 
 // SaveConfig saves cache configuration
 func (c *Cache) SaveConfig() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.saveConfig()
+}
+
+func (c *Cache) saveConfig() error {
 	configPath := filepath.Join(c.cacheDir, "config.json")
 	data, err := json.MarshalIndent(c.config, "", "  ")
 	if err != nil {
@@ -191,17 +199,21 @@ func (c *Cache) SaveConfig() error {
 
 // Get retrieves a cached analysis if available and not expired
 func (c *Cache) Get(repoName string) (*CacheEntry, bool) {
+	c.mu.RLock()
 	if !c.config.Enabled {
+		c.mu.RUnlock()
 		return nil, false
 	}
 
 	entry, exists := c.index.Entries[repoName]
 	if !exists {
+		c.mu.RUnlock()
 		return nil, false
 	}
 
 	// Check if expired
 	if time.Now().After(entry.ExpiresAt) {
+		c.mu.RUnlock()
 		c.Delete(repoName)
 		return nil, false
 	}
@@ -209,6 +221,7 @@ func (c *Cache) Get(repoName string) (*CacheEntry, bool) {
 	// Load full entry from file
 	filename := repoToFilename(repoName)
 	filePath := filepath.Join(c.cacheDir, "repos", filename)
+	c.mu.RUnlock()
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -225,18 +238,22 @@ func (c *Cache) Get(repoName string) (*CacheEntry, bool) {
 
 // GetWithoutTTLExpiration retrieves a cached analysis if available on disk, ignoring expiration checks
 func (c *Cache) GetWithoutTTLExpiration(repoName string) (*CacheEntry, bool) {
+	c.mu.RLock()
 	if !c.config.Enabled {
+		c.mu.RUnlock()
 		return nil, false
 	}
 
 	_, exists := c.index.Entries[repoName]
 	if !exists {
+		c.mu.RUnlock()
 		return nil, false
 	}
 
 	// Load full entry from file
 	filename := repoToFilename(repoName)
 	filePath := filepath.Join(c.cacheDir, "repos", filename)
+	c.mu.RUnlock()
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -268,6 +285,9 @@ func (c *Cache) SetWithTTL(repoName string, analysis interface{}, ttl time.Durat
 
 // SetWithTTLAndMetadata stores an analysis result and incremental metadata in the cache with an explicit TTL.
 func (c *Cache) SetWithTTLAndMetadata(repoName string, analysis interface{}, ttl time.Duration, metadata map[string]FileMetadata) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if !c.config.Enabled || !c.config.AutoCache {
 		return nil
 	}
@@ -323,6 +343,9 @@ func (c *Cache) SetWithTTLAndMetadata(repoName string, analysis interface{}, ttl
 
 // Delete removes a specific repo from cache
 func (c *Cache) Delete(repoName string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	filename := repoToFilename(repoName)
 	filePath := filepath.Join(c.cacheDir, "repos", filename)
 
@@ -334,6 +357,9 @@ func (c *Cache) Delete(repoName string) error {
 
 // Clear removes all cached data
 func (c *Cache) Clear() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	reposDir := filepath.Join(c.cacheDir, "repos")
 
 	// Remove all files in repos directory
@@ -351,6 +377,9 @@ func (c *Cache) Clear() error {
 
 // GetStats returns cache statistics
 func (c *Cache) GetStats() CacheStats {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	var totalSize int64
 	validCount := 0
 	expiredCount := 0
@@ -385,6 +414,9 @@ type CacheStats struct {
 
 // GetCachedRepos returns list of all cached repos
 func (c *Cache) GetCachedRepos() []CacheIndexEntry {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	repos := make([]CacheIndexEntry, 0, len(c.index.Entries))
 	for _, entry := range c.index.Entries {
 		repos = append(repos, entry)
@@ -394,6 +426,9 @@ func (c *Cache) GetCachedRepos() []CacheIndexEntry {
 
 // IsExpired checks if a cached entry is expired
 func (c *Cache) IsExpired(repoName string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	entry, exists := c.index.Entries[repoName]
 	if !exists {
 		return true
@@ -403,35 +438,53 @@ func (c *Cache) IsExpired(repoName string) bool {
 
 // HasCache checks if a repo is in cache (expired or not)
 func (c *Cache) HasCache(repoName string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	_, exists := c.index.Entries[repoName]
 	return exists
 }
 
 // GetConfig returns current cache configuration
 func (c *Cache) GetConfig() CacheConfig {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	return c.config
 }
 
 // SetEnabled enables or disables caching
 func (c *Cache) SetEnabled(enabled bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.config.Enabled = enabled
-	c.SaveConfig()
+	c.saveConfig()
 }
 
 // SetTTL sets the cache time-to-live
 func (c *Cache) SetTTL(ttl time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.config.TTL = ttl
-	c.SaveConfig()
+	c.saveConfig()
 }
 
 // SetAutoCache enables or disables auto-caching
 func (c *Cache) SetAutoCache(enabled bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	c.config.AutoCache = enabled
-	c.SaveConfig()
+	c.saveConfig()
 }
 
 // CleanExpired removes all expired entries
 func (c *Cache) CleanExpired() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	removed := 0
 	now := time.Now()
 
@@ -495,13 +548,21 @@ func (c *Cache) UpdateFileMetadata(
 	repoName string,
 	metadata map[string]FileMetadata,
 ) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	entry, found := c.Get(repoName)
+	// We need to call an internal Get or similar that doesn't lock
+	// Or we can just do the logic here.
 
+	// Check if enabled (using internal config)
+	if !c.config.Enabled {
+		return nil
+	}
+
+	// Check if in index
+	_, found := c.index.Entries[repoName]
 	if !found {
-
 		now := time.Now()
-
 		newEntry := CacheEntry{
 			RepoName:            repoName,
 			CachedAt:            now,
@@ -522,7 +583,6 @@ func (c *Cache) UpdateFileMetadata(
 		}
 
 		fileInfo, _ := os.Stat(filePath)
-
 		fileSize := int64(0)
 		if fileInfo != nil {
 			fileSize = fileInfo.Size()
@@ -538,12 +598,24 @@ func (c *Cache) UpdateFileMetadata(
 		return c.saveIndex()
 	}
 
-	entry.IncrementalMetadata = metadata
-
+	// Load full entry from file (we already hold the lock, so it's safe to read)
 	filename := repoToFilename(repoName)
 	filePath := filepath.Join(c.cacheDir, "repos", filename)
 
-	data, err := json.MarshalIndent(entry, "", "  ")
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		// If file is missing but index has it, we should probably just create a new one or error
+		return err
+	}
+
+	var cacheEntry CacheEntry
+	if err := json.Unmarshal(data, &cacheEntry); err != nil {
+		return err
+	}
+
+	cacheEntry.IncrementalMetadata = metadata
+
+	data, err = json.MarshalIndent(cacheEntry, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -553,7 +625,6 @@ func (c *Cache) UpdateFileMetadata(
 	}
 
 	fileInfo, _ := os.Stat(filePath)
-
 	fileSize := int64(0)
 	if fileInfo != nil {
 		fileSize = fileInfo.Size()
@@ -561,8 +632,8 @@ func (c *Cache) UpdateFileMetadata(
 
 	c.index.Entries[repoName] = CacheIndexEntry{
 		RepoName:  repoName,
-		CachedAt:  entry.CachedAt,
-		ExpiresAt: entry.ExpiresAt,
+		CachedAt:  cacheEntry.CachedAt,
+		ExpiresAt: cacheEntry.ExpiresAt,
 		FileSize:  fileSize,
 	}
 

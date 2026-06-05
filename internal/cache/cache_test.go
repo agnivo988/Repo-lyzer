@@ -1,11 +1,49 @@
 package cache
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
+
+func TestCache_Concurrency(t *testing.T) {
+	cache, err := NewCache()
+	if err != nil {
+		t.Fatalf("NewCache() error = %v", err)
+	}
+
+	const (
+		numGoroutines = 50
+		numOps        = 100
+	)
+
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines * 2)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func(id int) {
+			defer wg.Done()
+			for j := 0; j < numOps; j++ {
+				repo := fmt.Sprintf("repo-%d", id)
+				cache.Set(repo, "data")
+			}
+		}(i)
+
+		go func(id int) {
+			defer wg.Done()
+			for j := 0; j < numOps; j++ {
+				repo := fmt.Sprintf("repo-%d", id)
+				cache.Get(repo)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	cache.Clear()
+}
 
 func TestNewCache(t *testing.T) {
 	cache, err := NewCache()
@@ -330,4 +368,3 @@ func TestCache_GetWithoutTTLExpiration(t *testing.T) {
 
 	cache.Delete(testRepo)
 }
-
