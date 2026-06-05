@@ -20,5 +20,7 @@ func PrintRecruiterSummary(s analyzer.RecruiterSummary) {
 	fmt.Println("👥 Contributors:", s.Contributors)
 	fmt.Println("🏗️ Maturity:", s.MaturityLevel, "(", s.MaturityScore, ")")
 	fmt.Println("⚠️ Bus Factor:", s.BusFactor, "-", s.BusRisk)
+	fmt.Println("🐛 Issue Health:", s.IssueHealth)
+	fmt.Println("📥 PR Health:", s.PRHealth)
 	fmt.Println("🔥 Activity:", s.ActivityLevel)
 }
