@@ -1,6 +1,10 @@
 package github
 
-import gocache "github.com/patrickmn/go-cache"
+import (
+	"fmt"
+
+	gocache "github.com/patrickmn/go-cache"
+)
 
 type TreeEntry struct {
 	Path string `json:"path"`
@@ -30,8 +34,13 @@ func (c *Client) GetFileTree(owner, repo, branch string) ([]TreeEntry, error) {
 
 		var t TreeResponse
 		// recursive=1 to get full tree
-		if err := c.get("https://api.github.com/repos/"+owner+"/"+repo+"/git/trees/"+branch+"?recursive=1", &t); err != nil {
+		url := fmt.Sprintf("%s/repos/%s/%s/git/trees/%s?recursive=1", c.BaseURL, owner, repo, branch)
+		if err := c.get(url, &t); err != nil {
 			return nil, err
+		}
+
+		if t.Truncated {
+			fmt.Println("⚠️ Warning: Repository file tree is truncated by the GitHub API (>100k files). Downstream analysis may be incomplete.")
 		}
 
 		c.cache.Set(cacheKey, t.Tree, gocache.DefaultExpiration)

@@ -17,11 +17,12 @@ import (
 
 // Client handles GitHub API requests
 type Client struct {
-	http  *http.Client
-	token string
-	ctx   context.Context
-	cache *gocache.Cache
-	sf    singleflight.Group
+	http    *http.Client
+	token   string
+	ctx     context.Context
+	cache   *gocache.Cache
+	sf      singleflight.Group
+	BaseURL string
 }
 
 // User represents a GitHub user
@@ -34,13 +35,14 @@ type User struct {
 // NewClient creates a new GitHub API client
 func NewClient() *Client {
 	return &Client{
-		http:  &http.Client{Timeout: 30 * time.Second},
-		token: os.Getenv("GITHUB_TOKEN"),
-		ctx:   context.Background(),
+		http:    &http.Client{Timeout: 30 * time.Second},
+		token:   os.Getenv("GITHUB_TOKEN"),
+		ctx:     context.Background(),
 		cache: gocache.New(
 			5*time.Minute,  // default expiration
 			10*time.Minute, // cleanup interval
 		),
+		BaseURL: "https://api.github.com",
 	}
 }
 
