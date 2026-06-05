@@ -103,6 +103,7 @@ type MainModel struct {
 	animTick        int
 	err             interface{}
 	analysisCancel  context.CancelFunc
+	compareCtxCancel context.CancelFunc
 	analysisType    string
 	compareStep     int
 	compareInput1   string
@@ -240,6 +241,10 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.analysisCancel()
 			m.analysisCancel = nil
 		}
+		if m.compareCtxCancel != nil {
+			m.compareCtxCancel()
+			m.compareCtxCancel = nil
+		}
 		m.analysisInProgress = false
 		m.state = stateMenu
 		return m, nil
@@ -359,7 +364,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.analysisInProgress = true
 			m.lastSubmitTime = time.Now()
 			m.state = stateCompareLoading
-			cmds = append(cmds, m.compareRepos(msg.Repo1, msg.Repo2), TickProgressCmd())
+			ctx, cancel := context.WithCancel(context.Background())
+			m.compareCtxCancel = cancel
+			cmds = append(cmds, m.compareRepos(ctx, msg.Repo1, msg.Repo2), TickProgressCmd())
 		case BackToMenuMsg:
 			m.state = stateMenu
 		}
@@ -375,13 +382,19 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.compareResult.result = &msg
 			m.state = stateCompareResult
 			m.err = nil
+			m.compareCtxCancel = nil
 		case error:
 			m.analysisInProgress = false
 			m.err = msg
 			m.state = stateCompareInput
 			m.compareStep = 0
+			m.compareCtxCancel = nil
 		case tea.KeyMsg:
 			if msg.String() == "esc" {
+				if m.compareCtxCancel != nil {
+					m.compareCtxCancel()
+					m.compareCtxCancel = nil
+				}
 				m.analysisInProgress = false
 				m.state = stateMenu
 				m.compareInput1 = ""
@@ -1443,8 +1456,12 @@ func (m MainModel) compareResultView() string {
 	)
 }
 
-func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
+func (m MainModel) compareRepos(ctx context.Context, repo1Name, repo2Name string) tea.Cmd {
 	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		parts1 := strings.Split(repo1Name, "/")
 		parts2 := strings.Split(repo2Name, "/")
 
@@ -1460,16 +1477,33 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 			token = m.appConfig.GitHubToken
 		}
 		client := github.NewClientWithToken(token)
+		client.SetContext(ctx)
 
 		// Analyze first repo
 		repo1, err := client.GetRepo(parts1[0], parts1[1])
 		if err != nil {
 			return fmt.Errorf("failed to fetch %s: %w", repo1Name, err)
 		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		commits1, _ := client.GetCommits(parts1[0], parts1[1], 365)
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		contributors1, _ := client.GetContributorsWithAvatars(parts1[0], parts1[1], 15)
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		languages1, _ := client.GetLanguages(parts1[0], parts1[1])
 		fileTree1, _ := client.GetFileTree(parts1[0], parts1[1], repo1.DefaultBranch)
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		score1 := analyzer.CalculateHealth(repo1, commits1)
 		busFactor1, busRisk1 := analyzer.BusFactor(contributors1)
 		maturityScore1, maturityLevel1 := analyzer.RepoMaturityScore(repo1, len(commits1), len(contributors1), false)
@@ -1492,10 +1526,26 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		if err != nil {
 			return fmt.Errorf("failed to fetch %s: %w", repo2Name, err)
 		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		commits2, _ := client.GetCommits(parts2[0], parts2[1], 365)
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		contributors2, _ := client.GetContributorsWithAvatars(parts2[0], parts2[1], 15)
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		languages2, _ := client.GetLanguages(parts2[0], parts2[1])
 		fileTree2, _ := client.GetFileTree(parts2[0], parts2[1], repo2.DefaultBranch)
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		score2 := analyzer.CalculateHealth(repo2, commits2)
 		busFactor2, busRisk2 := analyzer.BusFactor(contributors2)
 		maturityScore2, maturityLevel2 := analyzer.RepoMaturityScore(repo2, len(commits2), len(contributors2), false)
