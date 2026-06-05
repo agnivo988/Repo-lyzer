@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -43,13 +44,9 @@ func TestQueryOSV_Errors(t *testing.T) {
 			server := httptest.NewServer(tt.handler)
 			defer server.Close()
 
-			// Save original URL and restore after test
-			origURL := osvURL
-			osvURL = server.URL
-			defer func() { osvURL = origURL }()
-
+			ctx := context.Background()
 			client := &http.Client{}
-			vulns, err := queryOSV(client, "test-pkg", "1.0.0", "npm")
+			vulns, err := queryOSV(ctx, client, "test-pkg", "1.0.0", "npm", server.URL)
 
 			if tt.expectedErrMsg != "" {
 				if err == nil {
@@ -76,9 +73,36 @@ func TestScanDependencies_ErrorPropagation(t *testing.T) {
 	}))
 	defer server.Close()
 
-	origURL := osvURL
-	osvURL = server.URL
-	defer func() { osvURL = origURL }()
+	deps := &DependencyAnalysis{
+		Files: []DependencyFile{
+			{
+				FileType: "npm",
+				Dependencies: []Dependency{
+					{Name: "test-pkg", Version: "1.0.0"},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	result, err := ScanDependencies(ctx, deps, server.URL)
+	if err == nil {
+		t.Errorf("ScanDependencies should have failed but got nil error")
+	} else if !strings.Contains(err.Error(), "failed to query OSV") {
+		t.Errorf("expected error containing %q, got %q", "failed to query OSV", err.Error())
+	}
+	
+	if result != nil {
+		t.Errorf("result should be nil on error")
+	}
+}
+
+func TestScanDependencies_Cancellation(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Simulate slow response
+		<-r.Context().Done()
+	}))
+	defer server.Close()
 
 	deps := &DependencyAnalysis{
 		Files: []DependencyFile{
@@ -91,22 +115,16 @@ func TestScanDependencies_ErrorPropagation(t *testing.T) {
 		},
 	}
 
-	// Note: Currently ScanDependencies swallows the error from queryOSV.
-	// The user instructions didn't explicitly ask to fix ScanDependencies' swallowing,
-	// but they did say "which causes silent scanner false negatives".
-	// If ScanDependencies swallows it, it's still a silent false negative at that level.
-	// However, I will first check if ScanDependencies SHOULD be fixed too.
-	// Instructions: "Fix Issue #323 ... queryOSV ... is swallowing ... errors ... which causes silent scanner false negatives."
-	// Let's see if ScanDependencies should propagate it.
-	
-	result, err := ScanDependencies(deps)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel immediately
+
+	result, err := ScanDependencies(ctx, deps, server.URL)
 	if err == nil {
-		t.Errorf("ScanDependencies should have failed but got nil error")
-	} else if !strings.Contains(err.Error(), "failed to query OSV") {
-		t.Errorf("expected error containing %q, got %q", "failed to query OSV", err.Error())
+		t.Errorf("expected error from cancelled context, got nil")
+	} else if !strings.Contains(err.Error(), context.Canceled.Error()) {
+		t.Errorf("expected error containing %q, got %q", context.Canceled.Error(), err.Error())
 	}
-	
 	if result != nil {
-		t.Errorf("result should be nil on error")
+		t.Errorf("result should be nil on cancellation")
 	}
 }

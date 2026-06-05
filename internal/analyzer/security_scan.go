@@ -2,6 +2,8 @@
 package analyzer
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -9,6 +11,9 @@ import (
 	"strings"
 	"time"
 )
+
+// DefaultOSVURL is the default endpoint for the OSV API.
+const DefaultOSVURL = "https://api.osv.dev/v1/query"
 
 // Vulnerability represents a security vulnerability
 type Vulnerability struct {
@@ -68,7 +73,7 @@ type osvVuln struct {
 }
 
 // ScanDependencies scans dependencies for vulnerabilities
-func ScanDependencies(deps *DependencyAnalysis) (*SecurityScanResult, error) {
+func ScanDependencies(ctx context.Context, deps *DependencyAnalysis, apiURL string) (*SecurityScanResult, error) {
 	if deps == nil || len(deps.Files) == 0 {
 		return &SecurityScanResult{
 			Vulnerabilities: []Vulnerability{},
@@ -91,8 +96,15 @@ func ScanDependencies(deps *DependencyAnalysis) (*SecurityScanResult, error) {
 		}
 
 		for _, dep := range file.Dependencies {
+			// Check context for cancellation
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			default:
+			}
+
 			result.ScannedPackages++
-			vulns, err := queryOSV(client, dep.Name, dep.Version, ecosystem)
+			vulns, err := queryOSV(ctx, client, dep.Name, dep.Version, ecosystem, apiURL)
 			if err != nil {
 				return nil, fmt.Errorf("failed to query OSV for %s@%s: %w", dep.Name, dep.Version, err)
 			}
@@ -125,9 +137,7 @@ func mapEcosystem(fileType string) string {
 	return m[fileType]
 }
 
-var osvURL = "https://api.osv.dev/v1/query"
-
-func queryOSV(client *http.Client, pkg, ver, eco string) ([]osvVuln, error) {
+func queryOSV(ctx context.Context, client *http.Client, pkg, ver, eco, apiURL string) ([]osvVuln, error) {
 	query := osvQuery{}
 	query.Package.Name = pkg
 	query.Package.Ecosystem = eco
@@ -141,7 +151,13 @@ func queryOSV(client *http.Client, pkg, ver, eco string) ([]osvVuln, error) {
 		return nil, fmt.Errorf("failed to marshal OSV query: %w", err)
 	}
 
-	resp, err := client.Post(osvURL, "application/json", strings.NewReader(string(data)))
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create OSV request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
