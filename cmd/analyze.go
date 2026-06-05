@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"bufio"
-	"encoding/base64"
 	"fmt"
 	"os"
 	"strings"
@@ -400,13 +399,7 @@ var analyzeCmd = &cobra.Command{
 			readmeContent := ""
 			readmePath := contribution.FindReadmePath(fileTree)
 			if readmePath != "" {
-				readmeBase64, err := client.GetFileContent(owner, repo, readmePath)
-				if err == nil {
-					decoded, err := base64.StdEncoding.DecodeString(readmeBase64)
-					if err == nil {
-						readmeContent = string(decoded)
-					}
-				}
+				readmeContent, err = client.GetFileContentDecoded(owner, repo, readmePath)
 			}
 			contribScore = contribution.Calculate(hasContributing, readmeContent, issues, commits, contributors)
 		}

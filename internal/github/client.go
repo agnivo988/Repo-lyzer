@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,10 +11,16 @@ import (
 	"strings"
 	"time"
 
-	
 	gocache "github.com/patrickmn/go-cache"
 	"golang.org/x/sync/singleflight"
 )
+
+// User represents a GitHub user
+type User struct {
+	Login     string `json:"login"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatar_url"`
+}
 
 // Client handles GitHub API requests
 type Client struct {
@@ -22,13 +29,6 @@ type Client struct {
 	ctx   context.Context
 	cache *gocache.Cache
 	sf    singleflight.Group
-}
-
-// User represents a GitHub user
-type User struct {
-	Login     string `json:"login"`
-	Name      string `json:"name"`
-	AvatarURL string `json:"avatar_url"`
 }
 
 // NewClient creates a new GitHub API client
@@ -199,17 +199,6 @@ func (c *Client) get(url string, target interface{}) error {
 	return fmt.Errorf("request failed: %s", url)
 }
 
-// formatDuration formats a duration in a human-readable way
-func formatDuration(d time.Duration) string {
-	if d < 0 {
-		return "now"
-	}
-	if d < time.Minute {
-		return fmt.Sprintf("%d seconds", int(d.Seconds()))
-	}
-	return fmt.Sprintf("%d min %d sec", int(d.Minutes()), int(d.Seconds())%60)
-}
-
 // GetUser fetches the authenticated user
 func (c *Client) GetUser() (*User, error) {
 	cacheKey := "user:me"
@@ -301,4 +290,19 @@ func (c *Client) GetFileContent(owner, repo, path string) (string, error) {
 		return "", err
 	}
 	return v.(string), nil
+}
+
+// GetFileContentDecoded fetches the content of a file and returns it as a decoded string
+func (c *Client) GetFileContentDecoded(owner, repo, path string) (string, error) {
+	content, err := c.GetFileContent(owner, repo, path)
+	if err != nil {
+		return "", err
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(content)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode base64: %w", err)
+	}
+
+	return string(decoded), nil
 }
