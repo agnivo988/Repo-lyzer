@@ -400,6 +400,9 @@ var analyzeCmd = &cobra.Command{
 			readmePath := contribution.FindReadmePath(fileTree)
 			if readmePath != "" {
 				readmeContent, err = client.GetFileContentDecoded(owner, repo, readmePath)
+				if err != nil {
+					fmt.Printf("⚠️  Warning: Failed to fetch README content: %v\n", err)
+				}
 			}
 			contribScore = contribution.Calculate(hasContributing, readmeContent, issues, commits, contributors)
 		}
