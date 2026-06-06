@@ -76,6 +76,24 @@ type CacheConfig struct {
 	AutoCache bool          `json:"auto_cache"`  // Automatically cache new analyses
 }
 
+const (
+	// MinTTL is the minimum allowed time-to-live for cache entries (1 minute)
+	MinTTL = 1 * time.Minute
+	// MaxTTL is the maximum allowed time-to-live for cache entries (7 days)
+	MaxTTL = 7 * 24 * time.Hour
+)
+
+// Validate checks if the cache configuration is valid.
+func (c CacheConfig) Validate() error {
+	if c.TTL < MinTTL {
+		return fmt.Errorf("cache TTL too short: %v (minimum %v)", c.TTL, MinTTL)
+	}
+	if c.TTL > MaxTTL {
+		return fmt.Errorf("cache TTL too long: %v (maximum %v)", c.TTL, MaxTTL)
+	}
+	return nil
+}
+
 // Cache manages the local cache for analysis results.
 // It provides thread-safe operations for storing and retrieving cached data.
 type Cache struct {
@@ -176,7 +194,18 @@ func (c *Cache) loadConfig() {
 	if err != nil {
 		return // Use defaults
 	}
-	json.Unmarshal(data, &c.config)
+	var loadedConfig CacheConfig
+	if err := json.Unmarshal(data, &loadedConfig); err != nil {
+		return // Use defaults
+	}
+
+	// Validate loaded configuration
+	if err := loadedConfig.Validate(); err != nil {
+		// If invalid, we use default TTL but keep other valid settings if possible
+		// For simplicity, if TTL is invalid, we fallback to default TTL
+		loadedConfig.TTL = DefaultConfig().TTL
+	}
+	c.config = loadedConfig
 }
 
 // SaveConfig saves cache configuration
@@ -418,10 +447,16 @@ func (c *Cache) SetEnabled(enabled bool) {
 	c.SaveConfig()
 }
 
-// SetTTL sets the cache time-to-live
-func (c *Cache) SetTTL(ttl time.Duration) {
+// SetTTL sets the cache time-to-live.
+// Returns an error if the TTL is out of allowed bounds (1m - 7d).
+func (c *Cache) SetTTL(ttl time.Duration) error {
+	newConfig := c.config
+	newConfig.TTL = ttl
+	if err := newConfig.Validate(); err != nil {
+		return err
+	}
 	c.config.TTL = ttl
-	c.SaveConfig()
+	return c.SaveConfig()
 }
 
 // SetAutoCache enables or disables auto-caching
