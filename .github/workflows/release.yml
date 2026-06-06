@@ -50,6 +50,9 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Run go vet
+        run: go vet ./...
+
       - name: Build binary
         env:
           GOOS: ${{ matrix.goos }}
