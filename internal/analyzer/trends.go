@@ -152,7 +152,17 @@ func AnalyzeTrends(
 	}
 
 	for i := range metrics.MonthlyData {
-    metrics.MonthlyData[i].PRVelocity = CalculatePRVelocity(prs)
+    monthStart := metrics.MonthlyData[i].Month
+    monthEnd := monthStart.AddDate(0, 1, 0) // Adds one month
+
+    monthPRs := make([]github.PullRequest, 0)
+		for _, pr := range prs {
+			// Check if PR was created within this specific month
+			if !pr.CreatedAt.Before(monthStart) && pr.CreatedAt.Before(monthEnd) {
+				monthPRs = append(monthPRs, pr)
+			}
+		}
+		metrics.MonthlyData[i].PRVelocity = CalculatePRVelocity(monthPRs)
 	}
 	// Calculate current health score (simplified)
 	metrics.CurrentHealthScore = calculateCurrentHealthScore(commits, contributors, issues, prs)

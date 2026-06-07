@@ -2,17 +2,22 @@ package analyzer
 
 import (
 	"testing"
+	"time" // This fixes the "undefined: time" error
+	"github.com/agnivo988/Repo-lyzer/internal/github" // This fixes the "undefined: github" error
 )
+func TestCalculatePRVelocity(t *testing.T) {
+    now := time.Now()
+    // Create a PR that took exactly 24 hours to merge
+    createdAt := now.Add(-24 * time.Hour)
+    prs := []github.PullRequest{
+        {
+            CreatedAt: createdAt,
+            MergedAt:  &now,
+        },
+    }
 
-func TestMonthlyMetricCalculation(t *testing.T) {
-	// 1. Setup your test data here
-	// 2. Call the function you want to test
-	// 3. Use an 'if' statement to check the result
-	
-	expectedCommits := 0
-	actualCommits := 0 // Replace with your function call
-	
-	if actualCommits != expectedCommits {
-		t.Errorf("Expected %d, got %d", expectedCommits, actualCommits)
-	}
+    velocity := CalculatePRVelocity(prs)
+    if velocity != 24.0 {
+        t.Errorf("Expected 24.0 hours, got %f", velocity)
+    }
 }
