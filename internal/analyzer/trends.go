@@ -76,6 +76,8 @@ type TrendMetrics struct {
 	Summary      string         `json:"summary"`
 }
 // CalculatePRVelocity computes how fast PRs are merged on average
+// CalculatePRVelocity computes the average time (in hours) it takes for PRs to be merged.
+// It excludes unmerged PRs or PRs where the merge time is before the creation time.
 func CalculatePRVelocity(prs []github.PullRequest) float64 {
     var totalDuration time.Duration
     var mergedCount int
