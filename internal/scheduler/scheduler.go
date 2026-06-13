@@ -5,6 +5,7 @@ package scheduler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -31,6 +32,10 @@ type Scheduler struct {
 
 // ReportExporter handles exporting analysis reports to various formats
 type ReportExporter struct{}
+
+const webhookRequestTimeout = 30 * time.Second
+
+var webhookHTTPClient = &http.Client{Timeout: webhookRequestTimeout}
 
 // NewScheduler creates a new scheduler instance
 func NewScheduler() (*Scheduler, error) {
@@ -285,7 +290,16 @@ func (s *Scheduler) sendToWebhook(webhookURL, filename string, data []byte) erro
 		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	resp, err := http.Post(webhookURL, "application/json", bytes.NewBuffer(jsonData))
+	ctx, cancel := context.WithTimeout(context.Background(), webhookRequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhookURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to build webhook request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := webhookHTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send webhook: %w", err)
 	}
