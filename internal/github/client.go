@@ -33,9 +33,13 @@ type User struct {
 
 // NewClient creates a new GitHub API client
 func NewClient() *Client {
+	token := os.Getenv("REPO_LYZER_GITHUB_TOKEN")
+	if token == "" {
+		token = os.Getenv("GITHUB_TOKEN")
+	}
 	return &Client{
 		http:  &http.Client{Timeout: 30 * time.Second},
-		token: os.Getenv("GITHUB_TOKEN"),
+		token: token,
 		ctx:   context.Background(),
 		cache: gocache.New(
 			5*time.Minute,  // default expiration
