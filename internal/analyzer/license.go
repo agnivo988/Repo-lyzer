@@ -218,7 +218,7 @@ func findLicenseFiles(tree []github.TreeEntry) []string {
 		filename := strings.ToUpper(parts[len(parts)-1])
 
 		for _, licenseName := range licenseNames {
-			if filename == licenseName || strings.ToUpper(filename) == licenseName {
+			if filename == strings.ToUpper(licenseName) {
 				files = append(files, entry.Path)
 				break
 			}
