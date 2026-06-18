@@ -199,7 +199,10 @@ func (p *ProgressBar) display() {
 	}
 
 	barWidth := 30
-	filledWidth := (p.current * barWidth) / p.total
+	filledWidth := 0
+	if p.total > 0 {
+		filledWidth = (p.current * barWidth) / p.total
+	}
 	if p.current > 0 && filledWidth == 0 {
 		filledWidth = 1
 	}
@@ -407,6 +410,12 @@ func (o *OverallProgress) UpdateStep(stepMessage string) {
 func (o *OverallProgress) Finish() {
 	o.mu.Lock()
 	defer o.mu.Unlock()
+
+	// Signal the background ticker goroutine to stop if one is running
+	if o.stepDone != nil {
+		close(o.stepDone)
+		o.stepDone = nil
+	}
 
 	o.spinner.Stop()
 	elapsed := time.Since(o.startTime).Seconds()
