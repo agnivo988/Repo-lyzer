@@ -89,7 +89,7 @@ type Cache struct {
 func DefaultConfig() CacheConfig {
 	return CacheConfig{
 		Enabled:   true,
-		TTL:       24 * time.Hour,
+		TTL:       clampTTL(24 * time.Hour),
 		MaxSize:   100,
 		AutoCache: true,
 	}
@@ -174,9 +174,10 @@ func (c *Cache) loadConfig() {
 	configPath := filepath.Join(c.cacheDir, "config.json")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return // Use defaults
+		return
 	}
 	json.Unmarshal(data, &c.config)
+	c.config.TTL = clampTTL(c.config.TTL)
 }
 
 // SaveConfig saves cache configuration
@@ -420,8 +421,19 @@ func (c *Cache) SetEnabled(enabled bool) {
 
 // SetTTL sets the cache time-to-live
 func (c *Cache) SetTTL(ttl time.Duration) {
-	c.config.TTL = ttl
+	c.config.TTL = clampTTL(ttl)
 	c.SaveConfig()
+}
+
+// clampTTL ensures TTL stays within reasonable bounds: 1 minute to 7 days.
+func clampTTL(ttl time.Duration) time.Duration {
+	if ttl < time.Minute {
+		return time.Minute
+	}
+	if ttl > 7*24*time.Hour {
+		return 7 * 24 * time.Hour
+	}
+	return ttl
 }
 
 // SetAutoCache enables or disables auto-caching

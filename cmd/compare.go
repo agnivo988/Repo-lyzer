@@ -157,11 +157,17 @@ func fetchCompareInput(client *github.Client, owner, repo string) (output.Compar
 		return output.CompareInput{}, fmt.Errorf("error fetching contributors for %s/%s: %w", owner, repo, err)
 	}
 
+	hasReleases, err := client.HasReleases(owner, repo)
+	if err != nil {
+		return output.CompareInput{}, fmt.Errorf("error checking releases for %s/%s: %w", owner, repo, err)
+	}
+
 	return output.CompareInput{
 		Repo:         repoInfo,
 		Commits:      commits,
 		Contributors: contributors,
 		Languages:    languages,
+		HasReleases:  hasReleases,
 	}, nil
 }
 

@@ -1058,7 +1058,11 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		// Stage 5: Compute metrics
 		score := analyzer.CalculateHealth(repo, commits)
 		busFactor, busRisk := analyzer.BusFactor(contributors)
-		maturityScore, maturityLevel := analyzer.RepoMaturityScore(repo, len(commits), len(contributors), false)
+		hasReleases, hasRelErr := client.HasReleases(parts[0], parts[1])
+		if hasRelErr != nil {
+			hasReleases = false
+		}
+		maturityScore, maturityLevel := analyzer.RepoMaturityScore(repo, len(commits), len(contributors), hasReleases)
 		contributorInsights := analyzer.AnalyzeContributors(contributors)
 
 		commitsLast90Days := 0
@@ -1426,7 +1430,8 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		fileTree1, _ := client.GetFileTree(parts1[0], parts1[1], repo1.DefaultBranch)
 		score1 := analyzer.CalculateHealth(repo1, commits1)
 		busFactor1, busRisk1 := analyzer.BusFactor(contributors1)
-		maturityScore1, maturityLevel1 := analyzer.RepoMaturityScore(repo1, len(commits1), len(contributors1), false)
+		hasReleases1, _ := client.HasReleases(parts1[0], parts1[1])
+		maturityScore1, maturityLevel1 := analyzer.RepoMaturityScore(repo1, len(commits1), len(contributors1), hasReleases1)
 
 		result1 := AnalysisResult{
 			Repo:          repo1,
@@ -1452,7 +1457,8 @@ func (m MainModel) compareRepos(repo1Name, repo2Name string) tea.Cmd {
 		fileTree2, _ := client.GetFileTree(parts2[0], parts2[1], repo2.DefaultBranch)
 		score2 := analyzer.CalculateHealth(repo2, commits2)
 		busFactor2, busRisk2 := analyzer.BusFactor(contributors2)
-		maturityScore2, maturityLevel2 := analyzer.RepoMaturityScore(repo2, len(commits2), len(contributors2), false)
+		hasReleases2, _ := client.HasReleases(parts2[0], parts2[1])
+		maturityScore2, maturityLevel2 := analyzer.RepoMaturityScore(repo2, len(commits2), len(contributors2), hasReleases2)
 
 		result2 := AnalysisResult{
 			Repo:          repo2,

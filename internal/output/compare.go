@@ -19,6 +19,7 @@ type CompareInput struct {
 	Commits      []github.Commit
 	Contributors []github.Contributor
 	Languages    map[string]int
+	HasReleases  bool
 }
 
 // CompareRepository contains the computed metrics for one repository.
@@ -179,7 +180,7 @@ func buildCompareRepository(input CompareInput) CompareRepository {
 	}
 
 	busFactor, busRisk := analyzer.BusFactor(input.Contributors)
-	maturityScore, maturityLevel := analyzer.RepoMaturityScore(input.Repo, len(input.Commits), len(input.Contributors), false)
+	maturityScore, maturityLevel := analyzer.RepoMaturityScore(input.Repo, len(input.Commits), len(input.Contributors), input.HasReleases)
 	healthScore := analyzer.CalculateHealth(input.Repo, input.Commits)
 
 	primaryLanguage := input.Repo.Language

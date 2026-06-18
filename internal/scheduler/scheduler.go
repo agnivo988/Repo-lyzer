@@ -129,10 +129,13 @@ func (s *Scheduler) executeJob(job config.ScheduledJob) error {
 		return fmt.Errorf("failed to get contributors: %w", err)
 	}
 
+	// Check releases
+	hasReleases, _ := client.HasReleases(job.Owner, job.Repo)
+
 	// Calculate metrics
 	healthScore := analyzer.CalculateHealth(repoInfo, commits)
 	busFactor, busRisk := analyzer.BusFactor(contributors)
-	maturityScore, maturityLevel := analyzer.RepoMaturityScore(repoInfo, len(commits), len(contributors), false)
+	maturityScore, maturityLevel := analyzer.RepoMaturityScore(repoInfo, len(commits), len(contributors), hasReleases)
 
 	// Build compact config for export
 	compactCfg := output.CompactConfig{

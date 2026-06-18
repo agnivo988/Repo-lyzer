@@ -3,7 +3,27 @@
   <img src="https://res.cloudinary.com/dhyii4oiw/image/upload/v1767324445/Screenshot_2026-01-02_085503_ros5gz.png" alt="Repo-lyzer Logo" width="300">
 </p>
 
+<p align="center">
+  <a href="https://github.com/agnivo988/Repo-lyzer/releases"><img src="https://img.shields.io/github/v/release/agnivo988/Repo-lyzer?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/agnivo988/Repo-lyzer/blob/main/LICENSE"><img src="https://img.shields.io/github/license/agnivo988/Repo-lyzer?style=flat-square" alt="License"></a>
+  <a href="https://github.com/agnivo988/Repo-lyzer/issues"><img src="https://img.shields.io/github/issues/agnivo988/Repo-lyzer?style=flat-square" alt="Issues"></a>
+  <a href="https://github.com/agnivo988/Repo-lyzer/actions"><img src="https://img.shields.io/github/actions/workflow/status/agnivo988/Repo-lyzer/ci.yml?style=flat-square" alt="CI"></a>
+</p>
+
 **Repo-lyzer** is a modern, terminal-based CLI tool written in **Golang** that analyzes GitHub repositories and presents insights in a beautifully formatted, interactive dashboard.
+
+---
+
+## Table of Contents
+- [Features](#features)
+- [Quick Start](#quick-start)
+  - [Installation](#installation)
+  - [Basic Usage](#basic-usage)
+  - [Docker Usage](#docker-usage)
+- [Architecture Overview](#architecture-overview)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -19,10 +39,18 @@
 
 ## Quick Start
 
+### Prerequisites
+- **Go 1.21+** (for `go install`) or **Docker** (for containerized usage)
+- A [GitHub Personal Access Token](https://github.com/settings/tokens) (required for API calls)
+
 ### Installation
 ```bash
-go install [github.com/agnivo988/Repo-lyzer@v1.0.6](https://github.com/agnivo988/Repo-lyzer@v1.0.6)
-repo-lyzer
+go install github.com/agnivo988/Repo-lyzer@latest
+```
+
+Verify the installation:
+```bash
+repo-lyzer version
 ```
 
 ### Basic Usage
@@ -33,7 +61,6 @@ repo-lyzer summary golang/go
 # Run full interactive analysis
 repo-lyzer analyze microsoft/vscode
 
-# Run analysis with contribution scoring enabled
 # Run analysis with contribution scoring enabled
 repo-lyzer analyze microsoft/vscode --contribute
 ```
@@ -113,14 +140,57 @@ The `docker-compose.yml` mounts a local `./data` directory to persist settings a
 
 ---
 
+## Contributing
+
+We welcome contributions from the community! Here's how to get started:
+
+1. **Fork** the repository
+2. **Clone** your fork:
+   ```bash
+   git clone https://github.com/your-username/Repo-lyzer.git
+   ```
+3. **Create a feature branch**:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+4. **Make your changes** and ensure tests pass:
+   ```bash
+   go test ./...
+   ```
+5. **Commit** with a clear message:
+   ```bash
+   git commit -m "feat: add your feature"
+   ```
+6. **Push** and open a Pull Request
+
+### Development Setup
+```bash
+# Install dependencies
+go mod download
+
+# Run tests
+go test ./...
+
+# Build from source
+go build -o repo-lyzer .
+```
+
+### Code Style
+- Run `go fmt ./...` before committing
+- Follow standard Go conventions
+- Add tests for new functionality
+
+---
+
 ## Maintainers & Contributors
-### Maintainer: @agnivo988
 
-<a href="https://github.com/Aamod007"><img src="https://github.com/Aamod007.png" width="50" height="50" alt="Aamod007" title="Contributor"></a> <a href="https://github.com/Aditya8369"><img src="https://github.com/Aditya8369.png" width="50" height="50" alt="Aditya8369" title="Contributor"></a> <a href="https://github.com/agnivo988"><img src="https://github.com/agnivo988.png" width="50" height="50" alt="agnivo988" title="Project Maintainer"></a> <a href="https://github.com/Gupta-02"><img src="https://github.com/Gupta-02.png" width="50" height="50" alt="Gupta-02" title="Contributor"></a> <a href="https://github.com/GauravKarakoti"><img src="https://github.com/GauravKarakoti.png" width="50" height="50" alt="GauravKarakoti" title="Contributor"></a> <a href="https://github.com/Sappymukherjee214"><img src="https://github.com/Sappymukherjee214.png" width="50" height="50" alt="Sappymukherjee214" title="Contributor"></a> <a href="https://github.com/ItsMeArm00n"><img src="https://github.com/ItsMeArm00n.png" width="50" height="50" alt="ItsMeArm00n" title="Contributor"></a> <a href="https://github.com/MuktaRedij"><img src="https://github.com/MuktaRedij.png" width="50" height="50" alt="MuktaRedij" title="Contributor"></a> <a href="https://github.com/Kiran95021"><img src="https://github.com/Kiran95021.png" width="50" height="50" alt="Kiran95021" title="Contributor"></a> <a href="https://github.com/Shriii19"><img src="https://github.com/Shriii19.png" width="50" height="50" alt="Shriii19" title="Contributor"></a> <a href="https://github.com/KUMARI-SONALIUPADHYAY"><img src="https://github.com/KUMARI-SONALIUPADHYAY.png" width="50" height="50" alt="KUMARI-SONALIUPADHYAY" title="Contributor"></a> <a href="https://github.com/magic-peach"><img src="https://github.com/magic-peach.png" width="50" height="50" alt="magic-peach" title="Contributor"></a> <a href="https://github.com/coderabbitai"><img src="https://github.com/coderabbitai.png" width="50" height="50" alt="coderabbitai[bot]" title="Bot Contributor"></a> <a href="https://github.com/sahoo-tech"><img src="https://github.com/sahoo-tech.png" width="50" height="50" alt="sahoo-tech" title="Contributor"></a> <a href="https://github.com/Abhijeet-980"><img src="https://github.com/Abhijeet-980.png" width="50" height="50" alt="Abhijeet-980" title="Contributor"></a> <a href="https://github.com/Diksha78-bot"><img src="https://github.com/Diksha78-bot.png" width="50" height="50" alt="Diksha78-bot" title="Bot Contributor"></a> <a href="https://github.com/Shivani-Meena07"><img src="https://github.com/Shivani-Meena07.png" width="50" height="50" alt="Shivani-Meena07" title="Contributor"></a> <a href="https://github.com/ShashankSaga"><img src="https://github.com/ShashankSaga.png" width="50" height="50" alt="ShashankSaga" title="Contributor"></a>
+### Project Maintainer
+- [@agnivo988](https://github.com/agnivo988)
 
-
+### Contributors
+<a href="https://github.com/Aamod007"><img src="https://github.com/Aamod007.png" width="50" height="50" alt="Aamod007" title="Contributor"></a> <a href="https://github.com/Aditya8369"><img src="https://github.com/Aditya8369.png" width="50" height="50" alt="Aditya8369" title="Contributor"></a> <a href="https://github.com/agnivo988"><img src="https://github.com/agnivo988.png" width="50" height="50" alt="agnivo988" title="Project Maintainer"></a> <a href="https://github.com/Gupta-02"><img src="https://github.com/Gupta-02.png" width="50" height="50" alt="Gupta-02" title="Contributor"></a> <a href="https://github.com/GauravKarakoti"><img src="https://github.com/GauravKarakoti.png" width="50" height="50" alt="GauravKarakoti" title="Contributor"></a> <a href="https://github.com/Sappymukherjee214"><img src="https://github.com/Sappymukherjee214.png" width="50" height="50" alt="Sappymukherjee214" title="Contributor"></a> <a href="https://github.com/ItsMeArm00n"><img src="https://github.com/ItsMeArm00n.png" width="50" height="50" alt="ItsMeArm00n" title="Contributor"></a> <a href="https://github.com/MuktaRedij"><img src="https://github.com/MuktaRedij.png" width="50" height="50" alt="MuktaRedij" title="Contributor"></a> <a href="https://github.com/Kiran95021"><img src="https://github.com/Kiran95021.png" width="50" height="50" alt="Kiran95021" title="Contributor"></a> <a href="https://github.com/Shriii19"><img src="https://github.com/Shriii19.png" width="50" height="50" alt="Shriii19" title="Contributor"></a> <a href="https://github.com/KUMARI-SONALIUPADHYAY"><img src="https://github.com/KUMARI-SONALIUPADHYAY.png" width="50" height="50" alt="KUMARI-SONALIUPADHYAY" title="Contributor"></a> <a href="https://github.com/magic-peach"><img src="https://github.com/magic-peach.png" width="50" height="50" alt="magic-peach" title="Contributor"></a> <a href="https://github.com/coderabbitai"><img src="https://github.com/coderabbitai.png" width="50" height="50" alt="coderabbitai[bot]" title="coderabbitai[bot]"></a>
 
 ---
 
 ## License
-**MIT License © 2026 Agniva Mukherjee**
+**MIT License © 2026 Agniva Mukherjee**. See [LICENSE](LICENSE) for details.

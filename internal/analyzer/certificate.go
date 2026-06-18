@@ -137,9 +137,12 @@ func GenerateCertificate(owner, repo string, client *github.Client) (*Certificat
 		return nil, fmt.Errorf("failed to get contributors: %w", err)
 	}
 
+	// Check releases
+	hasReleases, _ := client.HasReleases(owner, repo)
+
 	// Calculate scores
 	healthScore := CalculateHealth(repoInfo, commits)
-	maturityScore, maturityLevel := RepoMaturityScore(repoInfo, len(commits), len(contributors), false)
+	maturityScore, maturityLevel := RepoMaturityScore(repoInfo, len(commits), len(contributors), hasReleases)
 	busFactor, busRisk := BusFactor(contributors)
 
 	// Determine primary language

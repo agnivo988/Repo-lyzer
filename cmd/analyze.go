@@ -315,6 +315,9 @@ var analyzeCmd = &cobra.Command{
 		busFactor, busRisk := analyzer.BusFactor(contributors)
 		overallProgress.CompleteStep("Bus factor analysis complete")
 
+		// Check releases
+		hasReleases, _ := client.HasReleases(owner, repo)
+
 		// Calculate repository maturity score and level
 		overallProgress.StartStep("📈 Calculating repository maturity")
 		maturityScore, maturityLevel :=
@@ -322,7 +325,7 @@ var analyzeCmd = &cobra.Command{
 				repoInfo,
 				len(commits),
 				len(contributors),
-				false, // Assuming no releases check for simplicity
+				hasReleases,
 			)
 		overallProgress.CompleteStep("Maturity score calculated")
 
