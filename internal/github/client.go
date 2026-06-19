@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -284,7 +285,12 @@ func (c *Client) GetFileContent(owner, repo, path string) (string, error) {
 			return cached.(string), nil
 		}
 
-		url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path)
+		segments := strings.Split(path, "/")
+		for i, seg := range segments {
+			segments[i] = url.PathEscape(seg)
+		}
+		escapedPath := strings.Join(segments, "/")
+		url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, escapedPath)
 
 		var result struct {
 			Content  string `json:"content"`
