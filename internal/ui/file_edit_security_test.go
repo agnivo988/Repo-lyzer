@@ -92,3 +92,60 @@ func TestSanitizeRepoPath_RemovesExtraSeparatorsAndEscapes(t *testing.T) {
 		t.Fatalf("sanitizeRepoPath() retained duplicate separators: %q", got)
 	}
 }
+
+func TestSanitizeRepoPath_RejectsPathTraversal(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		path string
+	}{
+		{"double dot segment", "../../cmd/root.go"},
+		{"double dot in middle", "cmd/../../root.go"},
+		{"double dot at end", "cmd/.."},
+		{"bare double dot", ".."},
+		{"single dot segment", "./cmd/root.go"},
+		{"bare single dot", "."},
+		{"single dot in middle", "cmd/./root.go"},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := sanitizeRepoPath(tc.path)
+			if err == nil {
+				t.Fatalf("sanitizeRepoPath(%q) expected error for path traversal, got nil", tc.path)
+			}
+		})
+	}
+}
+
+func TestSanitizeRepoPath_AcceptsValidPaths(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		path string
+		want string
+	}{
+		{"simple file", "cmd/root.go", "cmd/root.go"},
+		{"nested path", "internal/github/client.go", "internal/github/client.go"},
+		{"file with dots in name", "v1.2.3/CHANGELOG.md", "v1.2.3/CHANGELOG.md"},
+		{"leading slash stripped", "/cmd/root.go", "cmd/root.go"},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := sanitizeRepoPath(tc.path)
+			if err != nil {
+				t.Fatalf("sanitizeRepoPath(%q) unexpected error: %v", tc.path, err)
+			}
+			if got != tc.want {
+				t.Fatalf("sanitizeRepoPath(%q) = %q, want %q", tc.path, got, tc.want)
+			}
+		})
+	}
+}
