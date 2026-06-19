@@ -127,6 +127,7 @@ func (c *Client) get(url string, target interface{}) error {
 			remaining := resp.Header.Get("X-RateLimit-Remaining")
 			resetTime := resp.Header.Get("X-RateLimit-Reset")
 
+			// Primary rate limit: X-RateLimit-Remaining is exhausted, or explicit 429.
 			if remaining == "0" || resp.StatusCode == 429 {
 				resetUnix, _ := strconv.ParseInt(resetTime, 10, 64)
 				resetAt := time.Unix(resetUnix, 0)
@@ -149,6 +150,28 @@ func (c *Client) get(url string, target interface{}) error {
 				// Authenticated: wait and retry
 				select {
 				case <-time.After(waitTime + time.Second):
+					continue
+				case <-c.ctx.Done():
+					return c.ctx.Err()
+				}
+			}
+
+			// Secondary rate limit: GitHub returns 403 with a Retry-After header
+			// (primary quota is not exhausted, so remaining != "0").
+			// See: https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#about-secondary-rate-limits
+			if retryAfter := resp.Header.Get("Retry-After"); retryAfter != "" {
+				waitSecs, err := strconv.Atoi(retryAfter)
+				if err != nil || waitSecs <= 0 {
+					waitSecs = 60 // safe default per GitHub guidance
+				}
+				waitTime := time.Duration(waitSecs) * time.Second
+
+				resp.Body.Close()
+				if attempt == maxRetries {
+					return fmt.Errorf("GitHub secondary rate limit exceeded; retry after %s", formatDuration(waitTime))
+				}
+				select {
+				case <-time.After(waitTime):
 					continue
 				case <-c.ctx.Done():
 					return c.ctx.Err()
