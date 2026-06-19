@@ -48,6 +48,14 @@ func (c *Client) GetContributors(owner, repo string) ([]Contributor, error) {
 			}
 
 			allContributors = append(allContributors, contributors...)
+
+			// Stop when fewer than per_page results — this is the last page.
+			// Avoids one unnecessary extra API call when contributor count is
+			// an exact multiple of perPage (e.g. 100, 200, 300).
+			if len(contributors) < perPage {
+				break
+			}
+
 			page++
 		}
 
