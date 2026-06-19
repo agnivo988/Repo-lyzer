@@ -42,12 +42,12 @@ func (c *Client) GetContributors(owner, repo string) ([]Contributor, error) {
 				return nil, err
 			}
 
-			// Stop when no more contributors
-			if len(contributors) == 0 {
+			allContributors = append(allContributors, contributors...)
+
+			// Stop when we got fewer results than requested — this is the last page
+			if len(contributors) < perPage {
 				break
 			}
-
-			allContributors = append(allContributors, contributors...)
 			page++
 		}
 
