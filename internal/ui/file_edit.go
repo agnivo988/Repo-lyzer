@@ -263,6 +263,11 @@ func sanitizeRepoPath(filePath string) (string, error) {
 			continue
 		}
 
+		// Reject path traversal segments before any other check.
+		if p == ".." || p == "." {
+			return "", fmt.Errorf("invalid file path")
+		}
+
 		for _, r := range p {
 			if unicode.IsControl(r) {
 				return "", fmt.Errorf("invalid file path")
