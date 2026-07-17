@@ -231,6 +231,10 @@ var analyzeCmd = &cobra.Command{
 			overallProgress.StartStep("🐛 Fetching open issues")
 			issues, err = client.GetIssues(owner, repo, "open")
 			if err != nil {
+				if isRateLimitError(err) {
+					overallProgress.Finish()
+					return fmt.Errorf("analysis incomplete: failed to fetch open issues because of GitHub rate limiting: %w", err)
+				}
 				issues = []github.Issue{} // fallback
 			}
 			overallProgress.CompleteStep("Open issues fetched")
@@ -444,6 +448,14 @@ var analyzeCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+func isRateLimitError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errorText := strings.ToLower(err.Error())
+	return strings.Contains(errorText, "rate limit") || strings.Contains(errorText, "rate-limit")
 }
 
 // runSummary performs a quick summary analysis of a repository
