@@ -64,6 +64,11 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		format, _ := cmd.Flags().GetString("format")
 		savePath, _ := cmd.Flags().GetString("save")
+		if savePath != "" {
+			if err := validateCompareSavePath(savePath); err != nil {
+				return err
+			}
+		}
 		format = strings.ToLower(strings.TrimSpace(format))
 		if format == "" {
 			format = "terminal"
@@ -177,6 +182,14 @@ func saveCompareOutput(path string, data []byte) error {
 	}
 
 	return os.WriteFile(path, data, 0644)
+}
+
+func validateCompareSavePath(path string) error {
+	cleanPath := filepath.Clean(path)
+	if filepath.IsAbs(path) || cleanPath == ".." || strings.HasPrefix(cleanPath, ".."+string(filepath.Separator)) {
+		return fmt.Errorf("save path must stay within the current directory: %q", path)
+	}
+	return nil
 }
 
 func init() {
