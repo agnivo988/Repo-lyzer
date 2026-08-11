@@ -253,7 +253,10 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get file tree: %w", err)
 		}
 		overallProgress.CompleteStep("File structure scanned")
-		cacheInstance, _ := cache.NewCache()
+		cacheInstance, cacheErr := cache.NewCache()
+		if cacheErr != nil {
+			return fmt.Errorf("failed to initialize cache: %w", cacheErr)
+		}
 		// Incremental analysis support
 		if incremental {
 

@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"time"
+	"unicode"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
@@ -253,8 +253,9 @@ func runTrendsForecast(owner, repo string, months int, modelName string, jsonFla
 	// Overall trend label from forecast
 	trendLabel := "Stable"
 	if forecast.Trend != "" {
-		// capitalize
-		trendLabel = strings.Title(forecast.Trend)
+		r := []rune(forecast.Trend)
+		r[0] = unicode.ToUpper(r[0])
+		trendLabel = string(r)
 	}
 	fmt.Printf("Trend: %s\n\n", trendLabel)
 
