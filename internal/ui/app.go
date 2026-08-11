@@ -1132,9 +1132,13 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		}
 
 		// Stage 7: Security vulnerability scan
-		security, securityErr := analyzer.ScanDependencies(deps)
-		if securityErr != nil && errors.Is(securityErr, context.Canceled) {
-			return securityErr
+		security, securityErr := analyzer.ScanDependencies(ctx, deps, analyzer.DefaultOSVURL)
+		if securityErr != nil {
+			if errors.Is(securityErr, context.Canceled) {
+				return securityErr
+			}
+			// Record/surface the fault cleanly to the UI and continue with analysis
+			log.Printf("Security scan error for %s: %v", repoName, securityErr)
 		}
 		if err := ctx.Err(); err != nil {
 			return err
