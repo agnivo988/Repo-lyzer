@@ -1,0 +1,88 @@
+{
+  "Repo": {
+    "name": "",
+    "owner": {
+      "login": "",
+      "name": "",
+      "avatar_url": ""
+    },
+    "full_name": "owner/repo",
+    "stargazers_count": 0,
+    "forks_count": 0,
+    "open_issues_count": 2,
+    "description": "",
+    "created_at": "0001-01-01T00:00:00Z",
+    "updated_at": "0001-01-01T00:00:00Z",
+    "pushed_at": "0001-01-01T00:00:00Z",
+    "watchers_count": 0,
+    "language": "",
+    "fork": false,
+    "archived": false,
+    "private": false,
+    "default_branch": "",
+    "html_url": "",
+    "clone_url": ""
+  },
+  "Commits": null,
+  "Contributors": null,
+  "FileTree": null,
+  "Languages": null,
+  "HealthScore": 0,
+  "BusFactor": 0,
+  "BusRisk": "",
+  "MaturityScore": 0,
+  "MaturityLevel": "",
+  "Dependencies": null,
+  "ContributorInsights": null,
+  "Security": null,
+  "CodeQuality": null,
+  "License": null,
+  "ContributorActivity": {
+    "Last90Days": 0,
+    "Last180Days": 0,
+    "Trend": "",
+    "Insight": ""
+  },
+  "RiskAlerts": null,
+  "QualityDashboard": null,
+  "Issues": [
+    {
+      "number": 1,
+      "title": "",
+      "state": "",
+      "created_at": "0001-01-01T00:00:00Z",
+      "updated_at": "0001-01-01T00:00:00Z",
+      "closed_at": null,
+      "comments": 0,
+      "labels": null,
+      "user": {
+        "login": "",
+        "name": "",
+        "avatar_url": ""
+      }
+    },
+    {
+      "number": 2,
+      "title": "",
+      "state": "",
+      "created_at": "0001-01-01T00:00:00Z",
+      "updated_at": "0001-01-01T00:00:00Z",
+      "closed_at": null,
+      "comments": 0,
+      "labels": null,
+      "user": {
+        "login": "",
+        "name": "",
+        "avatar_url": ""
+      }
+    }
+  ],
+  "PRs": null,
+  "MaintainerAnalysis": null,
+  "ContributionScore": {
+    "score": 0,
+    "level": "",
+    "strengths": null,
+    "weaknesses": null
+  }
+}

@@ -33,15 +33,16 @@ const (
 )
 
 type DashboardModel struct {
-	data        AnalysisResult
-	BackToMenu  bool
-	width       int
-	height      int
-	showExport  bool
-	statusMsg   string
-	currentView dashboardView
-	showHelp    bool
-	cacheStatus string // "fresh", "cached", or ""
+	data           AnalysisResult
+	BackToMenu     bool
+	width          int
+	height         int
+	showExport     bool
+	statusMsg      string
+	currentView    dashboardView
+	showHelp       bool
+	cacheStatus    string // "fresh", "cached", "synced", or ""
+	refreshSummary *RefreshSummary
 
 	// Precalculated fields for performance
 	// Precalculated fields for performance
@@ -60,6 +61,7 @@ func (m DashboardModel) Init() tea.Cmd { return nil }
 
 func (m *DashboardModel) SetData(data AnalysisResult) {
 	m.data = data
+	m.refreshSummary = nil
 	// Precalculate heavy charts
 	m.precalcActivity = analyzer.CommitsPerDay(m.data.Commits)
 
@@ -73,6 +75,10 @@ func (m *DashboardModel) SetData(data AnalysisResult) {
 
 func (m *DashboardModel) SetCacheStatus(status string) {
 	m.cacheStatus = status
+}
+
+func (m *DashboardModel) SetRefreshSummary(summary *RefreshSummary) {
+	m.refreshSummary = summary
 }
 
 type exportMsg struct {
@@ -353,10 +359,30 @@ func (m DashboardModel) overviewView() string {
 		cacheIndicator = "🟡 Cached"
 	case "expired":
 		cacheIndicator = "🔴 Expired"
+	case "stale":
+		cacheIndicator = "🔴 Stale"
+	case "synced":
+		cacheIndicator = "🔄 Synced"
 	}
 
 	header := TitleStyle.Render(fmt.Sprintf(" %s ", m.data.Repo.FullName))
 	subHeader := SubtleStyle.Render(fmt.Sprintf(" %s", cacheIndicator))
+
+	refreshBox := ""
+	if m.refreshSummary != nil && !m.refreshSummary.LastSync.IsZero() {
+		refreshLines := []string{
+			fmt.Sprintf("Last Sync: %s", formatRelativeTime(m.refreshSummary.LastSync)),
+			"",
+			"Fetching:",
+			pluralizedCount(m.refreshSummary.NewIssues, "new issue", "new issues"),
+			pluralizedCount(m.refreshSummary.NewPullRequests, "new pull request", "new pull requests"),
+			fmt.Sprintf("%d new contributor", m.refreshSummary.NewContributors),
+		}
+		if m.refreshSummary.NewContributors != 1 {
+			refreshLines[len(refreshLines)-1] = fmt.Sprintf("%d new contributors", m.refreshSummary.NewContributors)
+		}
+		refreshBox = CardStyle.Render(strings.Join(refreshLines, "\n"))
+	}
 
 	metrics := fmt.Sprintf(
 		"💚 Health:   %d/100\n"+
@@ -421,25 +447,59 @@ func (m DashboardModel) overviewView() string {
 		bottomPanel = riskPanel
 	}
 
+	sections := []string{lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader)}
+	if refreshBox != "" {
+		sections = append(sections, refreshBox)
+	}
+	sections = append(sections,
+		lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
+		bottomPanel,
+	)
+
 	trendSeries := m.buildMonthlyTrendSeries(4)
 	trendsPanel := m.repositoryTrendsSummaryCard(trendSeries)
-
-	panels := []string{
-		lipgloss.JoinVertical(
-			lipgloss.Left,
-			lipgloss.JoinHorizontal(lipgloss.Center, header, subHeader),
-			"\n",
-			lipgloss.JoinHorizontal(lipgloss.Top, metricsBox, chartBox),
-			"\n",
-			bottomPanel,
-		),
-	}
 	if trendsPanel != "" {
-		panels = append(panels, "\n", trendsPanel)
+		sections = append(sections, trendsPanel)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, panels...)
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 
+}
+
+func formatRelativeTime(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
+	delta := time.Since(t)
+	if delta < time.Minute {
+		return "just now"
+	}
+	if delta < time.Hour {
+		minutes := int(delta.Minutes())
+		if minutes == 1 {
+			return "1 minute ago"
+		}
+		return fmt.Sprintf("%d minutes ago", minutes)
+	}
+	if delta < 24*time.Hour {
+		hours := int(delta.Hours())
+		if hours == 1 {
+			return "1 hour ago"
+		}
+		return fmt.Sprintf("%d hours ago", hours)
+	}
+	if delta < 48*time.Hour {
+		return "Yesterday"
+	}
+	return t.Format("2006-01-02 15:04")
+}
+
+func pluralizedCount(count int, singular string, plural string) string {
+	if count == 1 {
+		return fmt.Sprintf("1 %s", singular)
+	}
+	return fmt.Sprintf("%d %s", count, plural)
 }
 
 func (m DashboardModel) repoView() string {

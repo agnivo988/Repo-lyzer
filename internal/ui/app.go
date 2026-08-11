@@ -62,6 +62,15 @@ type StatusMsg struct {
 	IsError bool
 }
 
+type refreshSummaryMsg struct {
+	Summary RefreshSummary
+}
+
+type syncAnalysisMsg struct {
+	Result  AnalysisResult
+	Summary RefreshSummary
+}
+
 func (s StatusMsg) Error() string {
 	return s.Message
 }
@@ -115,6 +124,9 @@ type MainModel struct {
 	progress        *ProgressTracker
 	cacheStatus     string
 	initialCmd      tea.Cmd
+	// cachedShown indicates a cached result was displayed; cachedShownRepo records which repo
+	cachedShown     bool
+	cachedShownRepo string
 }
 
 // NewMainModel creates a new MainModel with initialized sub-models
@@ -144,14 +156,6 @@ func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
 		cache:          cache,
 		appConfig:      config,
 		spinner:        s,
-	}
-
-	// Restore previous analysis result from disk so it survives refreshes
-	if saved, err := LoadCurrentAnalysis(); err == nil && saved != nil {
-		model.dashboard.SetData(*saved)
-		model.dashboard.SetCacheStatus("cached")
-		model.state = stateDashboard
-		model.cacheStatus = "cached"
 	}
 
 	return model
@@ -220,6 +224,17 @@ func (m MainModel) Init() tea.Cmd {
 	return m.initialCmd
 }
 
+// cacheStatusFromExpires returns "fresh" when now is before expires, otherwise "stale".
+func cacheStatusFromExpires(expires time.Time) string {
+	if expires.IsZero() {
+		return "cached"
+	}
+	if time.Now().Before(expires) {
+		return "fresh"
+	}
+	return "stale"
+}
+
 // Update handles messages and updates the model
 func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
@@ -250,7 +265,36 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		break
 
 	case ErrorMsg:
+		if m.state == stateDashboard {
+			m.dashboard.statusMsg = fmt.Sprintf("Sync failed: %v", error(msg))
+			return m, nil
+		}
 		m.err = error(msg)
+		return m, nil
+
+	case refreshSummaryMsg:
+		m.dashboard.SetRefreshSummary(&msg.Summary)
+		m.dashboard.SetCacheStatus("synced")
+		m.dashboard.statusMsg = "Repository data synced"
+		m.cacheStatus = "synced"
+		return m, nil
+
+	case syncAnalysisMsg:
+		m.dashboard.SetData(msg.Result)
+		m.dashboard.SetRefreshSummary(&msg.Summary)
+		m.dashboard.SetCacheStatus("synced")
+		m.dashboard.statusMsg = "Repository data synced"
+		m.cacheStatus = "synced"
+		m.progress = nil
+		m.analysisCancel = nil
+
+		history, _ := LoadHistory()
+		m.history.Entries = history.Entries
+		m.history.AddEntry(msg.Result)
+		m.history.Save()
+		if err := SaveCurrentAnalysis(msg.Result); err != nil {
+			log.Printf("Failed to persist synced analysis: %v", err)
+		}
 		return m, nil
 
 	case string:
@@ -265,6 +309,12 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.tree.height = m.windowHeight
 			m.state = stateTree
 			return m, nil
+		}
+		if msg == "refresh_data" && m.state == stateDashboard && m.dashboard.data.Repo != nil {
+			m.dashboard.statusMsg = "Syncing repository data..."
+			ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+			m.analysisCancel = cancel
+			return m, m.syncRepo(ctx, m.dashboard.data.Repo.FullName)
 		}
 	}
 
@@ -418,7 +468,19 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if result, ok := msg.(AnalysisResult); ok {
 			m.dashboard.SetData(result)
-			m.dashboard.SetCacheStatus("fresh")
+			// If a cached result was previously shown for the same repo, mark as synced.
+			repoName := ""
+			if result.Repo != nil {
+				repoName = result.Repo.FullName
+			}
+			if m.cachedShown && m.cachedShownRepo == repoName {
+				m.dashboard.SetCacheStatus("synced")
+			} else {
+				m.dashboard.SetCacheStatus("fresh")
+			}
+			// clear cachedShown marker
+			m.cachedShown = false
+			m.cachedShownRepo = ""
 			m.state = stateDashboard
 			m.progress = nil
 			m.cacheStatus = "fresh"
@@ -435,11 +497,21 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if cachedResult, ok := msg.(CachedAnalysisResult); ok {
 			m.dashboard.SetData(cachedResult.Result)
-			m.dashboard.SetCacheStatus("cached")
+			// Determine fresh/stale using ExpiresAt when available
+			status := "cached"
+			if !cachedResult.ExpiresAt.IsZero() {
+				status = cacheStatusFromExpires(cachedResult.ExpiresAt)
+			}
+			m.dashboard.SetCacheStatus(status)
 			m.state = stateDashboard
 			m.progress = nil
-			m.cacheStatus = "cached"
+			m.cacheStatus = status
 			m.analysisCancel = nil
+			// track that a cached result was shown for potential synced transition
+			if cachedResult.Result.Repo != nil {
+				m.cachedShown = true
+				m.cachedShownRepo = cachedResult.Result.Repo.FullName
+			}
 			// Save to history
 			history, _ := LoadHistory()
 			m.history.Entries = history.Entries
@@ -759,7 +831,51 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case stateDashboard:
+		if err, ok := msg.(error); ok {
+			m.dashboard.statusMsg = fmt.Sprintf("Sync failed: %v", err)
+			return m, nil
+		}
+
+		// Allow receiving a live AnalysisResult while on dashboard (e.g. background refresh completed)
+		if result, ok := msg.(AnalysisResult); ok {
+			m.dashboard.SetData(result)
+			// If a cached result was previously shown for the same repo, mark as synced.
+			repoName := ""
+			if result.Repo != nil {
+				repoName = result.Repo.FullName
+			}
+			if m.cachedShown && m.cachedShownRepo == repoName {
+				m.dashboard.SetCacheStatus("synced")
+			} else {
+				m.dashboard.SetCacheStatus("fresh")
+			}
+			// clear cachedShown marker
+			m.cachedShown = false
+			m.cachedShownRepo = ""
+			m.state = stateDashboard
+			m.progress = nil
+			m.cacheStatus = "fresh"
+			m.analysisCancel = nil
+			// Save to history and persist current analysis
+			history, _ := LoadHistory()
+			m.history.Entries = history.Entries
+			m.history.AddEntry(result)
+			m.history.Save()
+			if err := SaveCurrentAnalysis(result); err != nil {
+				log.Printf("Failed to persist current analysis: %v", err)
+			}
+			return m, nil
+		}
+
 		if key, ok := msg.(tea.KeyMsg); ok {
+			if key.String() == "r" {
+				if m.dashboard.data.Repo != nil {
+					m.dashboard.statusMsg = "Syncing repository data..."
+					ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+					m.analysisCancel = cancel
+					return m, m.syncRepo(ctx, m.dashboard.data.Repo.FullName)
+				}
+			}
 			if key.String() == "." {
 				if m.dashboard.data.Repo != nil {
 					m.input.input = m.dashboard.data.Repo.FullName
@@ -935,6 +1051,10 @@ func (m MainModel) cloneRepo(repoName string) tea.Cmd {
 }
 
 func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
+	return m.analyzeRepoWithCache(ctx, repoName, true)
+}
+
+func (m MainModel) analyzeRepoWithCache(ctx context.Context, repoName string, allowCache bool) tea.Cmd {
 	return func() tea.Msg {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -949,16 +1069,17 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		cacheKey := analysisCacheKey(repoName, analysisType)
 
 		// Check cache first
-		if m.cache != nil {
+		if allowCache && m.cache != nil {
 			if entry, found := m.cache.Get(cacheKey); found {
 				// Unmarshal cached analysis
 				var result AnalysisResult
 				if err := json.Unmarshal(entry.Analysis, &result); err == nil {
 					// Return cached result with status
 					return CachedAnalysisResult{
-						Result:   result,
-						IsCached: true,
-						CachedAt: entry.CachedAt,
+						Result:    result,
+						IsCached:  true,
+						CachedAt:  entry.CachedAt,
+						ExpiresAt: entry.ExpiresAt,
 					}
 				}
 			}
@@ -1020,7 +1141,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		// Compare with cached incremental metadata
 		changedFiles := []string{}
 
-		if m.cache != nil {
+		if allowCache && m.cache != nil {
 			if entry, found := m.cache.GetWithoutTTLExpiration(cacheKey); found {
 				if entry.IncrementalMetadata != nil {
 
@@ -1033,19 +1154,16 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 						}
 					}
 
-					fmt.Printf("🔄 Incremental analysis enabled\n")
-					fmt.Printf("📂 Changed files detected: %d\n", len(changedFiles))
-
 					// No changes detected
 					if len(changedFiles) == 0 {
-						fmt.Println("✅ No repository changes detected. Using cached analysis.")
 						var result AnalysisResult
 						if err := json.Unmarshal(entry.Analysis, &result); err == nil {
 							// Return cached result with status
 							return CachedAnalysisResult{
-								Result:   result,
-								IsCached: true,
-								CachedAt: entry.CachedAt,
+								Result:    result,
+								IsCached:  true,
+								CachedAt:  entry.CachedAt,
+								ExpiresAt: entry.ExpiresAt,
 							}
 						}
 					}
@@ -1244,6 +1362,181 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 
 		return result
 	}
+}
+
+func (m MainModel) syncRepo(ctx context.Context, repoName string) tea.Cmd {
+	baseline := m.dashboard.data
+
+	return func() tea.Msg {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		parts := strings.Split(repoName, "/")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid repository name: %s", repoName)
+		}
+
+		token := ""
+		if m.appConfig != nil {
+			token = m.appConfig.GitHubToken
+		}
+		client := github.NewClientWithToken(token)
+		client.SetContext(ctx)
+
+		repo, err := client.GetRepo(parts[0], parts[1])
+		if err != nil {
+			return fmt.Errorf("failed to sync repository details: %w", err)
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		issues, err := client.GetIssues(parts[0], parts[1], "open")
+		if err != nil {
+			return fmt.Errorf("failed to sync issues: %w", err)
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		prs, err := client.GetPullRequests(parts[0], parts[1], "open")
+		if err != nil {
+			return fmt.Errorf("failed to sync pull requests: %w", err)
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		contributors, err := client.GetContributorsWithAvatars(parts[0], parts[1], 15)
+		if err != nil {
+			return fmt.Errorf("failed to sync contributors: %w", err)
+		}
+
+		result := baseline
+		result.Repo = repo
+		result.Issues = issues
+		result.PRs = prs
+		result.Contributors = contributors
+		result.ContributorInsights = analyzer.AnalyzeContributors(contributors)
+		result.HealthScore = analyzer.CalculateHealth(repo, result.Commits)
+		result.BusFactor, result.BusRisk = analyzer.BusFactor(contributors)
+		result.MaturityScore, result.MaturityLevel = analyzer.RepoMaturityScore(repo, len(result.Commits), len(contributors), false)
+
+		commitsLast90Days := 0
+		cutoff := time.Now().AddDate(0, 0, -90)
+		for _, c := range result.Commits {
+			if c.Commit.Author.Date.After(cutoff) {
+				commitsLast90Days++
+			}
+		}
+		result.RiskAlerts = analyzer.AnalyzeRiskAlerts(
+			result.BusFactor,
+			result.HealthScore,
+			commitsLast90Days,
+			result.Security != nil && result.Security.CriticalCount > 0,
+		)
+
+		result.QualityDashboard = analyzer.GenerateQualityDashboard(
+			repo,
+			result.Commits,
+			contributors,
+			result.HealthScore,
+			result.BusFactor,
+			result.MaturityLevel,
+			result.MaturityScore,
+			result.Security,
+			result.CodeQuality,
+			result.Dependencies,
+			nil,
+		)
+
+		hasLockFile := result.Dependencies != nil && result.Dependencies.HasLockFile
+		result.MaintainerAnalysis = analyzer.AnalyzeMaintainerDashboard(
+			repo,
+			prs,
+			issues,
+			result.HealthScore,
+			result.BusFactor,
+			hasLockFile,
+			contributors,
+		)
+
+		if m.cache != nil {
+			cacheKey := analysisCacheKey(repoName, m.analysisType)
+			var currentHashes map[string]cache.FileMetadata
+			if entry, found := m.cache.GetWithoutTTLExpiration(cacheKey); found {
+				currentHashes = entry.IncrementalMetadata
+			}
+			if err := m.cache.SetWithMetadata(cacheKey, result, currentHashes); err != nil {
+				return fmt.Errorf("failed to update cache after sync: %w", err)
+			}
+		}
+
+		return syncAnalysisMsg{
+			Result: result,
+			Summary: RefreshSummary{
+				LastSync:        time.Now(),
+				NewIssues:       countNewIssues(baseline.Issues, result.Issues),
+				NewPullRequests: countNewPullRequests(baseline.PRs, result.PRs),
+				NewContributors: countNewContributors(baseline.Contributors, result.Contributors),
+			},
+		}
+	}
+}
+
+func countNewIssues(cached, current []github.Issue) int {
+	issueSet := make(map[int]struct{}, len(cached))
+	for _, issue := range cached {
+		if issue.PullRequest != nil {
+			continue
+		}
+		issueSet[issue.Number] = struct{}{}
+	}
+
+	newIssues := 0
+	for _, issue := range current {
+		if issue.PullRequest != nil {
+			continue
+		}
+		if _, found := issueSet[issue.Number]; !found {
+			newIssues++
+		}
+	}
+
+	return newIssues
+}
+
+func countNewPullRequests(cached, current []github.PullRequest) int {
+	pullRequestSet := make(map[int]struct{}, len(cached))
+	for _, pullRequest := range cached {
+		pullRequestSet[pullRequest.Number] = struct{}{}
+	}
+
+	newPullRequests := 0
+	for _, pullRequest := range current {
+		if _, found := pullRequestSet[pullRequest.Number]; !found {
+			newPullRequests++
+		}
+	}
+
+	return newPullRequests
+}
+
+func countNewContributors(cached, current []github.Contributor) int {
+	contributorSet := make(map[string]struct{}, len(cached))
+	for _, contributor := range cached {
+		contributorSet[strings.ToLower(contributor.Login)] = struct{}{}
+	}
+
+	newContributors := 0
+	for _, contributor := range current {
+		if _, found := contributorSet[strings.ToLower(contributor.Login)]; !found {
+			newContributors++
+		}
+	}
+
+	return newContributors
 }
 
 func (m MainModel) checkOwnership() bool {

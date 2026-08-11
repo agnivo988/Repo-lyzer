@@ -30,11 +30,12 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
-	github "github.com/agnivo988/Repo-lyzer/internal/github"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	github "github.com/agnivo988/Repo-lyzer/internal/github"
 )
 
 // CacheEntry represents a cached analysis result with metadata.
