@@ -40,6 +40,7 @@ type Monitor struct {
 	ctx           context.Context
 	cancel        context.CancelFunc
 	wg            sync.WaitGroup
+	workerWg      sync.WaitGroup
 	notifications chan Notification
 	startOnce     sync.Once
 }
@@ -62,6 +63,7 @@ func NewMonitor(owner, repo string, interval time.Duration) (*Monitor, error) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	client.SetContext(ctx)
 
 	return &Monitor{
 		client:        client,
@@ -122,7 +124,10 @@ func (m *Monitor) Stop() {
 // monitorLoop runs the main monitoring loop
 func (m *Monitor) monitorLoop() {
 	defer m.wg.Done()
-	defer close(m.notifications)
+	defer func() {
+		m.workerWg.Wait()
+		close(m.notifications)
+	}()
 
 	ticker := time.NewTicker(m.interval)
 	defer ticker.Stop()
@@ -142,22 +147,35 @@ func (m *Monitor) monitorLoop() {
 
 // checkForUpdates performs the actual monitoring checks
 func (m *Monitor) checkForUpdates() {
-	m.stateMutex.Lock()
-	defer m.stateMutex.Unlock()
-
 	// Check for new commits
-	m.checkCommits()
+	m.workerWg.Add(1)
+	go func() {
+		defer m.workerWg.Done()
+		m.checkCommits()
+	}()
 
 	// Check for new issues
-	m.checkIssues()
+	m.workerWg.Add(1)
+	go func() {
+		defer m.workerWg.Done()
+		m.checkIssues()
+	}()
 
 	// Check for new pull requests
-	m.checkPullRequests()
+	m.workerWg.Add(1)
+	go func() {
+		defer m.workerWg.Done()
+		m.checkPullRequests()
+	}()
 
 	// Check for contributor changes
-	m.checkContributors()
+	m.workerWg.Add(1)
+	go func() {
+		defer m.workerWg.Done()
+		m.checkContributors()
+	}()
 
-	// Save state
+	// Save state periodically
 	m.saveState()
 }
 
@@ -165,13 +183,20 @@ func (m *Monitor) checkForUpdates() {
 func (m *Monitor) checkCommits() {
 	commits, err := m.client.GetCommits(m.owner, m.repo, 1) // Get latest commit
 	if err != nil {
-		log.Printf("Failed to get commits: %v", err)
+		// Suppress logs if context was cancelled
+		if m.ctx.Err() == nil {
+			log.Printf("Failed to get commits: %v", err)
+		}
 		return
 	}
 
 	if len(commits) > 0 {
 		latestCommit := commits[0]
-		if latestCommit.SHA != m.state.LastCommitSHA {
+		m.stateMutex.RLock()
+		lastSHA := m.state.LastCommitSHA
+		m.stateMutex.RUnlock()
+
+		if latestCommit.SHA != lastSHA {
 			// New commit detected
 			notification := Notification{
 				Type:      "commit",
@@ -180,10 +205,17 @@ func (m *Monitor) checkCommits() {
 				Timestamp: time.Now(),
 				Severity:  "info",
 			}
-			m.notifications <- notification
 
+			select {
+			case <-m.ctx.Done():
+				return
+			case m.notifications <- notification:
+			}
+
+			m.stateMutex.Lock()
 			m.state.LastCommitSHA = latestCommit.SHA
 			m.state.LastUpdated = time.Now()
+			m.stateMutex.Unlock()
 		}
 	}
 }
@@ -214,14 +246,20 @@ func countPRs(items []github.Issue) int {
 func (m *Monitor) checkIssues() {
 	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
 	if err != nil {
-		log.Printf("Failed to get issues: %v", err)
+		if m.ctx.Err() == nil {
+			log.Printf("Failed to get issues: %v", err)
+		}
 		return
 	}
 
 	actualIssuesCount := countIssues(issues)
 
+	m.stateMutex.RLock()
+	lastCount := m.state.LastIssueCount
+	m.stateMutex.RUnlock()
+
 	// Only notify when the count actually changes
-	if actualIssuesCount != m.state.LastIssueCount {
+	if actualIssuesCount != lastCount {
 		notification := Notification{
 			Type:      "issue",
 			Title:     "Issues Update",
@@ -229,8 +267,16 @@ func (m *Monitor) checkIssues() {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+
+		select {
+		case <-m.ctx.Done():
+			return
+		case m.notifications <- notification:
+		}
+
+		m.stateMutex.Lock()
 		m.state.LastIssueCount = actualIssuesCount
+		m.stateMutex.Unlock()
 	}
 }
 
@@ -238,14 +284,20 @@ func (m *Monitor) checkIssues() {
 func (m *Monitor) checkPullRequests() {
 	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
 	if err != nil {
-		log.Printf("Failed to get pull requests: %v", err)
+		if m.ctx.Err() == nil {
+			log.Printf("Failed to get pull requests: %v", err)
+		}
 		return
 	}
 
 	actualPRCount := countPRs(issues)
 
+	m.stateMutex.RLock()
+	lastCount := m.state.LastPRCount
+	m.stateMutex.RUnlock()
+
 	// Only notify when the PR count actually changes
-	if actualPRCount != m.state.LastPRCount {
+	if actualPRCount != lastCount {
 		notification := Notification{
 			Type:      "pr",
 			Title:     "Pull Requests Update",
@@ -253,8 +305,16 @@ func (m *Monitor) checkPullRequests() {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+
+		select {
+		case <-m.ctx.Done():
+			return
+		case m.notifications <- notification:
+		}
+
+		m.stateMutex.Lock()
 		m.state.LastPRCount = actualPRCount
+		m.stateMutex.Unlock()
 	}
 }
 
@@ -262,12 +322,18 @@ func (m *Monitor) checkPullRequests() {
 func (m *Monitor) checkContributors() {
 	contributors, err := m.client.GetContributors(m.owner, m.repo)
 	if err != nil {
-		log.Printf("Failed to get contributors: %v", err)
+		if m.ctx.Err() == nil {
+			log.Printf("Failed to get contributors: %v", err)
+		}
 		return
 	}
 
+	m.stateMutex.RLock()
+	lastCount := m.state.LastContributorCount
+	m.stateMutex.RUnlock()
+
 	// Check if the contributor count has changed
-	if len(contributors) != m.state.LastContributorCount {
+	if len(contributors) != lastCount {
 		notification := Notification{
 			Type:      "contributor",
 			Title:     "Contributor Update",
@@ -275,8 +341,16 @@ func (m *Monitor) checkContributors() {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+
+		select {
+		case <-m.ctx.Done():
+			return
+		case m.notifications <- notification:
+		}
+
+		m.stateMutex.Lock()
 		m.state.LastContributorCount = len(contributors)
+		m.stateMutex.Unlock()
 	}
 }
 
@@ -338,12 +412,16 @@ func (m *Monitor) loadState() {
 
 // saveState saves the monitoring state to cache
 func (m *Monitor) saveState() {
-	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
+	m.stateMutex.RLock()
 	if m.state == nil {
+		m.stateMutex.RUnlock()
 		return
 	}
 
 	stateCopy := *m.state
+	m.stateMutex.RUnlock()
+
+	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
 	if stateCopy.Owner == "" {
 		stateCopy.Owner = m.owner
 	}
