@@ -74,6 +74,20 @@ func TestParseRequirementsTxt(t *testing.T) {
 				{Name: "numpy", Version: "<= 1.20", Type: "production"},
 			},
 		},
+		{
+			name:    "Package with space after compatible release comparator (~= )",
+			content: "requests ~= 2.28.0",
+			expected: []Dependency{
+				{Name: "requests", Version: "~= 2.28.0", Type: "production"},
+			},
+		},
+		{
+			name:    "Package with space after arbitrary equality comparator (=== )",
+			content: "numpy === 1.20.0",
+			expected: []Dependency{
+				{Name: "numpy", Version: "=== 1.20.0", Type: "production"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
