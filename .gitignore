@@ -1,5 +1,11 @@
 exports/history.json
 
+# Generated analysis output
+analysis.json
+
+# Node.js lockfile (not needed for Go project)
+package-lock.json
+
 # Go build artifacts
 repo-lyzer.exe
 repo-lyzer
