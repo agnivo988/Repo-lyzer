@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// TestParseRequirementsTxt tests the parsing of Python requirements.txt files
+// with various version specifier formats including spaced comparators.
 func TestParseRequirementsTxt(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -100,6 +102,8 @@ func TestParseRequirementsTxt(t *testing.T) {
 	}
 }
 
+// TestParseCargoToml tests the parsing of Rust Cargo.toml files
+// with both simple and inline table dependency formats.
 func TestParseCargoToml(t *testing.T) {
 	content := `
 [dependencies]
