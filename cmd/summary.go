@@ -43,11 +43,6 @@ Examples:
 			fmt.Println("Usage:   repo-lyzer summary <repository>")
 			fmt.Println("Example: repo-lyzer summary golang/go")
 			return fmt.Errorf("repository name required")
-		} else if len(args) > 1 {
-			fmt.Println("Error: too many arguments provided.")
-			fmt.Println("Usage:   repo-lyzer summary <repository>")
-			fmt.Println("Example: repo-lyzer summary golang/go")
-			return fmt.Errorf("too many arguments: expected 1, got %d", len(args))
 		}
 
 		// Validate the repository URL format
