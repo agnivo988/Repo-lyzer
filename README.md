@@ -189,7 +189,7 @@ go build -o repo-lyzer .
 
 ### Contributors
 <a href="https://github.com/agnivo988/Repo-lyzer/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=agnivo988/Repo-lyzer" />
+  <img src="https://contrib.rocks/image?repo=agnivo988/Repo-lyzer" alt="Contributors" />
 </a>
 
 ---
