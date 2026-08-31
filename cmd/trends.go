@@ -253,8 +253,8 @@ func runTrendsForecast(owner, repo string, months int, modelName string, jsonFla
 	// Overall trend label from forecast
 	trendLabel := "Stable"
 	if forecast.Trend != "" {
-		// capitalize
-		trendLabel = strings.Title(forecast.Trend)
+		// capitalize first letter
+		trendLabel = strings.ToUpper(forecast.Trend[:1]) + forecast.Trend[1:]
 	}
 	fmt.Printf("Trend: %s\n\n", trendLabel)
 
