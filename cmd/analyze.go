@@ -63,10 +63,6 @@ func validateRepoURL(repoArg string) (owner, repo string, err error) {
 		return "", "", fmt.Errorf("owner name is too long (maximum 39 characters)")
 	}
 
-	if len(owner) < 1 {
-		return "", "", fmt.Errorf("owner name is too short (minimum 1 character)")
-	}
-
 	if strings.HasPrefix(owner, "-") || strings.HasSuffix(owner, "-") {
 		return "", "", fmt.Errorf("owner name cannot start or end with a hyphen")
 	}
@@ -84,10 +80,6 @@ func validateRepoURL(repoArg string) (owner, repo string, err error) {
 
 	if len(repo) > 100 {
 		return "", "", fmt.Errorf("repository name is too long (maximum 100 characters)")
-	}
-
-	if len(repo) < 1 {
-		return "", "", fmt.Errorf("repository name is too short (minimum 1 character)")
 	}
 
 	// Repository names can contain more characters than usernames
