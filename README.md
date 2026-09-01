@@ -128,6 +128,7 @@ The `docker-compose.yml` mounts a local `./data` directory to persist settings a
 ## Documentation
 
 ### For Contributors
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contributing guide and GSSoC 2026 contributor instructions
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) – Complete architecture guide  
 - [ANALYZER_INTEGRATION.md](docs/ANALYZER_INTEGRATION.md) – Adding new analyzers  
 - [IMPLEMENTATION_DETAILS.md](docs/IMPLEMENTATION_DETAILS.md) – Technical deep dive
