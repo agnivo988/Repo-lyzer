@@ -92,7 +92,11 @@ func ScanDependencies(deps *DependencyAnalysis) (*SecurityScanResult, error) {
 
 		for _, dep := range file.Dependencies {
 			result.ScannedPackages++
-			vulns, _ := queryOSV(client, dep.Name, dep.Version, ecosystem)
+			vulns, err := queryOSV(client, dep.Name, dep.Version, ecosystem)
+			if err != nil {
+				// Log error but continue scanning other packages
+				continue
+			}
 
 			for _, v := range vulns {
 				vuln := convertVuln(v, dep.Name, dep.Version)
@@ -131,15 +135,24 @@ func queryOSV(client *http.Client, pkg, ver, eco string) ([]osvVuln, error) {
 		query.Version = ver
 	}
 
-	data, _ := json.Marshal(query)
+	data, err := json.Marshal(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal OSV query: %w", err)
+	}
 	resp, err := client.Post("https://api.osv.dev/v1/query", "application/json", strings.NewReader(string(data)))
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("OSV API returned status %d", resp.StatusCode)
+	}
+
 	var r osvResponse
-	json.NewDecoder(resp.Body).Decode(&r)
+	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		return nil, fmt.Errorf("failed to decode OSV response: %w", err)
+	}
 	return r.Vulns, nil
 }
 
