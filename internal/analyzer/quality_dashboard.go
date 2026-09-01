@@ -3,6 +3,7 @@ package analyzer
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/github"
 )
@@ -307,9 +308,14 @@ func generateDashboardRecommendations(
 }
 
 func countRecentCommits(commits []github.Commit) int {
-	// This is a simplified version - in practice you'd check commit dates
-	// For now, we'll assume all commits in the slice are recent
-	return len(commits)
+	cutoff := time.Now().AddDate(0, 0, -90)
+	count := 0
+	for _, c := range commits {
+		if c.Commit.Author.Date.After(cutoff) {
+			count++
+		}
+	}
+	return count
 }
 
 // GetRiskLevelColor returns color styling for risk level
