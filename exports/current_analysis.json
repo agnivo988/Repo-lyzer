@@ -1,0 +1,8184 @@
+{
+  "Repo": {
+    "name": "Repo-lyzer",
+    "owner": {
+      "login": "agnivo988",
+      "name": "",
+      "avatar_url": "https://avatars.githubusercontent.com/u/183830443?v=4"
+    },
+    "full_name": "agnivo988/Repo-lyzer",
+    "stargazers_count": 78,
+    "forks_count": 72,
+    "open_issues_count": 93,
+    "description": "Repo-lyzer is a developer-focused CLI tool built in Go language that analyzes and compares GitHub repositories to help understand code structure, quality, and changes efficiently. It provides insights like file tree analysis, repository comparison, and actionable metrics, making it easier for developers and recruiters to evaluate projects quickly.",
+    "created_at": "2026-01-01T18:05:27Z",
+    "updated_at": "2026-06-02T04:48:49Z",
+    "pushed_at": "2026-06-02T04:48:44Z",
+    "watchers_count": 78,
+    "language": "Go",
+    "fork": false,
+    "archived": false,
+    "private": false,
+    "default_branch": "main",
+    "html_url": "https://github.com/agnivo988/Repo-lyzer",
+    "clone_url": "https://github.com/agnivo988/Repo-lyzer.git"
+  },
+  "Commits": [
+    {
+      "sha": "6d6fa8987572b06ee27c78729a570173e38aeba0",
+      "commit": {
+        "author": {
+          "date": "2026-06-02T04:48:43Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "a177fb73b3560e47b29b2b143c11cc6a701475c4",
+      "commit": {
+        "author": {
+          "date": "2026-06-02T04:46:38Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "36091a11db4f7df5954722721d92c3c13b5f9dc4",
+      "commit": {
+        "author": {
+          "date": "2026-06-02T04:44:16Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d972ccdd3849756bbd294b1633f0634f34626192",
+      "commit": {
+        "author": {
+          "date": "2026-06-01T05:07:47Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "5c8daf351dbf8615af741ede08f6113cd98c6c91",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T16:26:38Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "ebc9ebd90e1ae639290a39d021e7f1f8dd345775",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T12:16:15Z"
+        }
+      },
+      "author": {
+        "login": "bhavyaxtech"
+      }
+    },
+    {
+      "sha": "d4ecd7afdc101d0c746793e76850883ed4afdc21",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T08:32:32Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "fe7694dabe74f2fefc0a233fc4a094e701e9cc8c",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T08:17:26Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "c719d60b1cd3aeb9a7eb21d330b899577fb7cbb2",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T04:42:14Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "9d2afdb1144a7f7748b3d26ae6c8c1e64d8f7406",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T04:40:39Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "2434fea8f79e3f514d15b17ff96edf9054fb7ed3",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T04:37:54Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "6407d736fdd600bd205ab08c66ed852dcb6767bc",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T04:33:58Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "a55c785a3abf4a6bdf6dd98f864fb41000034cdc",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T03:56:48Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "fb3e395018d8db5c445caa1237b57957a10ff33a",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T03:33:48Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "9986380daf2ccd704f72d676509cd8436ac9bedd",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T03:31:36Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "a295369d1bbaedc51a16f421c235ab1a44294cd3",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T03:23:36Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "7685cd4bd4f2358ca5b805140bf46fac9602a138",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T03:19:33Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "45890701050e57b9d3dd7e786db099e3f70256cf",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T03:17:18Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "dafd32f576c9473056bfbcec353a845bb4564fdb",
+      "commit": {
+        "author": {
+          "date": "2026-05-31T03:05:01Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "e7634802e8533d5c1df24a037c10e08b5e1bcaa8",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T19:33:51Z"
+        }
+      },
+      "author": null
+    },
+    {
+      "sha": "34d2a641854be18d8238a21e52d3309a68fd7e77",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T18:52:43Z"
+        }
+      },
+      "author": null
+    },
+    {
+      "sha": "e5205a7c7478c8971cde72a0f6374d783767dd73",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T18:52:01Z"
+        }
+      },
+      "author": null
+    },
+    {
+      "sha": "e2ffbaa656573888c131767e4b5bc7b994ce37b4",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T17:58:06Z"
+        }
+      },
+      "author": {
+        "login": "Vaibhav-0111"
+      }
+    },
+    {
+      "sha": "a2bc7fbe75b20bc07815241b4cfc9d3d94d4588b",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T17:08:04Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "caa86415a8531e31d7f125825b3bac5247d94649",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T17:00:53Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "613576df05a6d2074769672352ae7dcbc86300b6",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T15:35:22Z"
+        }
+      },
+      "author": {
+        "login": "DhruvalBhinsara1"
+      }
+    },
+    {
+      "sha": "2d61d16d0902bc4e25799039d1d083c0fb52d654",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T15:34:20Z"
+        }
+      },
+      "author": {
+        "login": "DhruvalBhinsara1"
+      }
+    },
+    {
+      "sha": "9207ef155d6842c7905d82f3e98ddafac1f02fe5",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T15:33:29Z"
+        }
+      },
+      "author": {
+        "login": "DhruvalBhinsara1"
+      }
+    },
+    {
+      "sha": "e54f30094cd0bbc30e8a37df4e051c689c9ce4ae",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T15:28:45Z"
+        }
+      },
+      "author": {
+        "login": "DhruvalBhinsara1"
+      }
+    },
+    {
+      "sha": "1ee0f6d6376e33e1b09e8fef0c1ca4e0c755d23e",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T15:27:05Z"
+        }
+      },
+      "author": {
+        "login": "DhruvalBhinsara1"
+      }
+    },
+    {
+      "sha": "611a77107a771064e36cae771e2fb85562ac54de",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T14:32:44Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "c48010e9aad57ffafef289085ed7490e45b45472",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T14:19:20Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "84572b4f454da55354386453b3297a86fab42793",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T14:18:58Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "a67e85c11847009f4008ca27149e9ba87c77c178",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T14:18:20Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "471a885bca08df2baff911cd306d27f5a9222899",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T10:58:59Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "b0bd10a6a48658abe5265e3205355b9bd008aa42",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:54:58Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "f32bb8c43fa5c1ad64a56e18ac9ac2298af012e1",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:46:17Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "2c04ef6bf502a0c25a8d74fa0dce7a015b44dc00",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:44:15Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "cf3a42c50551e55a114a24449fa81c1135b02060",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:39:49Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "852fb61e4b321ca40b8bd5a0f4bf381b28a1a9de",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:37:28Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "7e53315974a8dd53415f65765e33abc833f0ad18",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:29:09Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "d2b8467da222cd2239546f9d9d48201555cea59b",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:22:41Z"
+        }
+      },
+      "author": {
+        "login": "adyamohanka"
+      }
+    },
+    {
+      "sha": "79cfb737fc42f3cdb3797679785a63fa9f8255bf",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:17:45Z"
+        }
+      },
+      "author": {
+        "login": "Shiva210Jyoti"
+      }
+    },
+    {
+      "sha": "164dbdae7484d679f62d8b592fb740e1a102b5a8",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T09:10:47Z"
+        }
+      },
+      "author": {
+        "login": "Shiva210Jyoti"
+      }
+    },
+    {
+      "sha": "a896717edc73dd2d5dd4cd6d8b87932914cee9eb",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T08:54:21Z"
+        }
+      },
+      "author": {
+        "login": "adyamohanka"
+      }
+    },
+    {
+      "sha": "d3992b351331b2b0849579fe0cb7bf85fa36b4a4",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T08:15:21Z"
+        }
+      },
+      "author": {
+        "login": "sonusharma6-dsa"
+      }
+    },
+    {
+      "sha": "a9b1f93bd1805df7399267f1d262da1f1072ac97",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T08:08:38Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d97d7e23a795a15a9a6a98e6d591394582a25eb1",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T08:04:42Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "b8c57795f27ccfd9017e270e68cf0d4b87af3241",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T07:51:29Z"
+        }
+      },
+      "author": {
+        "login": "sanzzzz-g"
+      }
+    },
+    {
+      "sha": "3f899b6cda7bd2ad0ac3efbc3a2cd3d3a1d302db",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T07:08:21Z"
+        }
+      },
+      "author": {
+        "login": "sanzzzz-g"
+      }
+    },
+    {
+      "sha": "823ea740ae5136bccb0727f7cdf17a6f1960e53a",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T06:51:38Z"
+        }
+      },
+      "author": {
+        "login": "rajsingh1301"
+      }
+    },
+    {
+      "sha": "a920cff820c03b70d92b4fa0b70734d230a80b3e",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T06:32:08Z"
+        }
+      },
+      "author": {
+        "login": "sonusharma6-dsa"
+      }
+    },
+    {
+      "sha": "4d28cd01e4e444154a5aa6b9335ce295489fb6d9",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T06:28:58Z"
+        }
+      },
+      "author": {
+        "login": "sonusharma6-dsa"
+      }
+    },
+    {
+      "sha": "32668fa1985493e61e3e5e6d30282934ac75856d",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T06:10:50Z"
+        }
+      },
+      "author": {
+        "login": "sonusharma6-dsa"
+      }
+    },
+    {
+      "sha": "dba9ff7fb63d7aeaa37911a950a9252c4b67de86",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T05:44:25Z"
+        }
+      },
+      "author": {
+        "login": "sonusharma6-dsa"
+      }
+    },
+    {
+      "sha": "dfe43de11aee9f51b4143a4088c3f5cf84da6681",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T05:39:39Z"
+        }
+      },
+      "author": {
+        "login": "sujitha-kotyada"
+      }
+    },
+    {
+      "sha": "39947fbd815044eaca3d0f1950f728595cac99bb",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T05:28:58Z"
+        }
+      },
+      "author": {
+        "login": "sonusharma6-dsa"
+      }
+    },
+    {
+      "sha": "29e626c247a3675dd2e28439d11786a0c3e18083",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:56:43Z"
+        }
+      },
+      "author": {
+        "login": "DhruvalBhinsara1"
+      }
+    },
+    {
+      "sha": "98671351cbbbab9444b6cfe3f9ce78ff922f4294",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:46:23Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "b2baf20a1b47aed59d08767155f1273601849197",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:44:44Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "b9204663dba8c5bea94764c518c38a6d010768e5",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:44:29Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1e2d8d48a12cbfd9f0fd1b31146b02b0a725e27f",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:44:24Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "ccfa03ddff2fda9441d3348f637302cfe1288b98",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:43:29Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "2d7794aad30165d57fd5a4a08db6947b587be24e",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:38:41Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "f10512fb4914f2b2a85fc6ae7e565e0ab56180df",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:23:03Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "bb3e513a32e3af3beb59cb538c378e5f9c54cfb7",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T03:10:47Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "116f79f4113649b9472a796fbf3a7fe783776af1",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T02:56:58Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "f97153e79873ed29456883446819cd90760fbb49",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T02:55:23Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "e6da27ad9c5e1f2b4dbdbb1c738f3e566142d84c",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T02:46:29Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "f41ee22f60412172819ed0d6001229320c5d552e",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T02:39:13Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "97c519e2815de2600818d07249ceaa42ec5ce2e5",
+      "commit": {
+        "author": {
+          "date": "2026-05-30T02:36:02Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "36da735a2c795676318f0a5d2222a4f7cf54917a",
+      "commit": {
+        "author": {
+          "date": "2026-05-29T20:59:51Z"
+        }
+      },
+      "author": null
+    },
+    {
+      "sha": "f75ab8f084dcb955605ee142fe21d73728b2be23",
+      "commit": {
+        "author": {
+          "date": "2026-05-29T15:22:25Z"
+        }
+      },
+      "author": {
+        "login": "Pranaykarvi"
+      }
+    },
+    {
+      "sha": "b7c86032ed03a8f15477a42ee79688c6e8ec85ad",
+      "commit": {
+        "author": {
+          "date": "2026-05-29T11:42:19Z"
+        }
+      },
+      "author": null
+    },
+    {
+      "sha": "89f1245b505dab5396e3f079f736952f9e6696b2",
+      "commit": {
+        "author": {
+          "date": "2026-05-29T09:29:18Z"
+        }
+      },
+      "author": {
+        "login": "adyamohanka"
+      }
+    },
+    {
+      "sha": "aad04656d4f5db09186b7955b0b0b5c6e74800f7",
+      "commit": {
+        "author": {
+          "date": "2026-05-29T04:06:10Z"
+        }
+      },
+      "author": {
+        "login": "adityashirsatrao007"
+      }
+    },
+    {
+      "sha": "a00bbfef54c420c6b6cca8bf0807f4ca2064009d",
+      "commit": {
+        "author": {
+          "date": "2026-05-28T19:43:03Z"
+        }
+      },
+      "author": {
+        "login": "Vaibhav-0111"
+      }
+    },
+    {
+      "sha": "7697b15b524692de61875c11bcba175d9ad294d5",
+      "commit": {
+        "author": {
+          "date": "2026-05-28T19:42:22Z"
+        }
+      },
+      "author": {
+        "login": "Vaibhav-0111"
+      }
+    },
+    {
+      "sha": "2e1ac8771ab0faf3c573abe03295616189b698c3",
+      "commit": {
+        "author": {
+          "date": "2026-05-28T19:33:33Z"
+        }
+      },
+      "author": {
+        "login": "Vaibhav-0111"
+      }
+    },
+    {
+      "sha": "531104e3e0aa05dc3405db52cbf942d5713059f3",
+      "commit": {
+        "author": {
+          "date": "2026-05-28T18:32:16Z"
+        }
+      },
+      "author": {
+        "login": "SenseiSuraj24"
+      }
+    },
+    {
+      "sha": "3999755ff502a5c83257011a32bbec3094aaa410",
+      "commit": {
+        "author": {
+          "date": "2026-05-28T18:31:58Z"
+        }
+      },
+      "author": {
+        "login": "SenseiSuraj24"
+      }
+    },
+    {
+      "sha": "d2f8260466fcd68083dc6d72464097c8644a31ff",
+      "commit": {
+        "author": {
+          "date": "2026-05-28T18:19:06Z"
+        }
+      },
+      "author": {
+        "login": "SenseiSuraj24"
+      }
+    },
+    {
+      "sha": "2d0b585b9a401ec5bede576270b407fbe5ca20f4",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T17:33:28Z"
+        }
+      },
+      "author": {
+        "login": "anshul23102"
+      }
+    },
+    {
+      "sha": "dcb190b49edb5c818781e6603f1b0578dc096c26",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:42:02Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "dd6f552cc903bac40378bd56ae150dabcfb2227f",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:41:51Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "9edca723a95cfb0aa0364af8fc178b3ee448e34f",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:41:42Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "099249992bf8be1a3a30ca17d540cb399b90606d",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:40:17Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "96ebc083262611e122a25f7177de1113111a22c3",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:40:08Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "05863bf648855f901d0bd2b5fccd7934c6730d7c",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:39:58Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "158f79848a4415bda1dddd8c49f8c14f66e6c055",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:38:59Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "202d46175015de8d9f301ae8402caaa63a2c1d27",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T16:38:45Z"
+        }
+      },
+      "author": {
+        "login": "pranav-cholleti"
+      }
+    },
+    {
+      "sha": "e4e1a3749f97420eb824e17b4fdf385d5bf0dbce",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T15:59:42Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "943b1950ea1774e2aec8e769e6233f3cbbe4bdf3",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T15:51:11Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d77adab0e5aab02aa229e6f1226f901130db1291",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T15:40:50Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "11d8428a4d8f1e4b8812b8103e71111d73857725",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T15:38:20Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "78d730af32f12c050c8c731f18873cc909bee3e5",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T15:37:19Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3406a0b558b56a4542b82f2682072c1b65b30a21",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T15:23:19Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "dd7af113108e92f76108b241be1d39d6e3aefcc4",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T10:54:52Z"
+        }
+      },
+      "author": {
+        "login": "Xenon010101"
+      }
+    },
+    {
+      "sha": "28243d1d1036a52c70b2eaa387d37f60bea13c42",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T10:54:47Z"
+        }
+      },
+      "author": {
+        "login": "Xenon010101"
+      }
+    },
+    {
+      "sha": "1f63508f40009d66af9ebd4eefab5afd2e491bab",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T10:54:41Z"
+        }
+      },
+      "author": {
+        "login": "Xenon010101"
+      }
+    },
+    {
+      "sha": "fa84acd6a95bf9fd4a97e5b1c9c9ad1c26911717",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T08:06:29Z"
+        }
+      },
+      "author": {
+        "login": "riddhima25bet10005-a11y"
+      }
+    },
+    {
+      "sha": "1cc8a30eedc4cfea22944d31aedc51ee8e3de623",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T07:56:30Z"
+        }
+      },
+      "author": {
+        "login": "jonahmichael"
+      }
+    },
+    {
+      "sha": "7aa5bc442168b2fb83350c0b24ca18c62262091f",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T07:47:00Z"
+        }
+      },
+      "author": {
+        "login": "riddhima25bet10005-a11y"
+      }
+    },
+    {
+      "sha": "c0d1b1a3392e9cb3c34b3ef8f4499bd111197cab",
+      "commit": {
+        "author": {
+          "date": "2026-05-27T07:39:43Z"
+        }
+      },
+      "author": {
+        "login": "jonahmichael"
+      }
+    },
+    {
+      "sha": "37ab03c25668d7d303f7425a7c2ae6cad5f15e46",
+      "commit": {
+        "author": {
+          "date": "2026-05-26T20:09:32Z"
+        }
+      },
+      "author": {
+        "login": "adyamohanka"
+      }
+    },
+    {
+      "sha": "da7771bc950b353e61dee8f8a3dc2dec52a1c736",
+      "commit": {
+        "author": {
+          "date": "2026-05-26T11:02:45Z"
+        }
+      },
+      "author": null
+    },
+    {
+      "sha": "bafaa3beb11dd4016e11c9b114492da28f9f170f",
+      "commit": {
+        "author": {
+          "date": "2026-05-26T10:24:57Z"
+        }
+      },
+      "author": {
+        "login": "riddhima25bet10005-a11y"
+      }
+    },
+    {
+      "sha": "ced02af861ca9bfdc6d17dda83991f448e3075c9",
+      "commit": {
+        "author": {
+          "date": "2026-05-26T04:40:39Z"
+        }
+      },
+      "author": {
+        "login": "PiyushRajan2007"
+      }
+    },
+    {
+      "sha": "cf52343c6d9ffbc46d5daf450426c61833d4e980",
+      "commit": {
+        "author": {
+          "date": "2026-05-25T18:10:17Z"
+        }
+      },
+      "author": {
+        "login": "riddhima25bet10005-a11y"
+      }
+    },
+    {
+      "sha": "b0536a0ac69d8ac5696840cd08d0e3a666b57ee6",
+      "commit": {
+        "author": {
+          "date": "2026-05-25T17:43:58Z"
+        }
+      },
+      "author": {
+        "login": "riddhima25bet10005-a11y"
+      }
+    },
+    {
+      "sha": "8ad719f37358d121485c23f20bbcd3c11d23398e",
+      "commit": {
+        "author": {
+          "date": "2026-05-25T15:38:54Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "2141394285745878b941c50294622f4d4d740d48",
+      "commit": {
+        "author": {
+          "date": "2026-05-25T14:20:35Z"
+        }
+      },
+      "author": {
+        "login": "Harshit-Maurya838"
+      }
+    },
+    {
+      "sha": "c26d3d8584cec017fc505e63b967e925250b4618",
+      "commit": {
+        "author": {
+          "date": "2026-05-25T14:18:41Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "fc247ad2d73e27c066a7fde789a58be6f9a958bd",
+      "commit": {
+        "author": {
+          "date": "2026-05-25T14:17:31Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "729bb6d6a3441871a9346a8bb68ea2450adf3c29",
+      "commit": {
+        "author": {
+          "date": "2026-05-22T13:13:52Z"
+        }
+      },
+      "author": {
+        "login": "srinithithirumaran"
+      }
+    },
+    {
+      "sha": "c576a1f1be4aa14339f6be324909a4240c4725cd",
+      "commit": {
+        "author": {
+          "date": "2026-05-22T13:08:10Z"
+        }
+      },
+      "author": {
+        "login": "srinithithirumaran"
+      }
+    },
+    {
+      "sha": "ac88714e03cbfbc5ca51de5cc7805ae2f09051bc",
+      "commit": {
+        "author": {
+          "date": "2026-05-22T05:32:40Z"
+        }
+      },
+      "author": {
+        "login": "navya-1907"
+      }
+    },
+    {
+      "sha": "c708e0689bc9258ecedbcb6060d1c8b26a46f082",
+      "commit": {
+        "author": {
+          "date": "2026-05-22T05:30:41Z"
+        }
+      },
+      "author": {
+        "login": "navya-1907"
+      }
+    },
+    {
+      "sha": "b943d21315eda5b9b3755006c4363610bc5aed8c",
+      "commit": {
+        "author": {
+          "date": "2026-05-22T05:29:36Z"
+        }
+      },
+      "author": {
+        "login": "navya-1907"
+      }
+    },
+    {
+      "sha": "df34fb7f8db6a1d49335fae84befe311245952e4",
+      "commit": {
+        "author": {
+          "date": "2026-05-22T05:03:35Z"
+        }
+      },
+      "author": {
+        "login": "srinithithirumaran"
+      }
+    },
+    {
+      "sha": "8bb917f6ed874ddb96b5ff8aa8765abdd4e3f912",
+      "commit": {
+        "author": {
+          "date": "2026-05-21T15:02:46Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "2c7e76bd563d73beaa4690fcb915435e44f00f91",
+      "commit": {
+        "author": {
+          "date": "2026-05-21T14:23:50Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "8b3a1bca92fdfd518ad4a7795595c7758c6be587",
+      "commit": {
+        "author": {
+          "date": "2026-05-20T14:17:26Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "94b54256c9a26acf63b2a2b1a2d2102c5db9d562",
+      "commit": {
+        "author": {
+          "date": "2026-05-20T14:13:59Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "0fc11372871bcaa7df25ce5668d7c247eb057058",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T19:58:52Z"
+        }
+      },
+      "author": {
+        "login": "IshitaSingh0822"
+      }
+    },
+    {
+      "sha": "61512225adc75047ce5a4f2344eef2f779ab99ce",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T18:31:47Z"
+        }
+      },
+      "author": {
+        "login": "overhyped-pratham"
+      }
+    },
+    {
+      "sha": "18b95dc5750b5369fdd2d61fb15ff30a24e53599",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T17:34:30Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "38e128884c92d2c5e3e18ddd949352480c81c5d3",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T17:08:08Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "d026ffb0cc19b76edfd25e791c402b79ce41560b",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T17:03:25Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "86e626d94c06f6c67300052e96b168ceadf6f8a3",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:57:19Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "3e0774694e8c2c0e22c482333a8bcbe1c16fb9ad",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:05:36Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "179124fe2c72b126bcb19a94c7aa38879f603c81",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:05:07Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "cfa25f7c540131d53aa6eb8eb7f876734e68c530",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:04:53Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "66001e49ee17d17787a7c852161f28e32c4b658f",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:04:31Z"
+        }
+      },
+      "author": {
+        "login": "Aryan-B-Parikh"
+      }
+    },
+    {
+      "sha": "4f0a0d83bb92720383fe7ab6085c6f0b7f096ec2",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:03:36Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "0a6c6cf0f013c4c13b7131379ac2a629a483e42d",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:03:25Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "ee7d33e2a4c9f86682b5a36c032b173de431153c",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T16:03:09Z"
+        }
+      },
+      "author": {
+        "login": "tanmayythakare"
+      }
+    },
+    {
+      "sha": "e2a33bff2b3735d33f05ddc0948f0477ca487e62",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T15:48:43Z"
+        }
+      },
+      "author": {
+        "login": "Aryan-B-Parikh"
+      }
+    },
+    {
+      "sha": "439ea8485a2677446ea68d4bd17d2ac9916e2f4b",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T15:41:21Z"
+        }
+      },
+      "author": {
+        "login": "Aryan-B-Parikh"
+      }
+    },
+    {
+      "sha": "9c8a1ae830ad9a29b95b4d74dc49bee531376855",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T15:10:49Z"
+        }
+      },
+      "author": {
+        "login": "Aryan-B-Parikh"
+      }
+    },
+    {
+      "sha": "3b96c6139eba2c1f7525990645c9fc8d4696b12e",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T14:53:42Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "7a9f0106d82c4128d71aad1507cb498f336fc6cb",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T14:32:31Z"
+        }
+      },
+      "author": {
+        "login": "EchoOfCode"
+      }
+    },
+    {
+      "sha": "03f6976320d01c985fba2ccc89a3b31f6e39aa19",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T14:11:00Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d91051418f2bb75c7e3911d4e18cd5d4cd0a7165",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T14:08:08Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "bb767a227b9032bf943527b911a2f7f03c20dcec",
+      "commit": {
+        "author": {
+          "date": "2026-05-19T14:05:04Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "9449d874be83123940aa3120657e25d769ea8381",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T19:54:37Z"
+        }
+      },
+      "author": {
+        "login": "EchoOfCode"
+      }
+    },
+    {
+      "sha": "ceead30cccde4c34e0240478409227b23ce07c81",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T19:34:05Z"
+        }
+      },
+      "author": {
+        "login": "EchoOfCode"
+      }
+    },
+    {
+      "sha": "132d21a3faa849ccabe1fc4cc4290922e9f9d277",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T19:22:23Z"
+        }
+      },
+      "author": {
+        "login": "EchoOfCode"
+      }
+    },
+    {
+      "sha": "fb8c9cb140cccb56998938c5434a3fb44c69fb32",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T17:28:27Z"
+        }
+      },
+      "author": {
+        "login": "shrutip04"
+      }
+    },
+    {
+      "sha": "3d4b54de58b6f5442e639e1e22261766578a7924",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T16:48:50Z"
+        }
+      },
+      "author": {
+        "login": "shrutip04"
+      }
+    },
+    {
+      "sha": "dfc384217a4c1e2c15dcb6cdfcc2c7766ba77064",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T15:11:07Z"
+        }
+      },
+      "author": {
+        "login": "sanzzzz-g"
+      }
+    },
+    {
+      "sha": "561ed8969952cba57bb1e20d3853224c14c17876",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T13:55:59Z"
+        }
+      },
+      "author": {
+        "login": "sanzzzz-g"
+      }
+    },
+    {
+      "sha": "b5f4261562f0b832ac5f0fbf4f0894f549189d33",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T13:54:22Z"
+        }
+      },
+      "author": {
+        "login": "sanzzzz-g"
+      }
+    },
+    {
+      "sha": "762e631d1bd2eedf46f523fdcfd51155ca6ec78e",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T13:44:57Z"
+        }
+      },
+      "author": {
+        "login": "riddhima25bet10005-a11y"
+      }
+    },
+    {
+      "sha": "e51803947e62ed3b4bdf650d902112e8af552cc8",
+      "commit": {
+        "author": {
+          "date": "2026-05-18T05:46:26Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "0cd9272fad8cccf390d73ac377014686332beb22",
+      "commit": {
+        "author": {
+          "date": "2026-05-17T08:27:03Z"
+        }
+      },
+      "author": {
+        "login": "riddhima25bet10005-a11y"
+      }
+    },
+    {
+      "sha": "912f54c299812d4ebc1965ee9359367bf05c23d4",
+      "commit": {
+        "author": {
+          "date": "2026-04-17T06:09:46Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "2d04d4331593d409ca19133b576393cd83013adb",
+      "commit": {
+        "author": {
+          "date": "2026-04-15T17:14:45Z"
+        }
+      },
+      "author": {
+        "login": "Nitya-003"
+      }
+    },
+    {
+      "sha": "c19da271991c6947b7f0f44bcc191123e72f98e8",
+      "commit": {
+        "author": {
+          "date": "2026-04-15T17:13:36Z"
+        }
+      },
+      "author": {
+        "login": "Nitya-003"
+      }
+    },
+    {
+      "sha": "c7ff66dd959e3973a9b2ea3856387625ee9ee241",
+      "commit": {
+        "author": {
+          "date": "2026-04-15T17:05:13Z"
+        }
+      },
+      "author": {
+        "login": "Nitya-003"
+      }
+    },
+    {
+      "sha": "a2385384d6d0e0ea85f27316ddffd9fa91bc0cb7",
+      "commit": {
+        "author": {
+          "date": "2026-04-15T17:02:16Z"
+        }
+      },
+      "author": {
+        "login": "Nitya-003"
+      }
+    },
+    {
+      "sha": "90619a39cf8d9d2f97116d872e5871693c234ef2",
+      "commit": {
+        "author": {
+          "date": "2026-04-03T11:06:00Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "7fb97cf6f479173e4798f7be3a8b3763ec6bfff0",
+      "commit": {
+        "author": {
+          "date": "2026-04-02T15:09:02Z"
+        }
+      },
+      "author": {
+        "login": "AKSHEXXXX"
+      }
+    },
+    {
+      "sha": "5162b9eef8ca798b725e6b88bfbe60f3f47a00d4",
+      "commit": {
+        "author": {
+          "date": "2026-04-01T06:21:35Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "164018b92a61be21747440e26b4c8a15866b0db1",
+      "commit": {
+        "author": {
+          "date": "2026-04-01T06:18:42Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "601118e6be012ebb4fc50f1ecc8f7766e6b1320f",
+      "commit": {
+        "author": {
+          "date": "2026-03-31T18:35:37Z"
+        }
+      },
+      "author": {
+        "login": "AKSHEXXXX"
+      }
+    },
+    {
+      "sha": "e99d531e670ca63bc5f3795917305daeac5717c4",
+      "commit": {
+        "author": {
+          "date": "2026-03-29T03:49:50Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "4195c55d472560b3ea0ae47a887c6065a0dc203e",
+      "commit": {
+        "author": {
+          "date": "2026-03-28T06:44:03Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "8ed5f53dcf2a7ff85a6e27fa1b9631f3e2fd04ea",
+      "commit": {
+        "author": {
+          "date": "2026-03-28T06:41:07Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "50bd3b76283a5093b1e653369db7b582aa9fab4d",
+      "commit": {
+        "author": {
+          "date": "2026-03-28T06:22:35Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "a4c5795c050ec76343a34b69d48816c6dddb4faa",
+      "commit": {
+        "author": {
+          "date": "2026-03-27T13:25:11Z"
+        }
+      },
+      "author": {
+        "login": "akshatextreme"
+      }
+    },
+    {
+      "sha": "091fc76f0e88ac527b5f87b0d792507c9085b361",
+      "commit": {
+        "author": {
+          "date": "2026-03-20T03:18:43Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "fb18a7243baf6d20b362dc3afa484977e1bec6ca",
+      "commit": {
+        "author": {
+          "date": "2026-03-10T17:12:39Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d884b98eb807ad1e1401713f5b6ef39a0b190796",
+      "commit": {
+        "author": {
+          "date": "2026-03-06T09:55:11Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "070e49e820ba5efec736b684aa3ef13684fd3275",
+      "commit": {
+        "author": {
+          "date": "2026-03-06T05:15:45Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "147c94744224caaa0bc835f74c4018ccf21cd5c7",
+      "commit": {
+        "author": {
+          "date": "2026-03-05T14:52:07Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "4a223add6aa6691ed3f36de069b52241bef9675b",
+      "commit": {
+        "author": {
+          "date": "2026-03-05T14:28:26Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "79913bc1fcab924f09b3a70a294cfd510aa6ef02",
+      "commit": {
+        "author": {
+          "date": "2026-03-05T14:18:58Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "74b170040b70c89225bd251613ed31d7b887565d",
+      "commit": {
+        "author": {
+          "date": "2026-03-05T14:11:02Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "bd07c1dbab67c28fcc7f187bddb70711af93f48b",
+      "commit": {
+        "author": {
+          "date": "2026-03-04T05:47:36Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "362ee8105162af25caff31b2db3e06831f290750",
+      "commit": {
+        "author": {
+          "date": "2026-03-04T05:46:24Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "c5d4489b3119f6a90a99d957c445e04d4299b4ac",
+      "commit": {
+        "author": {
+          "date": "2026-02-21T15:56:41Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3f115ab9eeca373b89d4786ceba6929b56191d0a",
+      "commit": {
+        "author": {
+          "date": "2026-02-21T15:56:05Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "273ae017ec97b15408dc5d8a37f5b9ba5ebbff01",
+      "commit": {
+        "author": {
+          "date": "2026-02-21T15:53:05Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "998e6a8163bcb28f148986098030f6f86217520c",
+      "commit": {
+        "author": {
+          "date": "2026-02-19T16:02:03Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "b7403a4618759a7c7c02924c40cb3c5dbf2b1f62",
+      "commit": {
+        "author": {
+          "date": "2026-02-19T04:42:35Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "dd9d877367b371ec0d7d4a03b0d043f44a0a4535",
+      "commit": {
+        "author": {
+          "date": "2026-02-19T04:42:22Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "60c01346e8e322105047f2bd4b81ee70b43e59a6",
+      "commit": {
+        "author": {
+          "date": "2026-02-19T04:28:25Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "b32f457707ce4174d1e7922c5e95a122a395f58a",
+      "commit": {
+        "author": {
+          "date": "2026-02-15T08:19:56Z"
+        }
+      },
+      "author": {
+        "login": "madhav2348"
+      }
+    },
+    {
+      "sha": "64623cab3830873b99fda2d8448f6bcefa2d5da7",
+      "commit": {
+        "author": {
+          "date": "2026-02-15T08:03:09Z"
+        }
+      },
+      "author": {
+        "login": "madhav2348"
+      }
+    },
+    {
+      "sha": "22eac176c7f632545cb968bfc34a52fdd305fd21",
+      "commit": {
+        "author": {
+          "date": "2026-02-15T07:22:19Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "9b356eb19e5b2e6f1b083f485b4d5c49e3dfb018",
+      "commit": {
+        "author": {
+          "date": "2026-02-14T10:30:29Z"
+        }
+      },
+      "author": {
+        "login": "madhav2348"
+      }
+    },
+    {
+      "sha": "6eb56dfa380a70a2880ea4985ef8f694e817ef08",
+      "commit": {
+        "author": {
+          "date": "2026-02-12T06:30:08Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "010af2c781fc0cc1cd88b8443f2e10e307407730",
+      "commit": {
+        "author": {
+          "date": "2026-02-11T05:28:43Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "72762ece6a4aa96d0d03238a5cb3f10f0c9722e2",
+      "commit": {
+        "author": {
+          "date": "2026-02-10T07:33:18Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "89d32717e89844b9f697c882e550eb2dfbca7ecd",
+      "commit": {
+        "author": {
+          "date": "2026-02-10T07:29:56Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "818bdf1730f4f00dd4b7b7ea9e9c529fd1187f2d",
+      "commit": {
+        "author": {
+          "date": "2026-02-10T07:15:04Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "382d833772ef6cb0c0c11fc0e142c02eda55f4fd",
+      "commit": {
+        "author": {
+          "date": "2026-02-10T07:01:22Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "c2479a7fdd4b18fd1711e91c3c4a19e43152db75",
+      "commit": {
+        "author": {
+          "date": "2026-02-10T06:59:19Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "2ceabcf099ce405d7b071609b8c7f63afc53fec2",
+      "commit": {
+        "author": {
+          "date": "2026-02-09T08:03:29Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "8f20c1b3b1d85bb3755d21c222dbd2a86d488045",
+      "commit": {
+        "author": {
+          "date": "2026-02-09T08:03:07Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "4ef815d4fbe673a3fed6ce17b8b40f932c7d76ef",
+      "commit": {
+        "author": {
+          "date": "2026-02-09T08:02:19Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d23e1d3ffefa89891418baa41c51ab867b9f45dc",
+      "commit": {
+        "author": {
+          "date": "2026-02-08T07:22:32Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "9ed3014c0e22d0d1ac302c388245db03bfda22d3",
+      "commit": {
+        "author": {
+          "date": "2026-02-08T07:22:29Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "b32a8a27c52eec8bf2325b91ed33405185b741a3",
+      "commit": {
+        "author": {
+          "date": "2026-02-08T07:22:26Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "3e0d441fdec68f57ef7f042070d2fa581ae38aa2",
+      "commit": {
+        "author": {
+          "date": "2026-02-03T12:32:15Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "dc1f0a88d3a516b938d1c6de9b3eb0f7e6e10a08",
+      "commit": {
+        "author": {
+          "date": "2026-02-03T09:46:06Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "081a2ffcd35aca6f9d8feec94868abac52bfa2fb",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T19:18:29Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "6e741e0f730481b400c2b85e6e32c4cac713d3ca",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:58:59Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "0cd370905f7303dc7abf747c656864ac67908195",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:58:35Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "c7def8bb768ff4872ba9e66ffa53206877ad73fa",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:58:13Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3041a016457201fbaf0d226b5c73233a33a411c4",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:57:49Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "ac4bd0b770849fdb651e32fa5d01ebe1b51f742c",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:54:46Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "22df33a2e69bffc723f4e512d28632ea0199246a",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:54:25Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d2d806bd5147945bd80a0a749a8ff5c2bc9073b4",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:53:51Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "a8ab34973d25a02e9d4ea1590b729eaee9539888",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:44:10Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "b12c3be15b572c682d56deb77f44e7c2a096c793",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:44:07Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "e42203adcbfb61f62f67943988e1585903e0ddd0",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:44:02Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "f49d21dbc51df534658543d932c6a629f3161b74",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:43:58Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "c62611e72207b14cae4c338faf511c64d2a41a09",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:43:55Z"
+        }
+      },
+      "author": {
+        "login": "dependabot[bot]"
+      }
+    },
+    {
+      "sha": "ebdec173d39ec82c4b7e7381b9ae308fd18c9957",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:43:20Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1fa37134edcc76a3cd47a18e65432619bcc548fd",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:39:18Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3230a7680314632429384df18609335215a1adc9",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T09:22:19Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "89546705882686048e03ae770f81f55aee704485",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T08:08:29Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "060d6f281d9dbcac7b7a0ec8cf3dacd82915a586",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T08:03:25Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "c3a034d06e6bd398c6c6edb9506029425bb2958b",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T07:41:16Z"
+        }
+      },
+      "author": {
+        "login": "vedhapprakashni"
+      }
+    },
+    {
+      "sha": "79114d0fd0af208e3ded6436e7a3eb59fae9f2ec",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T06:33:24Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "78916e53fb0e4c9549d242f132f57a9637cc9d4b",
+      "commit": {
+        "author": {
+          "date": "2026-02-02T05:41:33Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "2648d60eb22a90d51a9527cb5518ac78eecc2e85",
+      "commit": {
+        "author": {
+          "date": "2026-01-31T18:24:00Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "e4e03a48c420a47fe7ca8d6cb123df0da28ba774",
+      "commit": {
+        "author": {
+          "date": "2026-01-31T18:09:50Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "3a52250c7018ec7e77a987d0e561ab41076a3f12",
+      "commit": {
+        "author": {
+          "date": "2026-01-31T17:21:37Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "107335b60903d7712653e95f14dd7ebb9e7e74ee",
+      "commit": {
+        "author": {
+          "date": "2026-01-31T09:53:38Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "18e5e829a31e8874fb7881997cc332413f0cb0ad",
+      "commit": {
+        "author": {
+          "date": "2026-01-31T09:50:23Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "f483746398e6f0e91c77d21fcdbd7867fe62dc32",
+      "commit": {
+        "author": {
+          "date": "2026-01-30T14:24:07Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "837a6bc2fdf0edbc9496e76e4704653271b0ddc2",
+      "commit": {
+        "author": {
+          "date": "2026-01-29T14:11:30Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "933156eea56cbef15cf1c6b7ff647fda47c2f2a8",
+      "commit": {
+        "author": {
+          "date": "2026-01-29T14:10:50Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "4c39aade98edf7c97603578d545b67e20b1fad20",
+      "commit": {
+        "author": {
+          "date": "2026-01-29T14:09:21Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "406eb2ed7a209e7758062af8a3b0167d81d2b256",
+      "commit": {
+        "author": {
+          "date": "2026-01-29T13:20:07Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "435d8f59ac6e60aff095a6172940ad8bca0e5c01",
+      "commit": {
+        "author": {
+          "date": "2026-01-29T13:13:41Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "a10dc861728c6787c9f037a07e636106da57f880",
+      "commit": {
+        "author": {
+          "date": "2026-01-29T13:09:27Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "f2593ac0df19299d023277093fe26ff5d03f6173",
+      "commit": {
+        "author": {
+          "date": "2026-01-29T10:05:26Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "afb5660c9ba2ad373a812588458a2b6a0868e75d",
+      "commit": {
+        "author": {
+          "date": "2026-01-28T18:37:01Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "5c3d9c731d92a38dcbf0460f1a60e1fd30c112d3",
+      "commit": {
+        "author": {
+          "date": "2026-01-27T14:25:32Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "ce17992cdba790d302a91095239c53830230b640",
+      "commit": {
+        "author": {
+          "date": "2026-01-27T10:34:43Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "7367e37ab43444978dde74f9e3d947849f6ded71",
+      "commit": {
+        "author": {
+          "date": "2026-01-27T10:33:59Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "a0f7751bedde9ad6a3664098263bd72d6eb8623e",
+      "commit": {
+        "author": {
+          "date": "2026-01-27T07:14:24Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "274577a1edbe2a9f001a8d27b6b841266595f5b6",
+      "commit": {
+        "author": {
+          "date": "2026-01-27T07:06:49Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "9dbbfcda1f55b49d1116de1f1888aabff6776c36",
+      "commit": {
+        "author": {
+          "date": "2026-01-27T05:55:39Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "41f7129c7f9a5d0a81d7fd071cad3a4ffc9935b4",
+      "commit": {
+        "author": {
+          "date": "2026-01-27T05:39:15Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "a699d357f93f9c04d8b9486061371fa53a51aced",
+      "commit": {
+        "author": {
+          "date": "2026-01-26T14:38:54Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "8952c56e01f6a40065265cefddc7233a1b21ab9a",
+      "commit": {
+        "author": {
+          "date": "2026-01-25T06:24:21Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "07c0146657c4014ad4fe235413549a3f3b488a19",
+      "commit": {
+        "author": {
+          "date": "2026-01-24T17:08:27Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "0117d35e6d8086a55e7dd14a895fbc531acd39eb",
+      "commit": {
+        "author": {
+          "date": "2026-01-24T04:51:14Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "e359a5eb073d1c9bfd94114583121b6d9bc1e62c",
+      "commit": {
+        "author": {
+          "date": "2026-01-24T04:51:08Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "bcd5c6e01f1f11b9dc6d3dbd398fbd7e673b3018",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T10:45:45Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "73769ea711c1ca369552e991620346884496bbcf",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T10:44:28Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "fa6fda16b09a285d5f4545ca9b548f9492834bda",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T08:03:45Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "e8dab2ba7896f1b5a211efad3ba6e1392ccb6b58",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T08:03:39Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "899e6ad8811a729dc500fd8c02eeb0398d3013c7",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T07:51:20Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "e6b3cc6423a9a5e769678d3edf16ec95cd56d2a5",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T07:36:41Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "e2933c5a7d56087e1f4dbdc9d9043b9b5df51d5f",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T07:33:51Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "e56c9a6f23501c3e6c5627a0ffd39b3f2924ab37",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T07:24:30Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "744ed24a92de42f85c7b38456244f21529cd2e65",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T05:51:15Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "9facebf251b57e6a844c8739891a23e8c8b2f9f8",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T05:30:10Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "b0a57243cfaca169b341dbce7ac4719a020b661f",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T05:07:12Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "f592ca7638df2b2ff2833328ccc6a0172a16dc65",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T04:51:26Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "9414720ee29491151d927dca2d517c860772dd05",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T04:21:00Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "083584adfecd5db18e8780059992a86b6295ccb6",
+      "commit": {
+        "author": {
+          "date": "2026-01-23T04:14:26Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "13800376fa8823f9ffd6cb9391ed7b69bfdbc0e1",
+      "commit": {
+        "author": {
+          "date": "2026-01-22T15:54:35Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "104fa260f71a55f0332e9d8e6440c103f2c8e294",
+      "commit": {
+        "author": {
+          "date": "2026-01-22T13:48:13Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "c89f10209c4df141af7ca8c44dc8883687b1d286",
+      "commit": {
+        "author": {
+          "date": "2026-01-22T05:13:01Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "92a1808bab1981572e18749ca2b79ad850b926b8",
+      "commit": {
+        "author": {
+          "date": "2026-01-22T04:36:54Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "c28b959fa442f69eb37b55b2a2aad331aacc7326",
+      "commit": {
+        "author": {
+          "date": "2026-01-22T04:30:59Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "6fa47db0aa5ff74bbd1af98ac7c30894b6e69ea5",
+      "commit": {
+        "author": {
+          "date": "2026-01-22T04:07:22Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "b2782028fd20c0e9a17dfdf77d498199b01a1b43",
+      "commit": {
+        "author": {
+          "date": "2026-01-21T17:35:17Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "a2bd4a35c2f102cf58155d9b12f6887a2a307df2",
+      "commit": {
+        "author": {
+          "date": "2026-01-21T15:59:21Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "de78e575012a6da71dc7b8b47a00d4320dd7c8ba",
+      "commit": {
+        "author": {
+          "date": "2026-01-21T15:43:02Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "af5e2e6c192566a8740050a2ba0b3b0a5cdb1c34",
+      "commit": {
+        "author": {
+          "date": "2026-01-21T04:14:40Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "e09e0265448de68b4ad4d28bd311cafba2af3948",
+      "commit": {
+        "author": {
+          "date": "2026-01-20T16:46:47Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "f1c43d7e8528fe4e32c4a9c545bc591d518186c7",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T18:30:09Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "687c3286afc6d50490528c3c2777dc70741d7119",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T18:29:20Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1a635dcb8ad98dfdc61ea020699d0dc911d659b1",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T18:18:26Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "81d695b9095ac42ec920e0c625b28ab741a2ac5e",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T18:16:37Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "3bd92c85abb4947c3901f82864525429070bb2e1",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T15:58:36Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "6c631affabc348cedf6dccdd48dfeef7b462a2b7",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T13:26:51Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "b261083b46f5724cb3e902f946a7306564149081",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T06:30:57Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "e5f71264d861661a480f01f6ad20d7867e2ce6e4",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T05:46:25Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "c7abc3bb297388809ba9b1bb6b46df3abed7a778",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T04:53:43Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "099d29bc6be15da06f276dfe49906bdc5339e764",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T04:53:37Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "1aeaa28862e523f89fcccce9e8c4d5ff1ffa9659",
+      "commit": {
+        "author": {
+          "date": "2026-01-19T04:46:13Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "5e06e07e7ba4c16796e0b2b719752ab2bc8a6161",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T13:01:58Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "fb46691b1ca404d9030c8f15f389f96873b52bf3",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T12:50:06Z"
+        }
+      },
+      "author": {
+        "login": "KUMARI-SONALIUPADHYAY"
+      }
+    },
+    {
+      "sha": "fec9cee757829911ab477c38ff7f643ed37f90db",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T12:13:05Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "a0c5f60bb180f1254a0212d1f1743bc976ff8359",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T12:12:47Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "385e088d36320c52e2dd29aaeecd7d7c6fd10a6d",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T11:59:33Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1966c5504def1968c488ecc8bc735cfc64e27001",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T09:48:12Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "85b1cdde48a12bc8d98476267388ab80359287ce",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T08:38:46Z"
+        }
+      },
+      "author": {
+        "login": "KUMARI-SONALIUPADHYAY"
+      }
+    },
+    {
+      "sha": "e9539803f997153fc691fa33f25879fb0cc99699",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T07:10:16Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "7732b285bf8323d92f1067e6c347b06c410337a0",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T07:04:37Z"
+        }
+      },
+      "author": {
+        "login": "KUMARI-SONALIUPADHYAY"
+      }
+    },
+    {
+      "sha": "e8a169ddb542298b9108cfa9aed8f6dac21cdb09",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T06:55:53Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "917514530422a398fb63b07fb6251f4eef842077",
+      "commit": {
+        "author": {
+          "date": "2026-01-18T06:50:44Z"
+        }
+      },
+      "author": {
+        "login": "KUMARI-SONALIUPADHYAY"
+      }
+    },
+    {
+      "sha": "0f55bc14ea3d92aa3647e4dd09ac71dcd9f57be7",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T14:30:28Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "819d31bc7cb65d9178081851749872b88a2b2793",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T14:25:10Z"
+        }
+      },
+      "author": {
+        "login": "Sappymukherjee214"
+      }
+    },
+    {
+      "sha": "a050efe88d66f9c151fb7913cbd3015a0f7da980",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T14:21:53Z"
+        }
+      },
+      "author": {
+        "login": "Sappymukherjee214"
+      }
+    },
+    {
+      "sha": "31f2f7b8e611f32ba3fd1581438fbf16b58aaae2",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T14:18:59Z"
+        }
+      },
+      "author": {
+        "login": "Sappymukherjee214"
+      }
+    },
+    {
+      "sha": "28a5be77dd11b606e6a9a7c3f154668d42707ca4",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T14:17:01Z"
+        }
+      },
+      "author": {
+        "login": "Sappymukherjee214"
+      }
+    },
+    {
+      "sha": "74eeeeaaecfb8013035647d23ba8643fed52af90",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T14:08:52Z"
+        }
+      },
+      "author": {
+        "login": "Sappymukherjee214"
+      }
+    },
+    {
+      "sha": "9e34285bdc23b2925d7c8eb8ddd50f97ea9e5d5d",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T13:52:51Z"
+        }
+      },
+      "author": {
+        "login": "Sappymukherjee214"
+      }
+    },
+    {
+      "sha": "e1bc959de0cb81e3cc2d63c42d1362f417be8ff4",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T13:24:07Z"
+        }
+      },
+      "author": {
+        "login": "Sappymukherjee214"
+      }
+    },
+    {
+      "sha": "39035a92dfc5e17985ec0656a4c0515725ca55e3",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T11:30:02Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "950f15d5c8c9a2c5ba94e034d6125cac8adf95a2",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T10:12:19Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "77c5713c911965a4cdf19a972e4c922ecac7a0fa",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T09:50:11Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "9dd9891e069f05d40e99deeb80852131f326512d",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T09:48:55Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "da6cb4705179f5b148874e6e8d92434801502c61",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T09:13:20Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "858cb2fa98b66966da54bde9eb46739f08f91bf8",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T09:12:08Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "d404901268e2fff01a9bbff3849310903920a530",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T08:33:03Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "1fa1ab686800e1b6a76acaa2e7910b3a0d6488fb",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T08:31:26Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "630998f74a8926fa100cf1ad96a355e2ab8c7f42",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T08:29:58Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "e231828b2eeb1c6b0acca6f89812309132a49b49",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T03:43:07Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "cf34cc2cb354ca5c8ef9fd6e133fd1b4afb63014",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T03:39:17Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1485161e405b943fe688df5de7f52132f6e4cbb8",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T03:36:30Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "ac07039a4291792e1a5d714c43261b31bd04e698",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T03:30:52Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "e2154b60e3d6e1f996060dc1882a3759fcdada53",
+      "commit": {
+        "author": {
+          "date": "2026-01-17T02:40:18Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1d1529589ad5a990f788181df72e6af487549584",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T17:56:40Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "c6d77c1772a4c0430f6ec87d7695ab7e6ffcdbc4",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T17:06:18Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "6fd9985b856bb6b325c18c64caae6d0beda59592",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T17:00:55Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "f2c2de9679f4f3adc14c02902cc280b4f8100e65",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T17:00:12Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3059424ac34fddc869b851efa6bdb8f8540aad4e",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T16:59:43Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "eb1db3d04c93118e677620d33de42eab096fa0ab",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T16:57:49Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "832cbe058a8f8b4ba3cbaa4af43d8517471d5bd3",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T16:48:20Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "027957b0a39fe7cf0593336c26eaab4d783f8ccb",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T16:48:04Z"
+        }
+      },
+      "author": {
+        "login": "MuktaRedij"
+      }
+    },
+    {
+      "sha": "cf025a040c980be94e26c8f0293a748253f3a21e",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T15:56:09Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "f5a13050e3377242333ddec3ad8bb74288a470b8",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T15:51:59Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "6f8d65b857fff62d47f88d5e044da30301ed9fdb",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T15:44:18Z"
+        }
+      },
+      "author": {
+        "login": "Gupta-02"
+      }
+    },
+    {
+      "sha": "ca88388a4680a730fe853d7c2602df6605e74407",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T14:41:46Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3dd230d503c4551c8ecb3e793b291b1247517cc4",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T13:36:37Z"
+        }
+      },
+      "author": {
+        "login": "MuktaRedij"
+      }
+    },
+    {
+      "sha": "fb2c252ae2c088e1ce3132d0ec7aeb7269659712",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T07:44:43Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "1a02cb912852d10d481394933b32b3ff16024a06",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T07:44:04Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "35c14867a1ba0a4b061c27a334546460d2de2740",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T05:24:06Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "564661bae204d46f3768700f85c3fd0c0f843e3f",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T05:23:25Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "4f683cc1ac00a390de5cc95bb3a2ef782a3b8db8",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T04:58:08Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "1c9109b2d423b56c9055370fa5e31a4ff55c7823",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T04:57:26Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "ff9b1ed6eb780a9cbc939d5d0b96f68bc71c2753",
+      "commit": {
+        "author": {
+          "date": "2026-01-16T04:48:36Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "749e12257b11802adb6a8818a1ade6abe2dc9e2d",
+      "commit": {
+        "author": {
+          "date": "2026-01-14T12:38:01Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "505e87aa54daf1a3b85684e29d1a8679afdadcf5",
+      "commit": {
+        "author": {
+          "date": "2026-01-14T11:15:40Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "3529f45c8a1fb3d6a8c8b88d4c1ab7234b2ad4a2",
+      "commit": {
+        "author": {
+          "date": "2026-01-14T10:40:07Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "cd4268cb5a6df279c8eb6445209da2bd8cb5390b",
+      "commit": {
+        "author": {
+          "date": "2026-01-14T10:39:27Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d08e233a6f10c763eb64e198b8557fe8f7b6241c",
+      "commit": {
+        "author": {
+          "date": "2026-01-14T07:09:14Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "03eaccead7ae5c7fd7a1184ad068b011963c19b4",
+      "commit": {
+        "author": {
+          "date": "2026-01-14T05:56:16Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "e3e93b3864baebd51460e4f8a72edd8898f42e6f",
+      "commit": {
+        "author": {
+          "date": "2026-01-13T19:36:23Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "882055ca02ecd9b23cd122f129238acc113bb2ea",
+      "commit": {
+        "author": {
+          "date": "2026-01-13T17:27:54Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "56252f6d17586c5db1791aa35bb8adc64920d988",
+      "commit": {
+        "author": {
+          "date": "2026-01-13T15:07:07Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "aacc27d181b3465b2306b6348c0a13e6361e4a49",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T16:22:37Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "846ad3fc998e563b703f3f4980083ce46d0f7cf9",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T16:20:46Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "ed8bba167df6ea35509b9276409ca2e0fc092eaf",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T16:16:25Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "d0d4e86dda17b4bf9e1f9a2a3eb19f90f2b9ab7e",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T16:07:13Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "d535bc9938073499e68d2fc5c915aadee36ef127",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T15:30:14Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "6b1fba15e88d3e85b707ce327d8b46d3949cae48",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T14:07:05Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d434d0002c8cad0fc87d7fb997c39f367ed8eb76",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T14:05:33Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "082647b5579ef17c8a77ea1dd1b5022ba71beaba",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T13:21:28Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "f62951f07efad7112e709a2475e98a2f843fabab",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T13:16:33Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "8e5bd0d945b20cbdcdde942b8e3e2d671a676e73",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T12:38:06Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "d856696d154194fd3859f1d16d0d0df6f82b28dc",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T12:35:55Z"
+        }
+      },
+      "author": {
+        "login": "GauravKarakoti"
+      }
+    },
+    {
+      "sha": "992fbef4a934db4a2d721997b3925832f2b2b022",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T12:05:03Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "fdfd2a7ffafe9b0dcf5ee17d039ff42ec8da1345",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T11:35:05Z"
+        }
+      },
+      "author": {
+        "login": "sahoo-tech"
+      }
+    },
+    {
+      "sha": "df7cd40b3cf5a1f16e44a8bca382915f1c2df1a8",
+      "commit": {
+        "author": {
+          "date": "2026-01-12T06:59:06Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1c2d0c3e3fb0e2e5c1067b98f2725f6ab1de6813",
+      "commit": {
+        "author": {
+          "date": "2026-01-11T11:30:25Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "b1e39969a4ef1e5a66b08a9d87fb522cecdfa343",
+      "commit": {
+        "author": {
+          "date": "2026-01-11T08:52:00Z"
+        }
+      },
+      "author": {
+        "login": "MuktaRedij"
+      }
+    },
+    {
+      "sha": "55abbdc43fe46a47445aac2cc36dac8c46273edf",
+      "commit": {
+        "author": {
+          "date": "2026-01-11T06:24:06Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "bdf8b0c327f6bda1f1e62f879a8eec0f856dcd46",
+      "commit": {
+        "author": {
+          "date": "2026-01-11T06:00:58Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "aa25a26cc4c046dc2dbf08116c7848e05f461df1",
+      "commit": {
+        "author": {
+          "date": "2026-01-11T05:55:39Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "e6cbb863f3d05df4659fdc3685bd0e7d355d84c1",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T12:08:51Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "715260e9bc31e329e1e10044b04e4b0566cbd20b",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T12:07:44Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "285156d742abba80125e3022eb8ab664d5ad7474",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T11:11:42Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "d47419439dc49e9b90cabe1489855f0021adbcc9",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T10:34:33Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "e8373f92e86a1d7b22dbd9a77765aec6d139373f",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T07:28:55Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "f99ef1b5d00b44ad0befdaf4f657852115af50c6",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T07:27:12Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "4b6a10c52244abf2d884ddcc36fad29ce7e73ff8",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T07:25:34Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "04bc8d81c1c25eac68946bce257c5f3b102d0f77",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T07:21:17Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "29c879c0b37997b935c5a4aec3c9c798634e9717",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T07:02:20Z"
+        }
+      },
+      "author": {
+        "login": "Shriii19"
+      }
+    },
+    {
+      "sha": "df8913b9588f18af67ba823554af1fe56adc2a61",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T06:51:23Z"
+        }
+      },
+      "author": {
+        "login": "Shriii19"
+      }
+    },
+    {
+      "sha": "f1c7fb5a4ceffffd3efdbe41d3c86bc7251b7f37",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T06:44:29Z"
+        }
+      },
+      "author": {
+        "login": "Shriii19"
+      }
+    },
+    {
+      "sha": "f228d67d4f1e15ee71d76e35698a969c22c55acb",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T06:20:30Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "f8f663713594be1af0b895a34a256b3ff33c3c97",
+      "commit": {
+        "author": {
+          "date": "2026-01-10T03:46:29Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "6158e428c8c3ceb186ad54df150e14a298b7f202",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T09:17:33Z"
+        }
+      },
+      "author": {
+        "login": "Abhijeet-980"
+      }
+    },
+    {
+      "sha": "7f7e632fd10a1ada0fe4d236f60aeddad20967ee",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T07:29:18Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "159fc17edda892c74c2e750df789881b2d3c88c9",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T07:24:02Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "f792a8e9349b15b4d492b585aa144ef6fcb9877f",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T07:18:15Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "3b626412d42a0f6ab16ac95238fc90e1f77b8bc8",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T07:10:43Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "0d9a565762d6d4e7f20b17aebdd33b871d5c3215",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T07:07:56Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "961e0b7a65f33715217e0130437c56c40a04a97c",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T07:03:14Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "87bc1e82b884fce23122b73ea02e3d1ef1946d79",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T04:09:24Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "0337ce355551a1ceb063abd72e4e4b8374011788",
+      "commit": {
+        "author": {
+          "date": "2026-01-09T04:07:16Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "22431ed547b88e54a076a09c4111218ce291686f",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T14:18:38Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "610f12934fe956aba56684e0f23976fb1905e138",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T11:54:41Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "9f283145589565fb1847e22503dddb1d9e6fe389",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T21:56:36Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "efc584b1955713c1b6adcac14f9e9c19c41620a1",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T22:05:35Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "5c79c53cddc72337b7fb80ff8e72921e93a31eee",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T21:56:36Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "2c1e205a2937aa3d83051cb362c2313f2ba22b5b",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T11:26:19Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "4dd0ce7f4f2b5fc61d3a0a497ad44c01dc68635c",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T22:17:47Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "eeda834d1bccf2eee07a2e5c85087fcf6e2a7bdf",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T11:22:04Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "7e9edc2280c758aab81ba8b3947f6b362f689c18",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T22:05:35Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "df1bcc3ac12bb3cbcdc432db7eaec7ac0bcaeb80",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T21:56:36Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "599742a48aa184c6c1dcd0dbe0c19a3d23f41d97",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T11:11:43Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "9fc3d6864475ee34617b768c07cf2ac65ce754f2",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T11:06:38Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "c7ebd2b4f8df018cfdf4904ef508b9fa6cc13451",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T11:04:31Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "601eb8cdd5390e840fb006a73e597c54fbb8306c",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T11:01:07Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "538665f830f223862fb500606abc8b8326743441",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T10:58:41Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "17037707ec12a3e8e7f119a2a2231c34ddb1a8ae",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T04:05:55Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d3a70bc8ad3e8ec1d55c8edaa9aaa1ca71c04067",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T02:27:54Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "984da3f6f9bf027c8536e270dbb41924b1e281b1",
+      "commit": {
+        "author": {
+          "date": "2026-01-08T02:21:14Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "a6cbc3f15b01c7b86f7c99de9fa68d15d92b1253",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T19:18:17Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "5a85a30b9729a7bde5614c9488d456a7f0848d64",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T19:03:22Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "7e699f9e1e66b4a4e8299137fadd1e6f127ffe2f",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T18:49:27Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "a6faa6849951dee2efd32ca9115d0a2924b6f5fd",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T18:44:31Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "f99c715174a8ff037a3130a40c1fb69cc1a6e207",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T18:34:25Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "92e59eb219f1b98e91023643954fea1c7e937cda",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T18:04:36Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "bcf93a94d5436719f5775f81546d27aed7151a5e",
+      "commit": {
+        "author": {
+          "date": "2026-01-07T16:48:52Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "6a14a41042a6f7aaeabc1afe0447ef4ae7babbfa",
+      "commit": {
+        "author": {
+          "date": "2026-01-06T20:26:34Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "c9128f9dccd8a09b619ac95aba65c22914f4adb7",
+      "commit": {
+        "author": {
+          "date": "2026-01-06T20:24:53Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "dd4ac0e9da7ab4d3f05274395bf0c46075cfd91e",
+      "commit": {
+        "author": {
+          "date": "2026-01-06T20:11:39Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "415169bf6a060dbe1581aecbb8f3c72326d5794d",
+      "commit": {
+        "author": {
+          "date": "2026-01-06T19:56:54Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "424de1bac0250281c2197626679e5466457aeb8f",
+      "commit": {
+        "author": {
+          "date": "2026-01-06T12:52:17Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "63185512238abad39e651c41b5c8f3de54628f2e",
+      "commit": {
+        "author": {
+          "date": "2026-01-06T09:50:50Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "474577deb29fe21c6bc1391d9452cd3ae3e6e361",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T16:03:34Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "e2d058bbd084887b7ecf2a15bf2d3cb695f168b3",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T15:59:33Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d204973fcaf50e3ed677a93df8c4cc7980aec97e",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T15:56:38Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "b46957553a9d8765f6c0afe670837613f0e70227",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T15:37:54Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "41f6f0952f26c34e065888167ecbd6500e66fb6f",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T13:53:58Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "26cbe74cc4de813e8ac1898b5dc39e6dd1ec8d61",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T13:36:55Z"
+        }
+      },
+      "author": {
+        "login": "ItsMeArm00n"
+      }
+    },
+    {
+      "sha": "8d07ddee63705dad4862e0d5ddae72d598816eb6",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T13:32:38Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "f0881dfbd9cb1bb4ab76e109ed67b0d89677a58f",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T13:16:43Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "6089152efab1f56e515bd31960475fa4fa4a7752",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T13:06:56Z"
+        }
+      },
+      "author": {
+        "login": "ItsMeArm00n"
+      }
+    },
+    {
+      "sha": "ae1aa2183a235bea38160a08ca17903219624abd",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T08:27:36Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "686cf37d501d9f76971169cc7c1b3fb451310c78",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T08:23:28Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "4d41f71310c1dc0c29d7338e18e2ed67a0ecde6c",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T08:22:25Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "dc875019090021bbf2bcb38381875546293d4d97",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T08:21:30Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "3d16c01302b45a0cdf14fcebb1bf958db9c996f0",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T07:45:01Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "280b0f572f93f69ff0ce3639042f02422402188f",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T06:20:55Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "1401930f15ecc48b0d8d8b7964dd28ebbc09f222",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T06:02:59Z"
+        }
+      },
+      "author": {
+        "login": "diksha78dev"
+      }
+    },
+    {
+      "sha": "04c348d37acb528d75064ced9dacc1d80643d7ab",
+      "commit": {
+        "author": {
+          "date": "2026-01-05T02:47:28Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "6ac615f810be7dc52e755b9c76d17ba2f4ecc7cd",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T20:06:06Z"
+        }
+      },
+      "author": {
+        "login": "ItsMeArm00n"
+      }
+    },
+    {
+      "sha": "3b94f5f6d69a51bd00640511123077c621cb58fb",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T18:30:56Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "ab00debb082aadd1a2370ad419ea055988cd0cc3",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T18:18:51Z"
+        }
+      },
+      "author": {
+        "login": "MuktaRedij"
+      }
+    },
+    {
+      "sha": "a9384da95fe46e233ef59ec0dcda103e81ca9613",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T13:47:19Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "20f5f9af9f27f9c63590170189af630a1595a2bd",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T13:27:57Z"
+        }
+      },
+      "author": {
+        "login": "ItsMeArm00n"
+      }
+    },
+    {
+      "sha": "b89abab8dbfe338f58405b092bc401125027d1e1",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T09:13:57Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "b65c7d00fdab10ff8bd52d9130f41e3692517e1f",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T09:10:25Z"
+        }
+      },
+      "author": {
+        "login": "MuktaRedij"
+      }
+    },
+    {
+      "sha": "eed0b9a74fbbc8809288a2de36ac44cb7dba3a53",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T09:06:15Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "162ec479c5f827977e9486f1abadeacbc0e664c2",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:51:57Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "ce68881f46a058e7be0db14e33b0be463fe3615e",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:46:40Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "1d7f6cf5c909d84dc524b48d4ec1fe364296f634",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:42:52Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "bc729d4c3bdbf95ea01ebab68814442968a977dc",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:39:45Z"
+        }
+      },
+      "author": {
+        "login": "MuktaRedij"
+      }
+    },
+    {
+      "sha": "e2c4e479c34b3558f9c2b3ac6e5d07c4d760666c",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:34:47Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "875a76135c2fc2bc8159b8579c0bcea4bec60a2a",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:34:47Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "8c8fa90b4d0f7c3886250576d9f5d68ccb72ab86",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:20:38Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "c6e10948de01778d0576467ae1c6f56456b0bd7a",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T08:14:50Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d71354521ebeba68b0c34f5e728cffac1c4018f9",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T07:26:55Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "7d84665755a2580eee0b0563e279c8b6475f2c80",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T07:26:07Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "30cbe4c878f9c117213b8873f8e9bd9da567f374",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T07:11:15Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "5ed9abb8bbd262fa54ef49755af42136ad5f7bc0",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T07:04:29Z"
+        }
+      },
+      "author": {
+        "login": "Shivani-Meena07"
+      }
+    },
+    {
+      "sha": "64fd71b0f14d23c14b5156537d6490f2f8a87279",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T06:50:34Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "baec09879795eca946b8f6a6e6b95bd4c7d29086",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T05:37:45Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "687652438956d1a0020ca62d0ffdb88bbee5808a",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T05:20:53Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "2382d514433c82a26a52b20f83abc7ef6298101c",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T03:29:08Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "02d0b375bfdc4e197eda32987e70ab3e2d7d0cb3",
+      "commit": {
+        "author": {
+          "date": "2026-01-04T03:01:17Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "7cdccfa313caa367f14c8e902cb5f4f9febf5cd3",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T20:08:48Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "7fd089448a7e15acc8cc4149a0a614dd2d37babb",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T20:03:46Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "de442fc069246c4fe6e65f1bcf529adc9d146958",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T19:57:03Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "eb1b7e0d71028b8b63b85da791c137ac0048ab46",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T19:17:14Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "80942bdbcece643f1cc40ffbc48c7cca2cc18bad",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T18:58:46Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "4e4dfdeb352e23c103cb335422dc004d160999db",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T18:48:25Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "36638c99708b6e0a911295df493795f081409713",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T18:39:20Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "5ccb5b8475b7a7546907f193e5fe75341813566d",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T18:35:20Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "06ab1b74b052ca39d380546710ef580853877698",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T18:34:01Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "19d3217c885a50fe93620d5c291cd6b8bbee7ddf",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T18:27:16Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "211a13b65c02337ea35a60032933aa0d3778a4dc",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T17:05:35Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "533a55d23af5f66f38b4a36de81437e3c5762466",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T17:56:36Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "185ab820fdc27921b7d1e6a05e452b27d933a358",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T17:53:45Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "73016cfc116171b42b2b7b4788ffda837cfe6bed",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T17:44:45Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "0ae9743e48bc53fdc613547ea57d8bfebe7db70b",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T17:36:17Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "40e8d389f9a4ca9d9d6ef78065d15e1fc51f433a",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T17:05:35Z"
+        }
+      },
+      "author": {
+        "login": "Aamod007"
+      }
+    },
+    {
+      "sha": "471b79cb90336b10396fd9ee89235c0a25e14b53",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T15:44:06Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "015ee87dd92519cbbff86b7a31b4fba2a4bda2f2",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T15:16:00Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "d67190292eaf37c586bb91ff0b14ac147f584fdf",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T15:15:31Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "00a4e0d60718ca165780f9343fd49b9b36a19818",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T15:04:50Z"
+        }
+      },
+      "author": {
+        "login": "Kiran95021"
+      }
+    },
+    {
+      "sha": "c8e403c8007f13e23744559f8670a52eaa24e938",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T15:00:46Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "cf7ff9efa3394b8cd39be898b0b0013ae8272531",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T14:57:28Z"
+        }
+      },
+      "author": {
+        "login": "Kiran95021"
+      }
+    },
+    {
+      "sha": "d1a0bb1dcdbeff003f21a0467fb027bd7a21ba5a",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T14:57:21Z"
+        }
+      },
+      "author": null
+    },
+    {
+      "sha": "3e7a6a85c89a5c450e93f8168def0c48bb1b9020",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T14:07:52Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "29f7c9ac3ad0a824dfa458a01a266734bf393d51",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T14:00:23Z"
+        }
+      },
+      "author": {
+        "login": "Kiran95021"
+      }
+    },
+    {
+      "sha": "b195aaa8f085402b7742a65a22dd6736247d0568",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T13:39:58Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "ac43f17ee574b94245a70b8fa6733ce05b055bc9",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T13:21:32Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "edb15e0183ab0e585ce77e6de3166f5a4aaedd38",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T13:10:47Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "e21295834d28a5a6bf21a9662b9d57a3dd4627bb",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T10:10:57Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "6daa05cd9e72d69f600715b44ef5b06389696896",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T10:09:41Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "3440e28fca029c23a1a81df282128262becb2e6c",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:57:18Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "0550292ad99389385c3143fcd8c9b582b33b1ad7",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:56:58Z"
+        }
+      },
+      "author": {
+        "login": "ItsMeArm00n"
+      }
+    },
+    {
+      "sha": "bb3954d8cee9ca360147b195b9898c31d101c860",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:46:12Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "e2db2a17c519fbd6f51584d0150fa35cf2ffef89",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:45:59Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "ed69091551c7bd9938796dfb0d0f442cff1663a0",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:45:01Z"
+        }
+      },
+      "author": {
+        "login": "ItsMeArm00n"
+      }
+    },
+    {
+      "sha": "a0d560461753a8176f5274fa01ea27054f93b1bb",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:42:35Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "cd795f22cda09995d770cb8ed2de8079f6946100",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:42:19Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "dc9d9257f6e2b301255d18984f7833e2598a3949",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:41:09Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "b122322450c1ccf8b643e01439f47d2cdc46dc96",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:35:27Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "63c14141dde4a09ed84a51987a919ada3d9eebf9",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:31:41Z"
+        }
+      },
+      "author": {
+        "login": "Aditya8369"
+      }
+    },
+    {
+      "sha": "5af1ac0682f6734986da338106408c2586238ea8",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T09:07:34Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "de4a58a7590631ded6c5521861cf162d7bd0c3c5",
+      "commit": {
+        "author": {
+          "date": "2026-01-03T08:52:49Z"
+        }
+      },
+      "author": {
+        "login": "ItsMeArm00n"
+      }
+    },
+    {
+      "sha": "1fab4b7bb34a4aab04f7374b70301f092d88469c",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T19:16:35Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "b196380862eb4704a5bbbd9c5b564095143cdde3",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T18:24:42Z"
+        }
+      },
+      "author": {
+        "login": "magic-peach"
+      }
+    },
+    {
+      "sha": "fb1c6d3cfa132171f6df13eaf880ce33603a45ab",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T18:22:07Z"
+        }
+      },
+      "author": {
+        "login": "magic-peach"
+      }
+    },
+    {
+      "sha": "204bac34b73dd79d9369f0b7493cf2a93ec39649",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T15:08:47Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "29375805f9cf08ca27dc070234abb2b42e218aab",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T14:54:39Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "86a04124e0026df4a76fe00e352460a61e6f0901",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T14:47:11Z"
+        }
+      },
+      "author": {
+        "login": "ShashankSaga"
+      }
+    },
+    {
+      "sha": "7ddfa8d7da2e1508c827e8405228d9f4a4d81541",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T12:34:23Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "b22352b2ed6ef43cc3f0ab2b903d0a40359ca22f",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T03:50:20Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3569f19116ef32a5e158fc24e0c8eeded7d6909c",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T03:36:22Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "61169c216db3c55c25caa2bd079fd4b3f7768b97",
+      "commit": {
+        "author": {
+          "date": "2026-01-02T03:29:13Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "aa95effd840605add50d4a7d150566b7e01ad09f",
+      "commit": {
+        "author": {
+          "date": "2026-01-01T18:56:57Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "9a739c08533668e666a6f9aef56d8d3a68ffbdb7",
+      "commit": {
+        "author": {
+          "date": "2026-01-01T18:54:07Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "02af4ae91222b2a465a90b212f0b0e72d23f9bf0",
+      "commit": {
+        "author": {
+          "date": "2026-01-01T18:28:17Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "3ef63bb1978fa80484126de5f5f8993fb2b34d23",
+      "commit": {
+        "author": {
+          "date": "2026-01-01T18:20:32Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    },
+    {
+      "sha": "aae5f27b08c0802346bf0523559eb86415060af3",
+      "commit": {
+        "author": {
+          "date": "2026-01-01T18:07:21Z"
+        }
+      },
+      "author": {
+        "login": "agnivo988"
+      }
+    }
+  ],
+  "Contributors": [
+    {
+      "login": "agnivo988",
+      "contributions": 185,
+      "avatar_url": "https://avatars.githubusercontent.com/u/183830443?v=4"
+    },
+    {
+      "login": "Aditya8369",
+      "contributions": 89,
+      "avatar_url": "https://avatars.githubusercontent.com/u/178887069?v=4"
+    },
+    {
+      "login": "Aamod007",
+      "contributions": 45,
+      "avatar_url": "https://avatars.githubusercontent.com/u/119789532?v=4"
+    },
+    {
+      "login": "Gupta-02",
+      "contributions": 16,
+      "avatar_url": "https://avatars.githubusercontent.com/u/182321898?v=4"
+    },
+    {
+      "login": "vedhapprakashni",
+      "contributions": 13,
+      "avatar_url": "https://avatars.githubusercontent.com/u/126845490?v=4"
+    },
+    {
+      "login": "dependabot[bot]",
+      "contributions": 10,
+      "avatar_url": "https://avatars.githubusercontent.com/in/29110?v=4"
+    },
+    {
+      "login": "tanmayythakare",
+      "contributions": 10,
+      "avatar_url": "https://avatars.githubusercontent.com/u/131752104?v=4"
+    },
+    {
+      "login": "GauravKarakoti",
+      "contributions": 9,
+      "avatar_url": "https://avatars.githubusercontent.com/u/180496085?v=4"
+    },
+    {
+      "login": "Pranaykarvi",
+      "contributions": 9,
+      "avatar_url": "https://avatars.githubusercontent.com/u/149316563?v=4"
+    },
+    {
+      "login": "sujitha-kotyada",
+      "contributions": 9,
+      "avatar_url": "https://avatars.githubusercontent.com/u/219284312?v=4"
+    },
+    {
+      "login": "pranav-cholleti",
+      "contributions": 8,
+      "avatar_url": "https://avatars.githubusercontent.com/u/119649614?v=4"
+    },
+    {
+      "login": "riddhima25bet10005-a11y",
+      "contributions": 7,
+      "avatar_url": "https://avatars.githubusercontent.com/u/228184960?v=4"
+    },
+    {
+      "login": "Sappymukherjee214",
+      "contributions": 7,
+      "avatar_url": "https://avatars.githubusercontent.com/u/173528272?v=4"
+    },
+    {
+      "login": "ItsMeArm00n",
+      "contributions": 7,
+      "avatar_url": "https://avatars.githubusercontent.com/u/139522983?v=4"
+    },
+    {
+      "login": "sonusharma6-dsa",
+      "contributions": 6,
+      "avatar_url": "https://avatars.githubusercontent.com/u/258794209?v=4"
+    },
+    {
+      "login": "MuktaRedij",
+      "contributions": 6,
+      "avatar_url": "https://avatars.githubusercontent.com/u/196807858?v=4"
+    },
+    {
+      "login": "DhruvalBhinsara1",
+      "contributions": 6,
+      "avatar_url": "https://avatars.githubusercontent.com/u/48351115?v=4"
+    },
+    {
+      "login": "sanzzzz-g",
+      "contributions": 5,
+      "avatar_url": "https://avatars.githubusercontent.com/u/218762472?v=4"
+    },
+    {
+      "login": "adyamohanka",
+      "contributions": 4,
+      "avatar_url": "https://avatars.githubusercontent.com/u/221871975?v=4"
+    },
+    {
+      "login": "Aryan-B-Parikh",
+      "contributions": 4,
+      "avatar_url": "https://avatars.githubusercontent.com/u/182212753?v=4"
+    },
+    {
+      "login": "KUMARI-SONALIUPADHYAY",
+      "contributions": 4,
+      "avatar_url": "https://avatars.githubusercontent.com/u/177291359?v=4"
+    },
+    {
+      "login": "EchoOfCode",
+      "contributions": 4,
+      "avatar_url": "https://avatars.githubusercontent.com/u/210523620?v=4"
+    },
+    {
+      "login": "Nitya-003",
+      "contributions": 4,
+      "avatar_url": "https://avatars.githubusercontent.com/u/181471078?v=4"
+    },
+    {
+      "login": "Vaibhav-0111",
+      "contributions": 4,
+      "avatar_url": "https://avatars.githubusercontent.com/u/150104890?v=4"
+    },
+    {
+      "login": "Shriii19",
+      "contributions": 3,
+      "avatar_url": "https://avatars.githubusercontent.com/u/166788110?v=4"
+    },
+    {
+      "login": "navya-1907",
+      "contributions": 3,
+      "avatar_url": "https://avatars.githubusercontent.com/u/133208903?v=4"
+    },
+    {
+      "login": "Xenon010101",
+      "contributions": 3,
+      "avatar_url": "https://avatars.githubusercontent.com/u/143032263?v=4"
+    },
+    {
+      "login": "srinithithirumaran",
+      "contributions": 3,
+      "avatar_url": "https://avatars.githubusercontent.com/u/192793295?v=4"
+    },
+    {
+      "login": "SenseiSuraj24",
+      "contributions": 3,
+      "avatar_url": "https://avatars.githubusercontent.com/u/195530316?v=4"
+    },
+    {
+      "login": "madhav2348",
+      "contributions": 3,
+      "avatar_url": "https://avatars.githubusercontent.com/u/161720210?v=4"
+    },
+    {
+      "login": "Kiran95021",
+      "contributions": 3,
+      "avatar_url": "https://avatars.githubusercontent.com/u/181767771?v=4"
+    },
+    {
+      "login": "AKSHEXXXX",
+      "contributions": 2,
+      "avatar_url": "https://avatars.githubusercontent.com/u/242416867?v=4"
+    },
+    {
+      "login": "magic-peach",
+      "contributions": 2,
+      "avatar_url": "https://avatars.githubusercontent.com/u/146705736?v=4"
+    },
+    {
+      "login": "Shiva210Jyoti",
+      "contributions": 2,
+      "avatar_url": "https://avatars.githubusercontent.com/u/181663168?v=4"
+    },
+    {
+      "login": "shrutip04",
+      "contributions": 2,
+      "avatar_url": "https://avatars.githubusercontent.com/u/196679282?v=4"
+    },
+    {
+      "login": "jonahmichael",
+      "contributions": 2,
+      "avatar_url": "https://avatars.githubusercontent.com/u/186861360?v=4"
+    },
+    {
+      "login": "sahoo-tech",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/179259731?v=4"
+    },
+    {
+      "login": "rajsingh1301",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/195672131?v=4"
+    },
+    {
+      "login": "overhyped-pratham",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/251187220?v=4"
+    },
+    {
+      "login": "anshul23102",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/167362756?v=4"
+    },
+    {
+      "login": "akshatextreme",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/178882371?v=4"
+    },
+    {
+      "login": "Shivani-Meena07",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/219447161?v=4"
+    },
+    {
+      "login": "ShashankSaga",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/182335945?v=4"
+    },
+    {
+      "login": "PiyushRajan2007",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/250790827?v=4"
+    },
+    {
+      "login": "IshitaSingh0822",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/127220309?v=4"
+    },
+    {
+      "login": "Harshit-Maurya838",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/174622309?v=4"
+    },
+    {
+      "login": "bhavyaxtech",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/202380426?v=4"
+    },
+    {
+      "login": "adityashirsatrao007",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/137131673?v=4"
+    },
+    {
+      "login": "Abhijeet-980",
+      "contributions": 1,
+      "avatar_url": "https://avatars.githubusercontent.com/u/88506393?v=4"
+    }
+  ],
+  "FileTree": [
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "c5349ff5694442efd4ae2b49810ae4ee6787e240"
+    },
+    {
+      "path": ".github/FUNDING.yml",
+      "mode": "100644",
+      "type": "blob",
+      "size": 790,
+      "sha": "be1ca5957f1ebdc99cc96ba08ed80933776ce341"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "7d2ab928df6121abe8522011d6379b7fec0d1e44"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 834,
+      "sha": "dd84ea7824f11be1eeda22377549cbc1aec7f980"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 567,
+      "sha": "b844550c24bcf7f4eb18b9972467c079c0098617"
+    },
+    {
+      "path": ".github/auto-messages",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "c0e20d0bbed17365efbd49f76117a7426aff12f0"
+    },
+    {
+      "path": ".github/auto-messages/first_time_pr.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 482,
+      "sha": "1f2d44c99d35084b26f24300a461186f19789f65"
+    },
+    {
+      "path": ".github/auto-messages/issue_opened.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 301,
+      "sha": "151de7235673b135ea4c4ca6717c3c6009d6fecd"
+    },
+    {
+      "path": ".github/auto-messages/pr_opened.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 237,
+      "sha": "0a6dad1d0939b49d750f4b860c8c8ec4edfa25d1"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "mode": "100644",
+      "type": "blob",
+      "size": 448,
+      "sha": "e7120571466c5119cff6b4113015f135bf34fad6"
+    },
+    {
+      "path": ".github/workflows",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "0e39762c5df04736927a0581440e106591a62d0f"
+    },
+    {
+      "path": ".github/workflows/auto-message.yml",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2627,
+      "sha": "9d22ef9bdca5a79eb2de8395a3255be5acf4ff0c"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3193,
+      "sha": "9f31e5daba756197722f65e302000ecede832723"
+    },
+    {
+      "path": ".github/workflows/contributors.yml",
+      "mode": "100644",
+      "type": "blob",
+      "size": 740,
+      "sha": "c01a5421bca9f51e421c811388a5a62276c38519"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1862,
+      "sha": "3bb5eb0f480471d4156445376a29eef24043c0c3"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "size": 283,
+      "sha": "05e9ddabd18bd447351a08f20c2f0952a37e4925"
+    },
+    {
+      "path": "Dockerfile",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1017,
+      "sha": "39384c4d93207c9d15ebd395ef280cc198c777e1"
+    },
+    {
+      "path": "LICENSE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1067,
+      "sha": "773b330dc1932e673215d395a4987f706b2e1afe"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7528,
+      "sha": "7e3a8aa3ab233e872bf0857c6246ce47f3cc0067"
+    },
+    {
+      "path": "SECURITY.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6536,
+      "sha": "b8da75dff39511457578b844c4e12b49d002ab40"
+    },
+    {
+      "path": "TODO.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 704,
+      "sha": "443f45974b6b3c7a1f1175e43adc0ce635194f00"
+    },
+    {
+      "path": "TRENDS_FEATURE_PLAN.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6741,
+      "sha": "ddc9e8c9b7711bfea026e18562512e2f7bb602cc"
+    },
+    {
+      "path": "analysis.json",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8846,
+      "sha": "16fbaa322c92ae3621e220387807855096718641"
+    },
+    {
+      "path": "cmd",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "4803091644b5d7a805b3a9d86f4297912b88b398"
+    },
+    {
+      "path": "cmd/analyze.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 19399,
+      "sha": "3f478a3c016ded5a8b8ecbe473834a61a4f8743b"
+    },
+    {
+      "path": "cmd/analyze_pr.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5411,
+      "sha": "ad75e84f1c524d9b381b89bd1208066813841f9b"
+    },
+    {
+      "path": "cmd/cache.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3490,
+      "sha": "5d99a4d055dbeb84ba97e54e2f9b7679c9fa2dfa"
+    },
+    {
+      "path": "cmd/certificate.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2069,
+      "sha": "29d08d1e88d10296b06f5d63fc38e405d42096c4"
+    },
+    {
+      "path": "cmd/collaboration.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3559,
+      "sha": "31392fbe9a8da2ac7930de3fc2abf42ada2239fd"
+    },
+    {
+      "path": "cmd/compare.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5380,
+      "sha": "41f265da328560227d93a74fc1a741697c99cc7f"
+    },
+    {
+      "path": "cmd/daemon.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6180,
+      "sha": "f93eb62390027139d80366cc58b2895e886a483d"
+    },
+    {
+      "path": "cmd/menu.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 556,
+      "sha": "81648f84599c2ef40d9ede9a853207e5061fa9bc"
+    },
+    {
+      "path": "cmd/monitor.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2735,
+      "sha": "8c74a38138f32f502a7c3bd5cb6d4fd3db21608c"
+    },
+    {
+      "path": "cmd/notifications.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1540,
+      "sha": "f26c1b056c34a095f9e754ba5f78e9cb19c5bf09"
+    },
+    {
+      "path": "cmd/root.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1957,
+      "sha": "abcf28a63d9d6334f909cd735c86b02e4c4270b0"
+    },
+    {
+      "path": "cmd/schedule.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 11206,
+      "sha": "e593d39716d189899300bac40c9f82fdc50935c6"
+    },
+    {
+      "path": "cmd/summary.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3630,
+      "sha": "4cd24bc1434aa0fb44f72d6851bb1e8f24a67581"
+    },
+    {
+      "path": "cmd/temporal.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8264,
+      "sha": "0037153505d35b648d2536dded6e797a58c3c551"
+    },
+    {
+      "path": "cmd/trends.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 11059,
+      "sha": "6dd5c5bca2da0e6eb172f62a45431d1afa3350d1"
+    },
+    {
+      "path": "cmd/trends_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3331,
+      "sha": "16de15fdf457fd4a582823f8057818a9c4430471"
+    },
+    {
+      "path": "docker-compose.yml",
+      "mode": "100644",
+      "type": "blob",
+      "size": 625,
+      "sha": "6695326c1d3d0e66e13ab1cf240e37be178c2503"
+    },
+    {
+      "path": "docs",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "64a1be333d1cd25f2d0cad68238f585850a3c190"
+    },
+    {
+      "path": "docs/ANALYZER_INTEGRATION.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 10680,
+      "sha": "4897f000fd033325d72133d0350769f2839de74b"
+    },
+    {
+      "path": "docs/API_REFERENCE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 20184,
+      "sha": "26c609aef9fc70d6abdf29196b04359a5eb2c6f4"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 13261,
+      "sha": "c3c9164fd7a0f3d98b148c83cbca85670886c95a"
+    },
+    {
+      "path": "docs/CHANGE_LOG.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 13035,
+      "sha": "d90aea4d903dfa052b6139c9586e5d244c03277f"
+    },
+    {
+      "path": "docs/CLI_GUIDES.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 505,
+      "sha": "080acdb67e138f3eb48f32513ddb2e4b69f0af1c"
+    },
+    {
+      "path": "docs/CODE_OF_CONDUCT.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5046,
+      "sha": "10e0ed5a4e15229f4ccbc589f9d2ca967c08b106"
+    },
+    {
+      "path": "docs/CONTRIBUTING.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4494,
+      "sha": "c47ae64f7ae05f4a403781a188ba2f839d0784f4"
+    },
+    {
+      "path": "docs/DOCUMENTATION_INDEX.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 10841,
+      "sha": "54338053c5f8d7702da523d994120d6af507217c"
+    },
+    {
+      "path": "docs/FEATURE_INVENTORY_PHASE2.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 13327,
+      "sha": "985a9c1d6e7744af098fb3677059c503a6cf3c90"
+    },
+    {
+      "path": "docs/IMPLEMENTATION_DETAILS.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 13333,
+      "sha": "9c8202334b2f460bf272d556d7e0b0a31bea7478"
+    },
+    {
+      "path": "docs/NOTIFICATIONS_AND_MONITORING.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1501,
+      "sha": "0a9bff20b0a218dee1d7100d111ff984d284bc5e"
+    },
+    {
+      "path": "docs/PHASE2_COMPLETION.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 12050,
+      "sha": "383899e6b38b2f411ca83868e2f147d513d176f3"
+    },
+    {
+      "path": "docs/PHASE2_DOCUMENTATION_INDEX.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 12013,
+      "sha": "13a1fb73e1e544b544876105000111fe8e5c8a78"
+    },
+    {
+      "path": "docs/PHASE2_FILE_CHANGES.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 10523,
+      "sha": "002edf187864fb36f7171dc0f97fff0dcb5f15f5"
+    },
+    {
+      "path": "docs/PHASE2_FINAL_SUMMARY.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 11118,
+      "sha": "10cea0b17c8355cf3a0726dc9f9284d9b3051403"
+    },
+    {
+      "path": "docs/PHASE2_QUICK_REFERENCE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7232,
+      "sha": "daed8317efd9d6c85be9e4da4779427c0d042a4a"
+    },
+    {
+      "path": "docs/PHASE2_README.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 12416,
+      "sha": "e0bd129c0a152764ee459b1792faf85c061641da"
+    },
+    {
+      "path": "docs/PROJECT_STRUCTURE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 918,
+      "sha": "bd44898cc360a94c8a6ee999df13058193acebc7"
+    },
+    {
+      "path": "docs/QUICK_REFERENCE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3716,
+      "sha": "10d70d15ee4615f4e63bc6893037ca870312f9b3"
+    },
+    {
+      "path": "docs/RESOLUTION_REPORT.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 17895,
+      "sha": "52f9934affdb0850abee2d3afe45a50a986efc22"
+    },
+    {
+      "path": "docs/SETTINGS_BACKEND.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2772,
+      "sha": "130a22b16707eb9e1a463ea2a0dfbf73119fc89b"
+    },
+    {
+      "path": "docs/TEMPORAL_API_REFERENCE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 16829,
+      "sha": "a29a5de03d9ee98719ecfb6565bc88a6ff262eef"
+    },
+    {
+      "path": "docs/TEMPORAL_ARCHITECTURE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 22898,
+      "sha": "f0a4bd082f647715367d72a0df1df4fc5ba926d5"
+    },
+    {
+      "path": "docs/TEMPORAL_INTEGRATION_GUIDE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 15489,
+      "sha": "fc24ef29240711e5b4132c30ba12401eafb8f2f5"
+    },
+    {
+      "path": "docs/TEMPORAL_INTELLIGENCE_FEATURE_SPEC.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 14846,
+      "sha": "186cd312830c77b48d03b42214c3cc1b029e7e0e"
+    },
+    {
+      "path": "docs/TEMPORAL_MVP_ROADMAP.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 14112,
+      "sha": "3b340bb04126d66997faffaecd5c7d1c23a297c4"
+    },
+    {
+      "path": "docs/TEMPORAL_QUICK_REFERENCE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 13183,
+      "sha": "b37795d7d34e2631cc637bbab18b4fa63c0b60cc"
+    },
+    {
+      "path": "docs/UI_FIXES_SUMMARY.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 11945,
+      "sha": "3f916946ebc5a01293e4a4b483e4c432d8b92b49"
+    },
+    {
+      "path": "docs/VISUAL_GUIDE.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 16263,
+      "sha": "dc682fcb04655dd856fbc589fe713b3c7c56fdc5"
+    },
+    {
+      "path": "docs/analysis.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 611,
+      "sha": "04dbaa59d4fab44089870b651b56c9951b612cb2"
+    },
+    {
+      "path": "docs/readme.md",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7351,
+      "sha": "bb0b9778e16d14b043c5e1fdf2241e441dd304b6"
+    },
+    {
+      "path": "go.mod",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2367,
+      "sha": "2bbf0678e362cd4fabf6c86cca8de307444b1bca"
+    },
+    {
+      "path": "go.sum",
+      "mode": "100644",
+      "type": "blob",
+      "size": 15441,
+      "sha": "11876f10d09a0998d2a77cd841d817f7f14f4038"
+    },
+    {
+      "path": "internal",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "b5e59859c2cc4fa00796061e4a778b772cb19e92"
+    },
+    {
+      "path": "internal/analyzer",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "cce9b37d5c285d4c7f4aff3f1e43cec4caac1e74"
+    },
+    {
+      "path": "internal/analyzer/bus_factor.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1853,
+      "sha": "78a6c8a2451aab77e102fa0d33b09d2a23e10272"
+    },
+    {
+      "path": "internal/analyzer/bus_factor_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3435,
+      "sha": "14b941712797656617136b619908ecb2dbe2b44f"
+    },
+    {
+      "path": "internal/analyzer/certificate.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5156,
+      "sha": "2c95c7e31baa7234a1f5563dea4037ee2ecd713e"
+    },
+    {
+      "path": "internal/analyzer/code_quality.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 18234,
+      "sha": "cfb1bb1dc3ea2ba5e4a25deb54c636a0f106df8f"
+    },
+    {
+      "path": "internal/analyzer/code_quality_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 9624,
+      "sha": "7f4f28b67725034d3f41b1b1c3c1987f8343b2b2"
+    },
+    {
+      "path": "internal/analyzer/collaboration.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 18849,
+      "sha": "e7cf075a9d83e78ddd2159216f1abae3c2133dab"
+    },
+    {
+      "path": "internal/analyzer/commit_activity.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 292,
+      "sha": "93586d864084712b9e92802a44a17c787903ab0c"
+    },
+    {
+      "path": "internal/analyzer/contributor_activity.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1304,
+      "sha": "6b78c13b56b16773430df3185101d2e56fc356da"
+    },
+    {
+      "path": "internal/analyzer/contributor_activity_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6049,
+      "sha": "287323ca41eebb51c9766be6d97203a23e429103"
+    },
+    {
+      "path": "internal/analyzer/contributor_insights.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 10796,
+      "sha": "1d0e887f421ecf8c26883b079e8b771f316e8c97"
+    },
+    {
+      "path": "internal/analyzer/contributor_insights_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6808,
+      "sha": "df824d10f45c391f1e2c294d3388b276fb893cd1"
+    },
+    {
+      "path": "internal/analyzer/core",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "9a0e2d9fb133cd3f10617336f172cfd4cb0ac7b6"
+    },
+    {
+      "path": "internal/analyzer/core/engine.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2096,
+      "sha": "f5bad9a313bedce5f20529ca9e30c26577c0094f"
+    },
+    {
+      "path": "internal/analyzer/core/engine_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2218,
+      "sha": "8b150403d30730ba4b79e07d4e2bd090eee5bb99"
+    },
+    {
+      "path": "internal/analyzer/dependencies.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 14191,
+      "sha": "ef12357ec1de2fbc8f457955b9550a64b4d7a9c5"
+    },
+    {
+      "path": "internal/analyzer/dependencies_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2158,
+      "sha": "f75252bc96e7b5d120556be7b91c6725cf073be7"
+    },
+    {
+      "path": "internal/analyzer/files.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 17,
+      "sha": "220b2832573bcd7c1f6e5358ba6c581648857784"
+    },
+    {
+      "path": "internal/analyzer/health.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 412,
+      "sha": "037a4033e07d1b0a000a8390d38bcc8dfa209e51"
+    },
+    {
+      "path": "internal/analyzer/health",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "3dde911f49404346cafc96272cc07dea40090f8e"
+    },
+    {
+      "path": "internal/analyzer/health/bus_factor.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3187,
+      "sha": "1424fc3cdab7757ca8a0163fb1e9cf650d867751"
+    },
+    {
+      "path": "internal/analyzer/health/health.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2365,
+      "sha": "d82f999cee3f7e2cdff91406094edc36cbce5751"
+    },
+    {
+      "path": "internal/analyzer/health/health_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1358,
+      "sha": "6aa9b239bca8d226f4a4575bbe898eebc9db0bab"
+    },
+    {
+      "path": "internal/analyzer/health/maintainer.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4090,
+      "sha": "04018534269c138217ca1296e4ac618aa32828d5"
+    },
+    {
+      "path": "internal/analyzer/health/pr_velocity.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3230,
+      "sha": "efbdd0a1c5f204bfaa83fac80bdea4f1f8ebfa8b"
+    },
+    {
+      "path": "internal/analyzer/health/pr_velocity_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1777,
+      "sha": "97c11cdd4a1e45e0f4b3981bd73e25dafb5c6d25"
+    },
+    {
+      "path": "internal/analyzer/health/render.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2294,
+      "sha": "9cae7ef5f1f4ed8a0dad38a78f37a9d0d7e07f81"
+    },
+    {
+      "path": "internal/analyzer/health_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2257,
+      "sha": "6272ad2c9a93ddc5077d61f6948d998c1e172f25"
+    },
+    {
+      "path": "internal/analyzer/hotspots.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5843,
+      "sha": "6b35d5248b25a66c134baaa74952bd534c28c787"
+    },
+    {
+      "path": "internal/analyzer/incremental.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 771,
+      "sha": "3b8b9e7906c2fe044aa477d61666e89ad5bb6830"
+    },
+    {
+      "path": "internal/analyzer/license.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 10219,
+      "sha": "426544862000fc57b53237d7625ef67c1278611b"
+    },
+    {
+      "path": "internal/analyzer/maintainer.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6646,
+      "sha": "33e518548314ca24c89ab5068a34f2072be45671"
+    },
+    {
+      "path": "internal/analyzer/maintainer_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3544,
+      "sha": "4f023ee26afcea66c891f8b7bb66dd76be911431"
+    },
+    {
+      "path": "internal/analyzer/maturity.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 722,
+      "sha": "9619cd0470c9a974b9f84088d43e78ae61fb8eb9"
+    },
+    {
+      "path": "internal/analyzer/maturity_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3171,
+      "sha": "f5f54e3dac1f84914320de9490b4d0c4645a3424"
+    },
+    {
+      "path": "internal/analyzer/pr_analytics.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4930,
+      "sha": "9e78cd3023888a666f7b49ca4b6a3b5c86ac7092"
+    },
+    {
+      "path": "internal/analyzer/pr_analytics_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8849,
+      "sha": "08413dfde3985f687185dd5a0270d43df24e24b5"
+    },
+    {
+      "path": "internal/analyzer/quality",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "85f29cb35466a8d2aa269b33e55b0db451494f6e"
+    },
+    {
+      "path": "internal/analyzer/quality/score.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1413,
+      "sha": "91d3d3a69afa8e6d3cdc80ab79919f63820994c1"
+    },
+    {
+      "path": "internal/analyzer/quality_dashboard.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 9546,
+      "sha": "855080d6b413bdeb6deb123d91adc44a95934247"
+    },
+    {
+      "path": "internal/analyzer/quality_dashboard_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6942,
+      "sha": "62263fcf988ab77e6f080d6cb901123b8f01fb01"
+    },
+    {
+      "path": "internal/analyzer/recruiter_summary.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 936,
+      "sha": "6e2e3e8e2bdffc256b309c1e57bcda9c7a4c426a"
+    },
+    {
+      "path": "internal/analyzer/risk_alerts.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 696,
+      "sha": "a6a74d898d1d32847ae6aa589e26d000788f1211"
+    },
+    {
+      "path": "internal/analyzer/security.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 17,
+      "sha": "220b2832573bcd7c1f6e5358ba6c581648857784"
+    },
+    {
+      "path": "internal/analyzer/security_scan.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6776,
+      "sha": "5dec1b49c1954fc20901559999551af2886e4287"
+    },
+    {
+      "path": "internal/analyzer/trends.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 17953,
+      "sha": "0a634b0f7e920970014a2b7ec801539df3795ed4"
+    },
+    {
+      "path": "internal/cache",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "ae288659ef58c6a632a7a50a0e38fd2deeed15f6"
+    },
+    {
+      "path": "internal/cache/apicache.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 328,
+      "sha": "6677c94bbcbd4ceb4ac611722f4c3e2696ba6c9b"
+    },
+    {
+      "path": "internal/cache/cache.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 14304,
+      "sha": "c10dae1ecc16e3f224c29420bc633e05652d432c"
+    },
+    {
+      "path": "internal/cache/cache_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6803,
+      "sha": "79fd0066232abb5dbeb21d4cb048d7aa8929f31e"
+    },
+    {
+      "path": "internal/config",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "d0fe3f95c47e32106a617db05ed3bc0404677005"
+    },
+    {
+      "path": "internal/config/settings.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 13468,
+      "sha": "c7b78c3da5d0a7f4088ab516c3fc1cdc385b0ce2"
+    },
+    {
+      "path": "internal/contribution",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "d02239d014b9a43f48294b28e607400e766b74a0"
+    },
+    {
+      "path": "internal/contribution/fetcher.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1228,
+      "sha": "1b78ee6f2b68c24f15d6276ab4cdbe5810bf8f81"
+    },
+    {
+      "path": "internal/contribution/scorer.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4755,
+      "sha": "55c94818a48f5b36cf2fe211b944a5abf037e662"
+    },
+    {
+      "path": "internal/contribution/scorer_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2329,
+      "sha": "6c98bc8b206b627418be3125b7783d9c32494509"
+    },
+    {
+      "path": "internal/evolution",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "c50dcfd842f69b8a2f3896df8e410c98fde5a673"
+    },
+    {
+      "path": "internal/evolution/detector.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5243,
+      "sha": "04c2f8c2ea3be197e11e1e410d386f61667485ae"
+    },
+    {
+      "path": "internal/evolution/types.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5238,
+      "sha": "ee5ec12e0233eae5544dc3534830d384fda4c776"
+    },
+    {
+      "path": "internal/github",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "e42be9b270ea4cbe336cc2f38cff58c5de957343"
+    },
+    {
+      "path": "internal/github/cachecopy.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 854,
+      "sha": "0677a8bc3413d68d749d489258c60ab09b9008e6"
+    },
+    {
+      "path": "internal/github/client.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7578,
+      "sha": "107e2ffa6cee5792667d6992a5ba9bc5375e07fb"
+    },
+    {
+      "path": "internal/github/client_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2786,
+      "sha": "891e88aa6c113d3bae16c28e28616148e9d276df"
+    },
+    {
+      "path": "internal/github/commits.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2806,
+      "sha": "bd5463f33a1d1e8883c50a733183b444594935fd"
+    },
+    {
+      "path": "internal/github/contributor.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2632,
+      "sha": "ea9f47ca28b9bec4ffb3b4a264ac47b11749c79b"
+    },
+    {
+      "path": "internal/github/issues.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1391,
+      "sha": "7e025353c55524568eadc319acff34dd7edb1d9e"
+    },
+    {
+      "path": "internal/github/languages.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 800,
+      "sha": "43d43a322e7574301bb640dfe8c7ba693b13ddb8"
+    },
+    {
+      "path": "internal/github/pulls.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6012,
+      "sha": "ded41def943846cf96fd86311132ea46f8056317"
+    },
+    {
+      "path": "internal/github/rate_limit.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2236,
+      "sha": "4c61f58e5b8a61b54fa204cd31d14e5f75b4cec4"
+    },
+    {
+      "path": "internal/github/repo.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1521,
+      "sha": "0163b69a90d9f4dc9ded2ad2da93765c2e81891d"
+    },
+    {
+      "path": "internal/github/tree.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1257,
+      "sha": "71e120a539566d398f651b2586788875bb5f55ae"
+    },
+    {
+      "path": "internal/graph",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "0f7bd4c8e7ced719f9c0a752c45db3fdaeb6b0d8"
+    },
+    {
+      "path": "internal/graph/graph.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5748,
+      "sha": "dbc649302ea12ceab85c2a48ae9cba3b55987b74"
+    },
+    {
+      "path": "internal/graph/metrics.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7336,
+      "sha": "c30943005d46184b6c04500854d3c482ed612cfb"
+    },
+    {
+      "path": "internal/graph/traversal.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7826,
+      "sha": "38c599d7068b5b27dec672ef4b715d96b8357fb2"
+    },
+    {
+      "path": "internal/graph/types.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5701,
+      "sha": "25c5d1b41e5a7ae0ed59f5e19c6f5ea2b37de6c2"
+    },
+    {
+      "path": "internal/monitor",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "9a91c9d4f86bc054297fcc71a9ad2ba8dd1fa5a6"
+    },
+    {
+      "path": "internal/monitor/monitor.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8866,
+      "sha": "acf3f1cf0d20e425f7e2093d70973a516072744f"
+    },
+    {
+      "path": "internal/monitor/monitor_filter_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4990,
+      "sha": "67cb46dcd432c5e165a378d489ca66fdf9cc68c3"
+    },
+    {
+      "path": "internal/monitor/monitor_state_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3768,
+      "sha": "577f27c5e905ba9b1272e4a11e55800e0d1bb578"
+    },
+    {
+      "path": "internal/output",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "eafc3369ddf38d8c48e7c5ca97f2019e5c6a9c8b"
+    },
+    {
+      "path": "internal/output/certificate.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7907,
+      "sha": "45fb559f8b2d17a9466377abe48e2a6e7cdca23f"
+    },
+    {
+      "path": "internal/output/certificate_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4948,
+      "sha": "763c61fdea3618e01b41256baa8e72ef53d6fa27"
+    },
+    {
+      "path": "internal/output/charts.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1532,
+      "sha": "4129c977f96ac668d35448c9f144e377a618ff8f"
+    },
+    {
+      "path": "internal/output/collaboration.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6776,
+      "sha": "2824cc261db2abc8d344ccff29366c7f12983715"
+    },
+    {
+      "path": "internal/output/compact.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5179,
+      "sha": "030a9987480f1d18ed9edf6f430ed1f7b02cb798"
+    },
+    {
+      "path": "internal/output/compare.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8535,
+      "sha": "a119c3e496ace15e61657cbbbbd140840c59b146"
+    },
+    {
+      "path": "internal/output/compare_html.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5306,
+      "sha": "4c7fd9f50a01d53f12329924b69646617b3e28cd"
+    },
+    {
+      "path": "internal/output/compare_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4408,
+      "sha": "58bb0759d7df5bde1d0e33345f55d07eb24d1365"
+    },
+    {
+      "path": "internal/output/contribution.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 945,
+      "sha": "bc409c51bd952c10b686e88ad17a40d7e32ace0a"
+    },
+    {
+      "path": "internal/output/health.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1170,
+      "sha": "5064702000f74017dd61d78262f73514ce1d9489"
+    },
+    {
+      "path": "internal/output/hotspots.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3426,
+      "sha": "a096432addda08a373d53219f66b5facbcd225df"
+    },
+    {
+      "path": "internal/output/json.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1875,
+      "sha": "80ff489bfbed1ba3adaffe5b510d8d17b22726f5"
+    },
+    {
+      "path": "internal/output/pdf_charts.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4245,
+      "sha": "9dcb963d4ce1108bca73cbe5bb6afb966e308662"
+    },
+    {
+      "path": "internal/output/pdf_config.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2778,
+      "sha": "e35610835545cc7abecf2be08acbd4dedcda8661"
+    },
+    {
+      "path": "internal/output/pdf_enhanced.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 16483,
+      "sha": "8b48a80bed8186473ed34adb243986725c760b6f"
+    },
+    {
+      "path": "internal/output/pr_analytics.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5447,
+      "sha": "a4aa83bc69e9a4abb8da5a161aec2599e7fb8287"
+    },
+    {
+      "path": "internal/output/recruiter.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 735,
+      "sha": "e01092b2d2130697906a8e5a305f55289953dc18"
+    },
+    {
+      "path": "internal/output/styles.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 503,
+      "sha": "b93981587b32502f50a78f8349741572c0de347b"
+    },
+    {
+      "path": "internal/output/tables.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 403,
+      "sha": "5040f003197c8562dd174ab7fe1f286c66ba94a5"
+    },
+    {
+      "path": "internal/output/tables_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1153,
+      "sha": "59d4677bd5419d1a537dcf3c142854f040429b60"
+    },
+    {
+      "path": "internal/output/templates",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "3515e2e1e028f2ac9d07dd3c3aa87ce4a2d36850"
+    },
+    {
+      "path": "internal/output/templates/compare.html",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8573,
+      "sha": "9c0c9aa1e94be6cbbac38786dead104bdc42dc63"
+    },
+    {
+      "path": "internal/output/trends.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 9571,
+      "sha": "e1929b7c15b525437d80b6aaaf7617db3dce2d54"
+    },
+    {
+      "path": "internal/output/yaml.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 217,
+      "sha": "8fde2fac59645e2ea08a48bc685e91ec778cb8e1"
+    },
+    {
+      "path": "internal/predictive",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "c6fedb16a14f7a12950828a1061d701ac3020ad6"
+    },
+    {
+      "path": "internal/predictive/forecaster.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 10592,
+      "sha": "270b00c951dcb3639c82228212e16e4ee45fc837"
+    },
+    {
+      "path": "internal/predictive/forecaster_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1995,
+      "sha": "08be6527e1c25112c12d9c7642f510990551fb7b"
+    },
+    {
+      "path": "internal/predictive/health_adapter.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3423,
+      "sha": "8e4363c817a2afe5df496ceaad0ea805c2a85206"
+    },
+    {
+      "path": "internal/predictive/health_adapter_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4478,
+      "sha": "78bdd839de3867ae89b3cf5db74eb0d97cbd2f2a"
+    },
+    {
+      "path": "internal/predictive/types.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3293,
+      "sha": "8f283ecad248bfa50b74ef2e5f20257813ed99c4"
+    },
+    {
+      "path": "internal/progress",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "05622930de126699750e74fe97a8131d177a1e52"
+    },
+    {
+      "path": "internal/progress/progress.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8866,
+      "sha": "7e294315bbdb15985a634dad33fd20563568b826"
+    },
+    {
+      "path": "internal/progress/progress_example_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1948,
+      "sha": "dc5ffe43f93a1d224de44d6b6ff9074b1d614ccf"
+    },
+    {
+      "path": "internal/scheduler",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "19c2beead07fbf288fba5aa0b41a3e8f1406f989"
+    },
+    {
+      "path": "internal/scheduler/scheduler.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 11971,
+      "sha": "ea20c719eb9f25050f91c043becf5a8e368991cd"
+    },
+    {
+      "path": "internal/simulation",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "3f3a3da371ac798d15207e9aa6ef3f6eef009a3e"
+    },
+    {
+      "path": "internal/simulation/engine.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7321,
+      "sha": "0bfeb1053dfa1932d22bb1822adb34ae11b15677"
+    },
+    {
+      "path": "internal/simulation/types.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4387,
+      "sha": "66657013b2303065985a208201b7f0fcbc8bfcc9"
+    },
+    {
+      "path": "internal/temporal",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "036e4fce7d16263239bdfccb621b5c4ad9509948"
+    },
+    {
+      "path": "internal/temporal/builder.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6938,
+      "sha": "3fd2260075e84687d939c6b0b05f91d7f2b8b506"
+    },
+    {
+      "path": "internal/temporal/builder_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 12108,
+      "sha": "712b4d6fbe5013b653dc5b0ff99f41ba64b23617"
+    },
+    {
+      "path": "internal/temporal/coordinator.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 9658,
+      "sha": "e70b499a6345dc95aee3f6d0a7fc30641a8a7d08"
+    },
+    {
+      "path": "internal/temporal/snapshot.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6954,
+      "sha": "f4d8f6da296404704d98c7301b3adcab523c0153"
+    },
+    {
+      "path": "internal/temporal/types.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 3045,
+      "sha": "72820a9d66094744c470ecbba10c8abf9cef0061"
+    },
+    {
+      "path": "internal/ui",
+      "mode": "040000",
+      "type": "tree",
+      "size": 0,
+      "sha": "d24e37cb10f5138bd8e78ba969edb35c3ea055b1"
+    },
+    {
+      "path": "internal/ui/accessibility.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 13230,
+      "sha": "f5a7879fe3c09eb018d487fa6380efb38c721322"
+    },
+    {
+      "path": "internal/ui/accessibility_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7651,
+      "sha": "1bd5b59b9abcae305a04a90d2545d911e2325e0b"
+    },
+    {
+      "path": "internal/ui/analyzer_bridge.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 9902,
+      "sha": "018519e17026d2a0ac1e2f003959ce1f6e5242b0"
+    },
+    {
+      "path": "internal/ui/app.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 41032,
+      "sha": "3d08a5ba880ae9b6069405a701d2f53cd4314b15"
+    },
+    {
+      "path": "internal/ui/charts.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1430,
+      "sha": "269de7906c9681eaf60d76565e5bc4f668b86d85"
+    },
+    {
+      "path": "internal/ui/clone_input.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1909,
+      "sha": "1e4d5c180fc85f0811926306a1a961e6b247dea6"
+    },
+    {
+      "path": "internal/ui/cloning.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1160,
+      "sha": "4c271ef97aa6032a3edae7214c3ebe5de76d6501"
+    },
+    {
+      "path": "internal/ui/collaboration.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6710,
+      "sha": "91b64e3155b9e167fac577d66adcb548b9ec9a72"
+    },
+    {
+      "path": "internal/ui/compare_input.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2030,
+      "sha": "9d24fb784fe7eb80cbfa860aab28ea78014aa971"
+    },
+    {
+      "path": "internal/ui/compare_loading.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1591,
+      "sha": "b07592ebeded747f2659d337c2554ce1a9a15ef5"
+    },
+    {
+      "path": "internal/ui/compare_result.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4826,
+      "sha": "d10814331d3ffacf9dce76a24849d403e7281ac1"
+    },
+    {
+      "path": "internal/ui/current_analysis.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 931,
+      "sha": "923b89bf750c57d6011a93ba70aa1648a3679cec"
+    },
+    {
+      "path": "internal/ui/dashboard.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 27931,
+      "sha": "3db8f07fbb2baeead7533f4e9ff3921785e30274"
+    },
+    {
+      "path": "internal/ui/dashboard_regression_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4364,
+      "sha": "eba8561dab20d317be42d69935607f322bcf2145"
+    },
+    {
+      "path": "internal/ui/export.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 20530,
+      "sha": "5b3fb5a8b2c41766c0711433e68c236d62bbb269"
+    },
+    {
+      "path": "internal/ui/export_enhanced_pdf.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1571,
+      "sha": "3d05afed1e214fec848ebb7692c9d2aefe56b283"
+    },
+    {
+      "path": "internal/ui/export_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1941,
+      "sha": "c74e1b821defce32fb74c4e182ba112e3644ed61"
+    },
+    {
+      "path": "internal/ui/favorites.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4575,
+      "sha": "e711e0eefa85659b22a017a22c2a23ea4f5a5a68"
+    },
+    {
+      "path": "internal/ui/favorites_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4419,
+      "sha": "72db10a0d2b3f8076a1c657a262e7edfb9a86673"
+    },
+    {
+      "path": "internal/ui/file_edit.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8440,
+      "sha": "5149211842cebb554386f36550d70d4a97a11a57"
+    },
+    {
+      "path": "internal/ui/file_edit_security_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2552,
+      "sha": "da29c6f0efdee271406bf46501269003029e98a7"
+    },
+    {
+      "path": "internal/ui/help.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4107,
+      "sha": "0c1049248bf95f9fffd61fbbdea4c638241d095f"
+    },
+    {
+      "path": "internal/ui/history.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 5510,
+      "sha": "32f47f96c7e72318e75114874af749be794c3257"
+    },
+    {
+      "path": "internal/ui/input.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2221,
+      "sha": "857c26738036cad29cb7951e6f3fa2a0b723966f"
+    },
+    {
+      "path": "internal/ui/loading.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 2462,
+      "sha": "c0ef26decca5515de603b227f24b1ebb6a77e8ee"
+    },
+    {
+      "path": "internal/ui/menu.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 9329,
+      "sha": "57e60851a552a7c11b3faa5217c4a81bc1dd9a98"
+    },
+    {
+      "path": "internal/ui/menu_routing_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4146,
+      "sha": "998d0351245024a4d0f30562f9e011e239adf00b"
+    },
+    {
+      "path": "internal/ui/monitor_dashboard.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7562,
+      "sha": "ecae490b7887850940438208a27518c84429ad53"
+    },
+    {
+      "path": "internal/ui/notifications.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8388,
+      "sha": "11092c5f73caa8978298f83ecdb7914d32e3386b"
+    },
+    {
+      "path": "internal/ui/progress.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4197,
+      "sha": "c554f2277cf560eeaad5d7a7e9154a867247fddf"
+    },
+    {
+      "path": "internal/ui/responsive.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 6114,
+      "sha": "1e39aa16cd55438f6360e65904ddb7f4cc0ebad1"
+    },
+    {
+      "path": "internal/ui/settings.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 4655,
+      "sha": "edbb753b90f6db89251fe0da9a39d96929a203f7"
+    },
+    {
+      "path": "internal/ui/shortcuts.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8581,
+      "sha": "3044a23ecbfdd8d03d80234691f6b0b35ec8dfbe"
+    },
+    {
+      "path": "internal/ui/styles.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1266,
+      "sha": "396925580fda606f43421d7ce5187cdf361730e6"
+    },
+    {
+      "path": "internal/ui/themes.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 8153,
+      "sha": "e71fdd8b4a61d54131ea466d0c72313880f20cea"
+    },
+    {
+      "path": "internal/ui/tree.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7616,
+      "sha": "3b82ceae324018d9f2fe1aa970f786e6fc1809d3"
+    },
+    {
+      "path": "internal/ui/trends_view.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 7650,
+      "sha": "9206d6d1e65f522d03674d97cd77cce4bd1de95c"
+    },
+    {
+      "path": "internal/ui/trends_view_test.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1672,
+      "sha": "405a9453f55262fde5497196110d48871a43bfbd"
+    },
+    {
+      "path": "internal/ui/types.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 1421,
+      "sha": "9fc9ea6abc44381006ee7e217e6f878d30648f9e"
+    },
+    {
+      "path": "main.go",
+      "mode": "100644",
+      "type": "blob",
+      "size": 517,
+      "sha": "7e479312be215f42f87d4fa5be5c53daf5823bec"
+    },
+    {
+      "path": "package-lock.json",
+      "mode": "100644",
+      "type": "blob",
+      "size": 95,
+      "sha": "e61228da5083be8d7c426aa1501c8b64a3cc93cb"
+    }
+  ],
+  "Languages": {
+    "Dockerfile": 1017,
+    "Go": 853751,
+    "HTML": 8573
+  },
+  "HealthScore": 92,
+  "BusFactor": 3,
+  "BusRisk": "Low Risk",
+  "MaturityScore": 45,
+  "MaturityLevel": "Growing",
+  "Dependencies": null,
+  "ContributorInsights": {
+    "total_contributors": 49,
+    "active_contributors": 17,
+    "top_contributor": {
+      "login": "agnivo988",
+      "commits": 185,
+      "percentage": 35.92233009708738,
+      "rank": 1,
+      "contributor_type": "Core",
+      "avatar_url": "https://avatars.githubusercontent.com/u/183830443?v=4"
+    },
+    "contributor_details": [
+      {
+        "login": "agnivo988",
+        "commits": 185,
+        "percentage": 35.92233009708738,
+        "rank": 1,
+        "contributor_type": "Core",
+        "avatar_url": "https://avatars.githubusercontent.com/u/183830443?v=4"
+      },
+      {
+        "login": "Aditya8369",
+        "commits": 89,
+        "percentage": 17.281553398058254,
+        "rank": 2,
+        "contributor_type": "Regular",
+        "avatar_url": "https://avatars.githubusercontent.com/u/178887069?v=4"
+      },
+      {
+        "login": "Aamod007",
+        "commits": 45,
+        "percentage": 8.737864077669903,
+        "rank": 3,
+        "contributor_type": "Regular",
+        "avatar_url": "https://avatars.githubusercontent.com/u/119789532?v=4"
+      },
+      {
+        "login": "Gupta-02",
+        "commits": 16,
+        "percentage": 3.1067961165048543,
+        "rank": 4,
+        "contributor_type": "Occasional",
+        "avatar_url": "https://avatars.githubusercontent.com/u/182321898?v=4"
+      },
+      {
+        "login": "vedhapprakashni",
+        "commits": 13,
+        "percentage": 2.524271844660194,
+        "rank": 5,
+        "contributor_type": "Occasional",
+        "avatar_url": "https://avatars.githubusercontent.com/u/126845490?v=4"
+      },
+      {
+        "login": "dependabot[bot]",
+        "commits": 10,
+        "percentage": 1.9417475728155338,
+        "rank": 6,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/in/29110?v=4"
+      },
+      {
+        "login": "tanmayythakare",
+        "commits": 10,
+        "percentage": 1.9417475728155338,
+        "rank": 7,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/131752104?v=4"
+      },
+      {
+        "login": "GauravKarakoti",
+        "commits": 9,
+        "percentage": 1.7475728155339807,
+        "rank": 8,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/180496085?v=4"
+      },
+      {
+        "login": "Pranaykarvi",
+        "commits": 9,
+        "percentage": 1.7475728155339807,
+        "rank": 9,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/149316563?v=4"
+      },
+      {
+        "login": "sujitha-kotyada",
+        "commits": 9,
+        "percentage": 1.7475728155339807,
+        "rank": 10,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/219284312?v=4"
+      },
+      {
+        "login": "pranav-cholleti",
+        "commits": 8,
+        "percentage": 1.5533980582524272,
+        "rank": 11,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/119649614?v=4"
+      },
+      {
+        "login": "ItsMeArm00n",
+        "commits": 7,
+        "percentage": 1.3592233009708738,
+        "rank": 12,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/139522983?v=4"
+      },
+      {
+        "login": "Sappymukherjee214",
+        "commits": 7,
+        "percentage": 1.3592233009708738,
+        "rank": 13,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/173528272?v=4"
+      },
+      {
+        "login": "riddhima25bet10005-a11y",
+        "commits": 7,
+        "percentage": 1.3592233009708738,
+        "rank": 14,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/228184960?v=4"
+      },
+      {
+        "login": "DhruvalBhinsara1",
+        "commits": 6,
+        "percentage": 1.1650485436893203,
+        "rank": 15,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/48351115?v=4"
+      },
+      {
+        "login": "MuktaRedij",
+        "commits": 6,
+        "percentage": 1.1650485436893203,
+        "rank": 16,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/196807858?v=4"
+      },
+      {
+        "login": "sonusharma6-dsa",
+        "commits": 6,
+        "percentage": 1.1650485436893203,
+        "rank": 17,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/258794209?v=4"
+      },
+      {
+        "login": "sanzzzz-g",
+        "commits": 5,
+        "percentage": 0.9708737864077669,
+        "rank": 18,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/218762472?v=4"
+      },
+      {
+        "login": "Aryan-B-Parikh",
+        "commits": 4,
+        "percentage": 0.7766990291262136,
+        "rank": 19,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/182212753?v=4"
+      },
+      {
+        "login": "EchoOfCode",
+        "commits": 4,
+        "percentage": 0.7766990291262136,
+        "rank": 20,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/210523620?v=4"
+      },
+      {
+        "login": "KUMARI-SONALIUPADHYAY",
+        "commits": 4,
+        "percentage": 0.7766990291262136,
+        "rank": 21,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/177291359?v=4"
+      },
+      {
+        "login": "Nitya-003",
+        "commits": 4,
+        "percentage": 0.7766990291262136,
+        "rank": 22,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/181471078?v=4"
+      },
+      {
+        "login": "Vaibhav-0111",
+        "commits": 4,
+        "percentage": 0.7766990291262136,
+        "rank": 23,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/150104890?v=4"
+      },
+      {
+        "login": "adyamohanka",
+        "commits": 4,
+        "percentage": 0.7766990291262136,
+        "rank": 24,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/221871975?v=4"
+      },
+      {
+        "login": "Kiran95021",
+        "commits": 3,
+        "percentage": 0.5825242718446602,
+        "rank": 25,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/181767771?v=4"
+      },
+      {
+        "login": "SenseiSuraj24",
+        "commits": 3,
+        "percentage": 0.5825242718446602,
+        "rank": 26,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/195530316?v=4"
+      },
+      {
+        "login": "Shriii19",
+        "commits": 3,
+        "percentage": 0.5825242718446602,
+        "rank": 27,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/166788110?v=4"
+      },
+      {
+        "login": "Xenon010101",
+        "commits": 3,
+        "percentage": 0.5825242718446602,
+        "rank": 28,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/143032263?v=4"
+      },
+      {
+        "login": "madhav2348",
+        "commits": 3,
+        "percentage": 0.5825242718446602,
+        "rank": 29,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/161720210?v=4"
+      },
+      {
+        "login": "navya-1907",
+        "commits": 3,
+        "percentage": 0.5825242718446602,
+        "rank": 30,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/133208903?v=4"
+      },
+      {
+        "login": "srinithithirumaran",
+        "commits": 3,
+        "percentage": 0.5825242718446602,
+        "rank": 31,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/192793295?v=4"
+      },
+      {
+        "login": "AKSHEXXXX",
+        "commits": 2,
+        "percentage": 0.3883495145631068,
+        "rank": 32,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/242416867?v=4"
+      },
+      {
+        "login": "Shiva210Jyoti",
+        "commits": 2,
+        "percentage": 0.3883495145631068,
+        "rank": 33,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/181663168?v=4"
+      },
+      {
+        "login": "jonahmichael",
+        "commits": 2,
+        "percentage": 0.3883495145631068,
+        "rank": 34,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/186861360?v=4"
+      },
+      {
+        "login": "magic-peach",
+        "commits": 2,
+        "percentage": 0.3883495145631068,
+        "rank": 35,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/146705736?v=4"
+      },
+      {
+        "login": "shrutip04",
+        "commits": 2,
+        "percentage": 0.3883495145631068,
+        "rank": 36,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/196679282?v=4"
+      },
+      {
+        "login": "Abhijeet-980",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 37,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/88506393?v=4"
+      },
+      {
+        "login": "Harshit-Maurya838",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 38,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/174622309?v=4"
+      },
+      {
+        "login": "IshitaSingh0822",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 39,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/127220309?v=4"
+      },
+      {
+        "login": "PiyushRajan2007",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 40,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/250790827?v=4"
+      },
+      {
+        "login": "ShashankSaga",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 41,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/182335945?v=4"
+      },
+      {
+        "login": "Shivani-Meena07",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 42,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/219447161?v=4"
+      },
+      {
+        "login": "adityashirsatrao007",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 43,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/137131673?v=4"
+      },
+      {
+        "login": "akshatextreme",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 44,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/178882371?v=4"
+      },
+      {
+        "login": "anshul23102",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 45,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/167362756?v=4"
+      },
+      {
+        "login": "bhavyaxtech",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 46,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/202380426?v=4"
+      },
+      {
+        "login": "overhyped-pratham",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 47,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/251187220?v=4"
+      },
+      {
+        "login": "rajsingh1301",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 48,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/195672131?v=4"
+      },
+      {
+        "login": "sahoo-tech",
+        "commits": 1,
+        "percentage": 0.1941747572815534,
+        "rank": 49,
+        "contributor_type": "New",
+        "avatar_url": "https://avatars.githubusercontent.com/u/179259731?v=4"
+      }
+    ],
+    "diversity_score": 84.54181983850194,
+    "concentration_risk": "Low",
+    "new_contributors": 42,
+    "veteran_contributors": 1,
+    "commit_distribution": {
+      "top_1_percent": 35.92233009708738,
+      "top_10_percent": 65.0485436893204,
+      "top_50_percent": 91.45631067961165,
+      "gini_coefficient": 0.7238359421438478
+    },
+    "team_size": "Large",
+    "recommendations": [
+      "🆕 Many new contributors. Ensure good onboarding documentation.",
+      "✅ Good contribution diversity. Maintain current practices."
+    ]
+  },
+  "Security": null,
+  "CodeQuality": null,
+  "License": null,
+  "ContributorActivity": {
+    "Last90Days": 179,
+    "Last180Days": 523,
+    "Trend": "Declining",
+    "Insight": "Commit activity has decreased in recent months"
+  },
+  "RiskAlerts": null,
+  "QualityDashboard": {
+    "overall_score": 83,
+    "risk_level": "Low",
+    "quality_grade": "A",
+    "problem_hotspots": null,
+    "hotspots": null,
+    "recommendations": null,
+    "key_metrics": {
+      "health_score": 92,
+      "security_score": 100,
+      "maturity_level": "Growing",
+      "bus_factor": 3,
+      "activity_level": "Very High",
+      "contributor_count": 49
+    }
+  },
+  "Issues": null,
+  "PRs": null,
+  "MaintainerAnalysis": null,
+  "ContributionScore": {
+    "score": 0,
+    "level": "",
+    "strengths": null,
+    "weaknesses": null
+  }
+}

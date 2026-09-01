@@ -322,9 +322,11 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case AnalyzeRepoMsg:
 			m.state = stateLoading
 			m.loading.SetRepoName(msg.repoName)
+			tracker := NewProgressTracker()
+			m.loading.SetProgress(tracker)
 			ctx, cancel := context.WithCancel(context.Background())
 			m.analysisCancel = cancel
-			cmds = append(cmds, m.analyzeRepo(ctx, msg.repoName), TickProgressCmd())
+			cmds = append(cmds, m.analyzeRepo(ctx, msg.repoName, tracker), TickProgressCmd())
 		case BackToMenuMsg:
 			m.state = stateMenu
 		}
@@ -486,12 +488,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						log.Printf("Failed to save favorites: %v", err)
 						m.err = fmt.Errorf("Failed to save favorites: %v", err)
 					} else {
-						m.input.input = repoName
 						m.state = stateLoading
 						m.loading.SetRepoName(repoName)
+						tracker := NewProgressTracker()
+						m.loading.SetProgress(tracker)
 						ctx, cancel := context.WithCancel(context.Background())
 						m.analysisCancel = cancel
-						cmds = append(cmds, m.analyzeRepo(ctx, repoName), TickProgressCmd())
+						cmds = append(cmds, m.analyzeRepo(ctx, repoName, tracker), TickProgressCmd())
 					}
 				}
 			case "d":
@@ -531,12 +534,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Re-analyze selected repo
 				if len(m.history.Entries) > 0 {
 					repoName := m.history.Entries[m.historyCursor].RepoName
-					m.input.input = repoName
 					m.state = stateLoading
 					m.loading.SetRepoName(repoName)
+					tracker := NewProgressTracker()
+					m.loading.SetProgress(tracker)
 					ctx, cancel := context.WithCancel(context.Background())
 					m.analysisCancel = cancel
-					cmds = append(cmds, m.analyzeRepo(ctx, repoName), TickProgressCmd())
+					cmds = append(cmds, m.analyzeRepo(ctx, repoName, tracker), TickProgressCmd())
 				}
 			case "d":
 				// Delete selected entry
@@ -762,12 +766,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if key, ok := msg.(tea.KeyMsg); ok {
 			if key.String() == "." {
 				if m.dashboard.data.Repo != nil {
-					m.input.input = m.dashboard.data.Repo.FullName
 					m.state = stateLoading
 					m.loading.SetRepoName(m.input.input)
+					tracker := NewProgressTracker()
+					m.loading.SetProgress(tracker)
 					ctx, cancel := context.WithCancel(context.Background())
 					m.analysisCancel = cancel
-					cmds = append(cmds, m.analyzeRepo(ctx, m.input.input), TickProgressCmd())
+					cmds = append(cmds, m.analyzeRepo(ctx, m.input.input, tracker), TickProgressCmd())
 					return m, tea.Batch(cmds...)
 				}
 			}
@@ -934,7 +939,7 @@ func (m MainModel) cloneRepo(repoName string) tea.Cmd {
 	}
 }
 
-func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
+func (m MainModel) analyzeRepo(ctx context.Context, repoName string, tracker *ProgressTracker) tea.Cmd {
 	return func() tea.Msg {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -964,7 +969,9 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			}
 		}
 
-		tracker := NewProgressTracker()
+		if tracker == nil {
+			tracker = NewProgressTracker()
+		}
 
 		// Stage 1: Fetch repository
 		token := ""
@@ -1130,6 +1137,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		tracker.NextStage() // Move to Security Scan
 
 		// Stage 7: Security vulnerability scan
 		security, securityErr := analyzer.ScanDependencies(deps)
@@ -1139,10 +1147,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		tracker.NextStage()
+		tracker.NextStage() // Move to Quality Analysis
 
-		// Mark complete
-		tracker.NextStage()
 		riskAlerts = analyzer.AnalyzeRiskAlerts(
 			busFactor,
 			score,
@@ -1173,6 +1179,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			deps,
 			hotspots,
 		)
+		tracker.NextStage() // Move to Issues & Pull Requests
 
 		// Fetch issues and PRs
 		issues, issuesErr := client.GetIssues(parts[0], parts[1], "open")
@@ -1241,6 +1248,9 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 
 		// Add success notification
 		AddAnalysisNotification(repoName, true)
+
+		tracker.NextStage() // Complete Issues & Pull Requests, activate Final Report
+		tracker.NextStage() // Mark Final Report complete (reaches 100%)
 
 		return result
 	}
