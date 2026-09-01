@@ -648,6 +648,9 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.err = fmt.Errorf("Cache cleared")
 				} else if m.settingsOption == "token" && m.appConfig != nil {
 					m.appConfig.ClearGitHubToken()
+					// Propagate the clear to any live monitor so the old token is
+					// no longer used in subsequent API requests from that instance.
+					m.monitorDashboard.ClearToken()
 					m.err = fmt.Errorf("GitHub token cleared")
 				}
 			case "x":
