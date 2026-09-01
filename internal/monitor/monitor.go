@@ -22,8 +22,8 @@ type MonitorState struct {
 	Owner                string    `json:"owner"`
 	Repo                 string    `json:"repo"`
 	LastCommitSHA        string    `json:"last_commit_sha"`
-	LastIssueCount       int       `json:"last_issue_id"`
-	LastPRCount          int       `json:"last_pr_id"`
+	LastIssueCount       int       `json:"last_issue_count"`
+	LastPRCount          int       `json:"last_pr_count"`
 	LastContributorCount int       `json:"last_contributor_count"`
 	LastUpdated          time.Time `json:"last_updated"`
 }
@@ -148,11 +148,17 @@ func (m *Monitor) checkForUpdates() {
 	// Check for new commits
 	m.checkCommits()
 
-	// Check for new issues
-	m.checkIssues()
+	// Fetch issues once and pass to both checkers to avoid duplicate API calls
+	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
+	if err != nil {
+		log.Printf("Failed to get issues: %v", err)
+	} else {
+		// Check for new issues
+		m.checkIssues(issues)
 
-	// Check for new pull requests
-	m.checkPullRequests()
+		// Check for new pull requests
+		m.checkPullRequests(issues)
+	}
 
 	// Check for contributor changes
 	m.checkContributors()
@@ -173,14 +179,22 @@ func (m *Monitor) checkCommits() {
 		latestCommit := commits[0]
 		if latestCommit.SHA != m.state.LastCommitSHA {
 			// New commit detected
+			shaDisplay := latestCommit.SHA
+			if len(shaDisplay) > 8 {
+				shaDisplay = shaDisplay[:8]
+			}
 			notification := Notification{
 				Type:      "commit",
 				Title:     "New Commit",
-				Message:   fmt.Sprintf("New commit: %s", latestCommit.SHA[:8]),
+				Message:   fmt.Sprintf("New commit: %s", shaDisplay),
 				Timestamp: time.Now(),
 				Severity:  "info",
 			}
-			m.notifications <- notification
+			select {
+			case m.notifications <- notification:
+			default:
+				log.Printf("Notification channel full, dropping commit notification")
+			}
 
 			m.state.LastCommitSHA = latestCommit.SHA
 			m.state.LastUpdated = time.Now()
@@ -211,12 +225,7 @@ func countPRs(items []github.Issue) int {
 }
 
 // checkIssues monitors for new issues (excludes pull requests)
-func (m *Monitor) checkIssues() {
-	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
-	if err != nil {
-		log.Printf("Failed to get issues: %v", err)
-		return
-	}
+func (m *Monitor) checkIssues(issues []github.Issue) {
 
 	actualIssuesCount := countIssues(issues)
 
@@ -229,18 +238,17 @@ func (m *Monitor) checkIssues() {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+		select {
+		case m.notifications <- notification:
+		default:
+			log.Printf("Notification channel full, dropping issue notification")
+		}
 		m.state.LastIssueCount = actualIssuesCount
 	}
 }
 
 // checkPullRequests monitors for new pull requests (filtered and state-tracked)
-func (m *Monitor) checkPullRequests() {
-	issues, err := m.client.GetIssues(m.owner, m.repo, "open")
-	if err != nil {
-		log.Printf("Failed to get pull requests: %v", err)
-		return
-	}
+func (m *Monitor) checkPullRequests(issues []github.Issue) {
 
 	actualPRCount := countPRs(issues)
 
@@ -253,7 +261,11 @@ func (m *Monitor) checkPullRequests() {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+		select {
+		case m.notifications <- notification:
+		default:
+			log.Printf("Notification channel full, dropping PR notification")
+		}
 		m.state.LastPRCount = actualPRCount
 	}
 }
@@ -275,7 +287,11 @@ func (m *Monitor) checkContributors() {
 			Timestamp: time.Now(),
 			Severity:  "info",
 		}
-		m.notifications <- notification
+		select {
+		case m.notifications <- notification:
+		default:
+			log.Printf("Notification channel full, dropping contributor notification")
+		}
 		m.state.LastContributorCount = len(contributors)
 	}
 }
