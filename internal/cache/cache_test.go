@@ -225,6 +225,8 @@ func TestRepoToFilename(t *testing.T) {
 		{"owner/repo", "owner_repo.json"},
 		{"user/my-project", "user_my-project.json"},
 		{"org/repo.name", "org_repo.name.json"},
+		{"analysis:owner/repo", "analysis_owner_repo.json"},
+		{"monitor:owner/repo", "monitor_owner_repo.json"},
 	}
 
 	for _, tt := range tests {

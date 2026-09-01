@@ -141,7 +141,9 @@ func getCacheDir() (string, error) {
 
 // repoToFilename converts repo name to safe filename
 func repoToFilename(repoName string) string {
-	return strings.ReplaceAll(repoName, "/", "_") + ".json"
+	name := strings.ReplaceAll(repoName, "/", "_")
+	name = strings.ReplaceAll(name, ":", "_")
+	return name + ".json"
 }
 
 // loadIndex loads the cache index from disk

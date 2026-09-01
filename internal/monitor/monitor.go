@@ -326,7 +326,7 @@ func (m *Monitor) loadState() {
 	defer m.stateMutex.Unlock()
 
 	key := fmt.Sprintf("%s/%s", m.owner, m.repo)
-	entry, found := m.cache.Get(key)
+	entry, found := m.cache.Get("monitor:" + key)
 	if !found || entry == nil || len(entry.Analysis) == 0 {
 		return
 	}
@@ -367,7 +367,7 @@ func (m *Monitor) saveState() {
 		stateCopy.Repo = m.repo
 	}
 
-	if err := m.cache.SetWithTTL(key, stateCopy, monitorStateTTL); err != nil {
+	if err := m.cache.SetWithTTL("monitor:"+key, stateCopy, monitorStateTTL); err != nil {
 		log.Printf("Failed to persist monitoring state for %s: %v", key, err)
 	}
 }
