@@ -11,8 +11,25 @@ permissions:
   contents: write
 
 jobs:
+  vet:
+    name: static-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.2'
+          cache: true
+      - name: Download dependencies
+        run: go mod download
+      - name: Run go vet
+        run: go vet ./...
+
   build:
     name: Build & Release (${{ matrix.suffix }})
+    needs: [vet]
     runs-on: ubuntu-latest
 
     strategy:
@@ -44,7 +61,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           # Keep in sync with the go directive in go.mod.
-          go-version: '1.24'
+          go-version: '1.24.2'
           cache: true
 
       - name: Download dependencies
