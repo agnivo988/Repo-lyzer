@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"os"
@@ -11,6 +12,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/agnivo988/Repo-lyzer/internal/config"
+	"github.com/agnivo988/Repo-lyzer/internal/gitpush"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -87,6 +90,13 @@ func (m FileEditModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusMsg = "✓ Opened in editor"
 		}
 
+	case pushResultMsg:
+		if msg.err != nil {
+			m.statusMsg = fmt.Sprintf("Push failed: %v", msg.err)
+		} else {
+			m.statusMsg = "✓ Pushed changes successfully!"
+		}
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "v":
@@ -102,6 +112,12 @@ func (m FileEditModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Open cloned repo in VS Code
 			if m.isCloned {
 				return m, m.openClonedInVSCode()
+			}
+		case "p":
+			// Push changes to GitHub repository
+			if m.isCloned {
+				m.statusMsg = "Pushing to GitHub..."
+				return m, m.pushToGitHub()
 			}
 		case "esc":
 			m.Done = true
@@ -139,8 +155,10 @@ func (m FileEditModel) View() string {
 	content += "  [c] Clone repository to Desktop\n"
 	if m.isCloned {
 		content += SuccessStyle.Render("  [o] Open cloned repo in VS Code (new window)\n")
+		content += SuccessStyle.Render("  [p] Push changes to GitHub repository\n")
 	} else {
 		content += SubtleStyle.Render("  [o] Open cloned repo (clone first)\n")
+		content += SubtleStyle.Render("  [p] Push changes (clone first)\n")
 	}
 
 	if m.statusMsg != "" {
@@ -345,5 +363,30 @@ func (m FileEditModel) openClonedInVSCode() tea.Cmd {
 		}
 
 		return openResultMsg{err}
+	}
+}
+
+type pushResultMsg struct {
+	err error
+}
+
+// pushToGitHub stages, commits, and pushes any local changes to GitHub
+func (m FileEditModel) pushToGitHub() tea.Cmd {
+	return func() tea.Msg {
+		settings, err := config.LoadSettings()
+		token := ""
+		if err == nil {
+			token = settings.GitHubToken
+		}
+
+		errPush := gitpush.PushRepo(context.Background(), gitpush.PushOptions{
+			LocalPath: m.clonePath,
+			RepoOwner: m.repoOwner,
+			RepoName:  m.repoName,
+			CommitMsg: "Update via Repo-lyzer",
+			Token:     token,
+		})
+
+		return pushResultMsg{err: errPush}
 	}
 }

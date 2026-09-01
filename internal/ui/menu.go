@@ -35,6 +35,7 @@ func NewMenuModel() MenuModel {
 			"🔄 Compare Repositories",
 			"📜 View History",
 			"📥 Clone Repository",
+			"📤 Push to GitHub",
 			"🔔 Notifications",
 			"👀 Monitoring",
 			"⚙️ Settings",
@@ -129,7 +130,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "q":
 			if !m.inSubmenu {
-				m.SelectedOption = 9
+				m.SelectedOption = 10
 				m.Done = true
 			} else {
 				m.inSubmenu = false
@@ -139,7 +140,7 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "?":
 			if !m.inSubmenu {
-				m.cursor = 8
+				m.cursor = 9
 				m.enterSubmenu()
 			}
 		case "a":
@@ -168,19 +169,24 @@ func (m MenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = 4 // Clone
 				m.enterSubmenu()
 			}
+		case "u":
+			if !m.inSubmenu {
+				m.cursor = 5 // Push
+				m.enterSubmenu()
+			}
 		case "n":
 			if !m.inSubmenu {
-				m.cursor = 5 // Notification
+				m.cursor = 6 // Notification
 				m.enterSubmenu()
 			}
 		case "m":
 			if !m.inSubmenu {
-				m.cursor = 6 // Monitor
+				m.cursor = 7 // Monitor
 				m.enterSubmenu()
 			}
 		case "s":
 			if !m.inSubmenu {
-				m.cursor = 7 //Setting
+				m.cursor = 8 //Setting
 				m.enterSubmenu()
 			}
 		}
@@ -222,17 +228,20 @@ func (m *MenuModel) enterSubmenu() {
 		m.SelectedSubmenuOption = -1
 		m.SelectedSubmenuType = ""
 		m.Done = true
-	case 5: // Notification
+	case 5: // Push to GitHub
 		m.SelectedOption = 5
 		m.SelectedSubmenuOption = -1
 		m.SelectedSubmenuType = ""
 		m.Done = true
-	case 6: // Monitoring
+	case 6: // Notification
 		m.SelectedOption = 6
 		m.SelectedSubmenuOption = -1
 		m.SelectedSubmenuType = ""
 		m.Done = true
-	case 7: // Settings
+	case 7: // Monitoring
+		m.SelectedOption = 7
+		m.Done = true
+	case 8: // Settings
 		m.submenuType = "settings"
 		m.submenuChoices = []string{
 			"Theme Settings",
@@ -243,7 +252,7 @@ func (m *MenuModel) enterSubmenu() {
 		}
 		m.inSubmenu = true
 		m.submenuCursor = 0
-	case 8: // Help
+	case 9: // Help
 		m.submenuType = "help"
 		m.submenuChoices = []string{
 			"Keyboard Shortcuts",
@@ -253,10 +262,8 @@ func (m *MenuModel) enterSubmenu() {
 		}
 		m.inSubmenu = true
 		m.submenuCursor = 0
-	case 9: // Exit
-		m.SelectedOption = 9
-		m.SelectedSubmenuOption = -1
-		m.SelectedSubmenuType = ""
+	case 10: // Exit
+		m.SelectedOption = 10
 		m.Done = true
 	}
 }
@@ -284,7 +291,7 @@ func (m MenuModel) View() string {
 		return m.submenuView(logoView)
 	}
 	// Menu items with keyboard shortcuts
-	shortcuts := []string{"a", "f", "c", "h", "d", "n", "m", "s", "?", "q"}
+	shortcuts := []string{"a", "f", "c", "h", "d", "u", "n", "m", "s", "?", "q"}
 	var menuItems []string
 
 	for i, choice := range m.choices {
