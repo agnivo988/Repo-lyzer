@@ -2,6 +2,7 @@ package temporal
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/evolution"
@@ -265,9 +266,9 @@ func (c *Coordinator) Finalize() *AnalysisResult {
 	}
 
 	// Compute summary metrics
-	result.HealthScore = 75 // TODO: Calculate from actual data
-	result.HealthTrend = "stable"
-	result.OverallRiskLevel = "medium"
+	result.HealthScore = c.computeHealthScore()
+	result.HealthTrend = c.computeHealthTrend()
+	result.OverallRiskLevel = c.computeOverallRiskLevel()
 	result.CriticalIssues = make([]string, 0)
 
 	// Identify critical issues from findings
@@ -278,6 +279,138 @@ func (c *Coordinator) Finalize() *AnalysisResult {
 	}
 
 	return result
+}
+
+func (c *Coordinator) computeHealthScore() int {
+	if c.Timeline == nil {
+		return 50
+	}
+
+	score := 100
+
+	for _, risk := range c.RiskIndicators {
+		switch strings.ToLower(risk.Severity) {
+		case "critical":
+			score -= 30
+		case "high":
+			score -= 20
+		case "medium":
+			score -= 10
+		case "low":
+			score -= 5
+		default:
+			score -= 2
+		}
+	}
+
+	for _, drift := range c.DriftIndicators {
+		switch strings.ToLower(drift.Severity) {
+		case "high":
+			score -= 8
+		case "medium":
+			score -= 4
+		case "low":
+			score -= 2
+		}
+	}
+
+	if c.HealthForecast != nil {
+		switch strings.ToLower(c.HealthForecast.Trend) {
+		case "improving":
+			score += 8
+		case "degrading":
+			score -= 10
+		}
+	}
+
+	if score < 0 {
+		return 0
+	}
+	if score > 100 {
+		return 100
+	}
+	return score
+}
+
+func (c *Coordinator) computeHealthTrend() string {
+	if c.HealthForecast != nil {
+		switch strings.ToLower(c.HealthForecast.Trend) {
+		case "improving":
+			return "improving"
+		case "degrading":
+			return "declining"
+		case "stable":
+			return "stable"
+		}
+	}
+
+	var improvingSignals, worseningSignals int
+	for _, risk := range c.RiskIndicators {
+		switch strings.ToLower(risk.Trajectory) {
+		case "improving":
+			improvingSignals++
+		case "worsening":
+			worseningSignals++
+		}
+	}
+
+	for _, drift := range c.DriftIndicators {
+		switch strings.ToLower(drift.Direction) {
+		case "decreasing":
+			improvingSignals++
+		case "increasing":
+			worseningSignals++
+		}
+	}
+
+	if worseningSignals > improvingSignals {
+		return "declining"
+	}
+	if improvingSignals > worseningSignals {
+		return "improving"
+	}
+
+	return "stable"
+}
+
+func (c *Coordinator) computeOverallRiskLevel() string {
+	riskLevel := "low"
+
+	for _, risk := range c.RiskIndicators {
+		riskLevel = maxRiskLevel(riskLevel, risk.Severity)
+	}
+
+	for _, drift := range c.DriftIndicators {
+		riskLevel = maxRiskLevel(riskLevel, drift.Severity)
+	}
+
+	if c.HealthForecast != nil {
+		riskLevel = maxRiskLevel(riskLevel, c.HealthForecast.RiskLevel)
+	}
+
+	return riskLevel
+}
+
+func maxRiskLevel(current, candidate string) string {
+	rank := map[string]int{
+		"low":      1,
+		"medium":   2,
+		"high":     3,
+		"critical": 4,
+	}
+
+	currentRank, currentOk := rank[strings.ToLower(current)]
+	candidateRank, candidateOk := rank[strings.ToLower(candidate)]
+	if !candidateOk {
+		return current
+	}
+	if !currentOk {
+		return candidate
+	}
+	if candidateRank <= currentRank {
+		return current
+	}
+	return candidate
 }
 
 // FullAnalysisPipeline runs the complete temporal analysis workflow.
