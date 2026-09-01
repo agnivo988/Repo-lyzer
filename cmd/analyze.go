@@ -375,17 +375,32 @@ var analyzeCmd = &cobra.Command{
 		// Analyze commit activity per day
 		activity := analyzer.CommitsPerDay(commits)
 
+		// Fetch PRs for merge rate calculation
+		prs, _ := client.GetPullRequestsWithLimit(owner, repo, "all", 100)
+		mergedCount := 0
+		for _, pr := range prs {
+			if pr.MergedAt != nil {
+				mergedCount++
+			}
+		}
+		prMergeRate := 0.0
+		if len(prs) > 0 {
+			prMergeRate = float64(mergedCount) / float64(len(prs)) * 100
+		}
+
 		// Build recruiter summary
 		recruiterSummary := analyzer.BuildRecruiterSummary(
 			repoInfo.FullName,
-			repoInfo.Forks,
 			repoInfo.Stars,
+			repoInfo.Forks,
 			len(commits),
 			len(contributors),
 			maturityScore,
 			maturityLevel,
 			busFactor,
 			busRisk,
+			repoInfo.OpenIssues,
+			prMergeRate,
 		)
 
 		// Fetch README content and calculate contribution score if contribute flag is enabled
