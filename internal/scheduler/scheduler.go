@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync" // SECURITY FIX: Imported sync for RWMutex
 	"time"
 
 	"github.com/agnivo988/Repo-lyzer/internal/analyzer"
@@ -23,6 +24,7 @@ import (
 
 // Scheduler manages scheduled analysis report jobs
 type Scheduler struct {
+	mu             sync.RWMutex // SECURITY FIX: RWMutex as explicitly required by Issue #415
 	cron           *cron.Cron
 	settings       *config.AppSettings
 	jobEntries     map[string]cron.EntryID
@@ -89,7 +91,11 @@ func (s *Scheduler) scheduleJob(job config.ScheduledJob) error {
 		return fmt.Errorf("failed to add cron job: %w", err)
 	}
 
+	// SECURITY FIX: Write lock map before writing
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.jobEntries[job.ID] = entryID
+
 	log.Printf("Job %s scheduled with spec: %s", job.ID, spec)
 	return nil
 }
@@ -318,10 +324,17 @@ func (s *Scheduler) AddJob(job config.ScheduledJob) error {
 
 // RemoveJob removes a scheduled job
 func (s *Scheduler) RemoveJob(jobID string) error {
-	// Remove from cron if scheduled
-	if entryID, ok := s.jobEntries[jobID]; ok {
+	// SECURITY FIX: Read lock map before checking existence
+	s.mu.RLock()
+	entryID, ok := s.jobEntries[jobID]
+	s.mu.RUnlock()
+
+	if ok {
+		// SECURITY FIX: Write lock map before modifying
+		s.mu.Lock()
 		s.cron.Remove(entryID)
 		delete(s.jobEntries, jobID)
+		s.mu.Unlock()
 	}
 
 	return s.settings.RemoveScheduledJob(jobID)
@@ -351,9 +364,17 @@ func (s *Scheduler) EnableJob(jobID string, enabled bool) error {
 			return fmt.Errorf("failed to schedule job: %w", err)
 		}
 	} else {
-		if entryID, ok := s.jobEntries[jobID]; ok {
+		// SECURITY FIX: Read lock map before checking existence
+		s.mu.RLock()
+		entryID, ok := s.jobEntries[jobID]
+		s.mu.RUnlock()
+
+		if ok {
+			// SECURITY FIX: Write lock map before modifying
+			s.mu.Lock()
 			s.cron.Remove(entryID)
 			delete(s.jobEntries, jobID)
+			s.mu.Unlock()
 		}
 	}
 
@@ -391,3 +412,4 @@ func FormatScheduleInterval() string {
 func GetCronExpressionForInterval(interval config.ScheduleInterval) string {
 	return interval.CronExpression()
 }
+
