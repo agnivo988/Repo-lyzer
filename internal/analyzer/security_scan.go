@@ -30,6 +30,7 @@ type SecurityScanResult struct {
 	HighCount       int             `json:"high_count"`
 	MediumCount     int             `json:"medium_count"`
 	LowCount        int             `json:"low_count"`
+	UnknownCount    int             `json:"unknown_count"`
 	ScannedPackages int             `json:"scanned_packages"`
 	ScanTime        time.Time       `json:"scan_time"`
 	SecurityScore   int             `json:"security_score"`
@@ -111,6 +112,9 @@ func ScanDependencies(deps *DependencyAnalysis) (*SecurityScanResult, error) {
 					result.MediumCount++
 				case "LOW":
 					result.LowCount++
+				default:
+					// UNKNOWN or NONE: no numeric CVSS score was available for this CVE.
+					result.UnknownCount++
 				}
 			}
 		}
@@ -176,23 +180,53 @@ func convertVuln(o osvVuln, pkg, ver string) Vulnerability {
 	return v
 }
 
+// scoreToSeverity maps a valid CVSS base score to a severity label.
+// A zero score (produced when fmt.Sscanf fails on a malformed string) returns
+// "UNKNOWN" so callers can distinguish a failed parse from a genuine "LOW"
+// finding, addressing the risk of silently under-reporting severity.
+func scoreToSeverity(score float64) string {
+	if score <= 0 {
+		return "UNKNOWN"
+	}
+	if score >= 9.0 {
+		return "CRITICAL"
+	}
+	if score >= 7.0 {
+		return "HIGH"
+	}
+	if score >= 4.0 {
+		return "MEDIUM"
+	}
+	return "LOW"
+}
+
 func getSeverity(o osvVuln) string {
+	// Prefer CVSS v3: it distinguishes CRITICAL (9.0+) from HIGH (7.0-8.9),
+	// which CVSS v2 does not. Check the fmt.Sscanf return value so that a
+	// malformed or non-numeric score string does not silently default to 0
+	// and get classified as LOW.
 	for _, s := range o.Severity {
 		if s.Type == "CVSS_V3" {
-			score := parseCvssScore(s.Score)
-			if score >= 9.0 {
-				return "CRITICAL"
-			} else if score >= 7.0 {
-				return "HIGH"
-			} else if score >= 4.0 {
-				return "MEDIUM"
-			} else if score > 0.0 {
-				return "LOW"
-			}
-			return "NONE"
+			// Use parseCvssScore which handles both numeric strings and CVSS v3
+			// vector strings. scoreToSeverity maps 0 (parse failure) to "UNKNOWN"
+			// rather than "LOW" so that malformed scores are not under-reported.
+			return scoreToSeverity(parseCvssScore(s.Score))
 		}
 	}
-	return "MEDIUM"
+
+	// Fall back to CVSS v2. Many older CVEs (pre-2015) carry only a v2 score.
+	// Defaulting them to "MEDIUM" hides genuinely critical findings and inflates
+	// the repository security score.
+	for _, s := range o.Severity {
+		if s.Type == "CVSS_V2" {
+			return scoreToSeverity(parseCvssScore(s.Score))
+		}
+	}
+
+	// No numeric score is present for any severity type. Return "UNKNOWN" rather
+	// than "MEDIUM" so the caller can distinguish an unscored CVE from one that
+	// has been assessed as genuinely medium severity.
+	return "UNKNOWN"
 }
 
 func parseCvssScore(scoreStr string) float64 {
@@ -257,7 +291,13 @@ func calcSecurityScore(r *SecurityScanResult) int {
 
 // GetSeverityEmoji returns emoji for severity
 func GetSeverityEmoji(sev string) string {
-	m := map[string]string{"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢"}
+	m := map[string]string{
+		"CRITICAL": "🔴",
+		"HIGH":     "🟠",
+		"MEDIUM":   "🟡",
+		"LOW":      "🟢",
+		"UNKNOWN":  "⬜",
+	}
 	if e, ok := m[sev]; ok {
 		return e
 	}
