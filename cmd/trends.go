@@ -86,14 +86,10 @@ func runTrends(repoArg string, cmd *cobra.Command) error {
 	demoFlag, _ := cmd.Flags().GetBool("demo")
 	modelFlag, _ := cmd.Flags().GetString("model")
 
-	// Use months flag or default
+	if err := validateMonths(monthsFlag); err != nil {
+		return err
+	}
 	months := monthsFlag
-	if months < 1 {
-		months = 6 // Default to 6 months
-	}
-	if months > 24 {
-		months = 24 // Max 24 months
-	}
 
 	// Track detailed flag (for future use)
 	_ = detailedFlag
@@ -176,6 +172,13 @@ func runTrends(repoArg string, cmd *cobra.Command) error {
 		fmt.Printf("\nAnalysis completed in %v\n", duration)
 	}
 
+	return nil
+}
+
+func validateMonths(months int) error {
+	if months < 1 || months > 24 {
+		return fmt.Errorf("months must be between 1 and 24, got %d", months)
+	}
 	return nil
 }
 

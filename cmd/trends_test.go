@@ -13,6 +13,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func TestValidateMonths(t *testing.T) {
+	tests := []struct {
+		name  string
+		value int
+		want  bool
+	}{
+		{name: "minimum", value: 1, want: true},
+		{name: "maximum", value: 24, want: true},
+		{name: "zero", value: 0, want: false},
+		{name: "negative", value: -6, want: false},
+		{name: "above maximum", value: 25, want: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := validateMonths(test.value) == nil
+			if got != test.want {
+				t.Fatalf("validateMonths(%d) valid = %v, want %v", test.value, got, test.want)
+			}
+		})
+	}
+}
+
 func TestRunTrendsForecastOutputsJSON(t *testing.T) {
 	originalBuildTimeline := buildTimelineFromGitHub
 	originalForecast := forecastHealthFromTimeline
