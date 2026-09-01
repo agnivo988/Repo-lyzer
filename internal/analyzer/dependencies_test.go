@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// TestParseRequirementsTxt tests the parsing of Python requirements.txt files
+// with various version specifier formats including spaced comparators.
 func TestParseRequirementsTxt(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -46,6 +48,48 @@ func TestParseRequirementsTxt(t *testing.T) {
 				{Name: "requests", Version: "==2.28.0", Type: "production"},
 			},
 		},
+		{
+			name:    "Package with space after comparator (>= )",
+			content: "numpy >= 1.0",
+			expected: []Dependency{
+				{Name: "numpy", Version: ">= 1.0", Type: "production"},
+			},
+		},
+		{
+			name:    "Package with space after comparator (== )",
+			content: "flask == 2.0.0",
+			expected: []Dependency{
+				{Name: "flask", Version: "== 2.0.0", Type: "production"},
+			},
+		},
+		{
+			name:    "Package with space after comparator (!= )",
+			content: "requests != 2.0.0",
+			expected: []Dependency{
+				{Name: "requests", Version: "!= 2.0.0", Type: "production"},
+			},
+		},
+		{
+			name:    "Package with space after comparator (<= )",
+			content: "numpy <= 1.20",
+			expected: []Dependency{
+				{Name: "numpy", Version: "<= 1.20", Type: "production"},
+			},
+		},
+		{
+			name:    "Package with space after compatible release comparator (~= )",
+			content: "requests ~= 2.28.0",
+			expected: []Dependency{
+				{Name: "requests", Version: "~= 2.28.0", Type: "production"},
+			},
+		},
+		{
+			name:    "Package with space after arbitrary equality comparator (=== )",
+			content: "numpy === 1.20.0",
+			expected: []Dependency{
+				{Name: "numpy", Version: "=== 1.20.0", Type: "production"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -58,6 +102,8 @@ func TestParseRequirementsTxt(t *testing.T) {
 	}
 }
 
+// TestParseCargoToml tests the parsing of Rust Cargo.toml files
+// with both simple and inline table dependency formats.
 func TestParseCargoToml(t *testing.T) {
 	content := `
 [dependencies]
