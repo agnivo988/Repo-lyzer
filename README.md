@@ -131,7 +131,7 @@ The `docker-compose.yml` mounts a local `./data` directory to persist settings a
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) – Complete architecture guide  
 - [ANALYZER_INTEGRATION.md](docs/ANALYZER_INTEGRATION.md) – Adding new analyzers  
 - [IMPLEMENTATION_DETAILS.md](docs/IMPLEMENTATION_DETAILS.md) – Technical deep dive
-- [PROJECT STRUCTURE.md](docs/PROJECT_STRUCTURE.md) - Project Structure and Workflow
+- [PROJECT STRUCTURE.md](docs/PROJECT%20STRUCTURE.md) - Project Structure and Workflow
 
 ### Reference
 - [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) – Master index  
