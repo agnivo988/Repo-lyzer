@@ -365,7 +365,7 @@ func ExportCSV(data AnalysisResult, _ string) (string, error) {
 
 	// Languages
 	file.WriteString("\nLanguages\n")
-	file.WriteString("Language,Lines of Code\n")
+	file.WriteString("Language,Percentage\n")
 	total := 0
 	for _, bytes := range data.Languages {
 		total += bytes
