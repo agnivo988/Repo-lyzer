@@ -1,8 +1,16 @@
 package github
 
+import "time"
+
 func copyCommits(src []Commit) []Commit {
 	out := make([]Commit, len(src))
-	copy(out, src)
+	for i, c := range src {
+		out[i] = c
+		if c.Author != nil {
+			authorCopy := *c.Author
+			out[i].Author = &authorCopy
+		}
+	}
 	return out
 }
 
@@ -14,7 +22,17 @@ func copyContributors(src []Contributor) []Contributor {
 
 func copyIssues(src []Issue) []Issue {
 	out := make([]Issue, len(src))
-	copy(out, src)
+	for i, issue := range src {
+		out[i] = issue
+		if issue.ClosedAt != nil {
+			closedCopy := *issue.ClosedAt
+			out[i].ClosedAt = &closedCopy
+		}
+		if issue.PullRequest != nil {
+			prCopy := *issue.PullRequest
+			out[i].PullRequest = &prCopy
+		}
+	}
 	return out
 }
 
@@ -28,7 +46,17 @@ func copyLanguagesMap(src map[string]int) map[string]int {
 
 func copyPullRequests(src []PullRequest) []PullRequest {
 	out := make([]PullRequest, len(src))
-	copy(out, src)
+	for i, pr := range src {
+		out[i] = pr
+		if pr.MergedAt != nil {
+			mergedCopy := *pr.MergedAt
+			out[i].MergedAt = &mergedCopy
+		}
+		if pr.ClosedAt != nil {
+			closedCopy := *pr.ClosedAt
+			out[i].ClosedAt = &closedCopy
+		}
+	}
 	return out
 }
 
@@ -42,4 +70,12 @@ func copyTreeEntries(src []TreeEntry) []TreeEntry {
 	out := make([]TreeEntry, len(src))
 	copy(out, src)
 	return out
+}
+
+func copyTime(t *time.Time) *time.Time {
+	if t == nil {
+		return nil
+	}
+	copy := *t
+	return &copy
 }
