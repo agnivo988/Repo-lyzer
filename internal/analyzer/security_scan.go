@@ -130,7 +130,8 @@ func queryOSV(client *http.Client, pkg, ver, eco string) ([]osvVuln, error) {
 	query := osvQuery{}
 	query.Package.Name = pkg
 	query.Package.Ecosystem = eco
-	ver = strings.TrimPrefix(strings.TrimPrefix(ver, "^"), "~")
+	// Strip all leading version comparison operators (e.g. ==, >=, <=, ~, ^)
+	ver = strings.TrimLeft(ver, "=<>!~^ ")
 	if ver != "" && ver != "*" {
 		query.Version = ver
 	}
