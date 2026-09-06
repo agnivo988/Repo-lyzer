@@ -39,13 +39,14 @@ Examples:
 			return err
 		}
 
-		config, err := config.LoadSettings()
+		appConfig, err := config.LoadSettings()
 		if err != nil {
-			return err
+			// If settings file doesn't exist, use defaults
+			appConfig = config.DefaultSettings()
 		}
 
 		// Create main model and set to notifications state
-		model := ui.NewMainModel(cache, config)
+		model := ui.NewMainModel(cache, appConfig)
 		model.SetStateNotifications()
 
 		// Run the TUI
