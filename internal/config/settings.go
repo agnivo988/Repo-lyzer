@@ -8,6 +8,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -418,7 +419,7 @@ func (s *AppSettings) RemoveScheduledJob(jobID string) error {
 			return s.SaveSettings()
 		}
 	}
-	return nil
+	return fmt.Errorf("job not found: %s", jobID)
 }
 
 // GetScheduledJobs returns all scheduled jobs
@@ -428,9 +429,9 @@ func (s *AppSettings) GetScheduledJobs() []ScheduledJob {
 
 // GetScheduledJobByID returns a scheduled job by ID
 func (s *AppSettings) GetScheduledJobByID(jobID string) *ScheduledJob {
-	for _, job := range s.ScheduledJobs {
+	for i, job := range s.ScheduledJobs {
 		if job.ID == jobID {
-			return &job
+			return &s.ScheduledJobs[i]
 		}
 	}
 	return nil
