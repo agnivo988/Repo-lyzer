@@ -3,6 +3,7 @@
 package analyzer
 
 import (
+	"fmt"
 	"math"
 	"sort"
 	"time"
@@ -208,7 +209,7 @@ func analyzeCrossContributorPatterns(prs []github.PullRequest) CrossContributorP
 
 		// Create a "virtual" file entry per PR for analysis
 		// In production, we'd use commit file data
-		fileKey := "PR #" + string(rune(pr.Number+'0'))
+		fileKey := fmt.Sprintf("PR #%d", pr.Number)
 		if fileContributors[fileKey] == nil {
 			fileContributors[fileKey] = make(map[string]bool)
 		}
