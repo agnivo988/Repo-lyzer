@@ -200,10 +200,29 @@ func calculateComplexity(content, filename string) int {
 	}
 
 	lines := strings.Split(content, "\n")
+	inBlockComment := false
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
+
+		// Handle block comments
+		if inBlockComment {
+			if strings.Contains(trimmed, "*/") {
+				inBlockComment = false
+			}
+			continue
+		}
+
+		// Check for start of block comment
+		if strings.Contains(trimmed, "/*") {
+			if !strings.Contains(trimmed, "*/") {
+				inBlockComment = true
+			}
+			continue
+		}
+
+		// Skip single-line comments
 		if strings.HasPrefix(trimmed, "//") || strings.HasPrefix(trimmed, "*") {
-			continue // Skip comments (basic check)
+			continue
 		}
 
 		for _, kw := range keywords {
