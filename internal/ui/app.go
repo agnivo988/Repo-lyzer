@@ -322,6 +322,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case AnalyzeRepoMsg:
 			m.state = stateLoading
 			m.loading.SetRepoName(msg.repoName)
+			m.progress = NewProgressTracker()
+			m.loading.SetProgress(m.progress)
 			ctx, cancel := context.WithCancel(context.Background())
 			m.analysisCancel = cancel
 			cmds = append(cmds, m.analyzeRepo(ctx, msg.repoName), TickProgressCmd())
@@ -489,6 +491,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.input.input = repoName
 						m.state = stateLoading
 						m.loading.SetRepoName(repoName)
+						m.progress = NewProgressTracker()
+						m.loading.SetProgress(m.progress)
 						ctx, cancel := context.WithCancel(context.Background())
 						m.analysisCancel = cancel
 						cmds = append(cmds, m.analyzeRepo(ctx, repoName), TickProgressCmd())
@@ -534,6 +538,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.input.input = repoName
 					m.state = stateLoading
 					m.loading.SetRepoName(repoName)
+					m.progress = NewProgressTracker()
+					m.loading.SetProgress(m.progress)
 					ctx, cancel := context.WithCancel(context.Background())
 					m.analysisCancel = cancel
 					cmds = append(cmds, m.analyzeRepo(ctx, repoName), TickProgressCmd())
@@ -765,6 +771,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.input.input = m.dashboard.data.Repo.FullName
 					m.state = stateLoading
 					m.loading.SetRepoName(m.input.input)
+					m.progress = NewProgressTracker()
+					m.loading.SetProgress(m.progress)
 					ctx, cancel := context.WithCancel(context.Background())
 					m.analysisCancel = cancel
 					cmds = append(cmds, m.analyzeRepo(ctx, m.input.input), TickProgressCmd())
@@ -945,6 +953,11 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			return fmt.Errorf("invalid repository URL: must be in owner/repo format or a valid GitHub URL")
 		}
 
+		tracker := m.progress
+		if tracker == nil {
+			tracker = NewProgressTracker()
+		}
+
 		analysisType := normalizeAnalysisType(m.analysisType)
 		cacheKey := analysisCacheKey(repoName, analysisType)
 
@@ -954,6 +967,10 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 				// Unmarshal cached analysis
 				var result AnalysisResult
 				if err := json.Unmarshal(entry.Analysis, &result); err == nil {
+					// Fast-forward tracker for cached result
+					for i := 0; i < 10; i++ {
+						tracker.NextStage()
+					}
 					// Return cached result with status
 					return CachedAnalysisResult{
 						Result:   result,
@@ -963,8 +980,6 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 				}
 			}
 		}
-
-		tracker := NewProgressTracker()
 
 		// Stage 1: Fetch repository
 		token := ""
@@ -977,21 +992,21 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err != nil {
 			return err
 		}
-		tracker.NextStage()
+		tracker.NextStage() // Done Stage 1: Fetching metadata
 
 		// Stage 2: Analyze commits
 		commits, err := client.GetCommits(parts[0], parts[1], 365)
 		if err != nil {
 			return fmt.Errorf("failed to get commits: %w", err)
 		}
-		tracker.NextStage()
+		tracker.NextStage() // Done Stage 2: Analyzing commits
 
 		// Stage 3: Analyze contributors
 		contributors, err := client.GetContributorsWithAvatars(parts[0], parts[1], 15)
 		if err != nil {
 			return fmt.Errorf("failed to get contributors: %w", err)
 		}
-		tracker.NextStage()
+		tracker.NextStage() // Done Stage 3: Analyzing contributors
 
 		// Stage 4: Analyze languages
 		languages, err := client.GetLanguages(parts[0], parts[1])
@@ -1018,12 +1033,10 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		}
 
 		// Compare with cached incremental metadata
-		changedFiles := []string{}
-
 		if m.cache != nil {
 			if entry, found := m.cache.GetWithoutTTLExpiration(cacheKey); found {
 				if entry.IncrementalMetadata != nil {
-
+					changedFiles := []string{}
 					for path, currentMeta := range currentHashes {
 						cachedMeta, exists := entry.IncrementalMetadata[path]
 
@@ -1033,14 +1046,14 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 						}
 					}
 
-					fmt.Printf("🔄 Incremental analysis enabled\n")
-					fmt.Printf("📂 Changed files detected: %d\n", len(changedFiles))
-
 					// No changes detected
 					if len(changedFiles) == 0 {
-						fmt.Println("✅ No repository changes detected. Using cached analysis.")
 						var result AnalysisResult
 						if err := json.Unmarshal(entry.Analysis, &result); err == nil {
+							// Fast-forward tracker
+							for i := 0; i < 10; i++ {
+								tracker.NextStage()
+							}
 							// Return cached result with status
 							return CachedAnalysisResult{
 								Result:   result,
@@ -1053,7 +1066,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			}
 		}
 
-		tracker.NextStage()
+		tracker.NextStage() // Done Stage 4: Analyzing languages & files
 
 		// Stage 5: Compute metrics
 		score := analyzer.CalculateHealth(repo, commits)
@@ -1080,6 +1093,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 			commitsLast90Days,
 			false,
 		)
+
+		tracker.NextStage() // Done Stage 5: Computing health metrics
 
 		if analysisType == "quick" {
 			qualityDashboard := analyzer.GenerateQualityDashboard(
@@ -1117,6 +1132,11 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 				m.cache.SetWithMetadata(cacheKey, result, currentHashes)
 			}
 
+			// Fast-forward remaining stages
+			for i := 0; i < 5; i++ {
+				tracker.NextStage()
+			}
+
 			AddAnalysisNotification(repoName, true)
 
 			return result
@@ -1130,6 +1150,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		tracker.NextStage() // Done Stage 6: Analyzing dependencies
 
 		// Stage 7: Security vulnerability scan
 		security, securityErr := analyzer.ScanDependencies(deps)
@@ -1139,16 +1160,7 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		tracker.NextStage()
-
-		// Mark complete
-		tracker.NextStage()
-		riskAlerts = analyzer.AnalyzeRiskAlerts(
-			busFactor,
-			score,
-			commitsLast90Days,
-			security != nil && security.CriticalCount > 0,
-		)
+		tracker.NextStage() // Done Stage 7: Scanning for vulnerabilities
 
 		// Analyze Hotspots
 		hotspots, hotspotsErr := analyzer.AnalyzeHotspots(repo, commits, fileTree, client)
@@ -1158,8 +1170,16 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		tracker.NextStage() // Done Stage 8: Analyzing hotspots
 
 		// Generate quality dashboard
+		riskAlerts = analyzer.AnalyzeRiskAlerts(
+			busFactor,
+			score,
+			commitsLast90Days,
+			security != nil && security.CriticalCount > 0,
+		)
+
 		qualityDashboard := analyzer.GenerateQualityDashboard(
 			repo,
 			commits,
@@ -1211,6 +1231,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		}
 		contribScore := contribution.Calculate(hasContributing, readmeContent, issues, commits, contributors)
 
+		tracker.NextStage() // Done Stage 9: Generating report
+
 		result := AnalysisResult{
 			Repo:                repo,
 			Commits:             commits,
@@ -1238,6 +1260,8 @@ func (m MainModel) analyzeRepo(ctx context.Context, repoName string) tea.Cmd {
 		if m.cache != nil {
 			m.cache.SetWithMetadata(cacheKey, result, currentHashes)
 		}
+
+		tracker.NextStage() // Done Stage 10: Complete
 
 		// Add success notification
 		AddAnalysisNotification(repoName, true)
