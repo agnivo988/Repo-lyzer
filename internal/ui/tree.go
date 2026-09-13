@@ -93,10 +93,10 @@ func (m *TreeModel) updateVisibleList() {
 
 func (m *TreeModel) updateFilteredList() {
 	m.visibleList = []*FileNode{}
-	query := strings.ToLower(m.searchQuery)
+	query := m.searchQuery
 
 	for _, node := range m.allNodes {
-		if strings.Contains(strings.ToLower(node.Name), query) {
+		if strings.ContainsFold(node.Name, query) {
 			m.visibleList = append(m.visibleList, node)
 		}
 	}
@@ -196,7 +196,10 @@ func (m TreeModel) View() string {
 	// Show search input if in search mode
 	if m.searchMode {
 		searchView := m.searchInput.View()
-		content += "🔍 " + searchView + "\n\n"
+		content += "🔍 " + searchView + "\n"
+		matchCount := len(m.visibleList)
+		totalCount := len(m.allNodes)
+		content += SubtleStyle.Render(fmt.Sprintf("%d/%d files match", matchCount, totalCount)) + "\n\n"
 	} else {
 		content += SubtleStyle.Render("Press / to search files") + "\n\n"
 	}
@@ -230,7 +233,12 @@ func (m TreeModel) View() string {
 			style = SelectedStyle
 		}
 
-		line := fmt.Sprintf("%s%s%s %s", prefix, indent, icon, node.Name)
+		displayName := node.Name
+		if m.searchMode && m.searchQuery != "" {
+			displayName = m.highlightMatch(node.Name)
+		}
+
+		line := fmt.Sprintf("%s%s%s %s", prefix, indent, icon, displayName)
 		content += style.Render(line) + "\n"
 	}
 
@@ -278,6 +286,29 @@ func (m TreeModel) getNodeDepth(parent *FileNode, target *FileNode) int {
 		}
 	}
 	return -1
+}
+
+func (m TreeModel) highlightMatch(name string) string {
+	lowerName := strings.ToLower(name)
+	lowerQuery := strings.ToLower(m.searchQuery)
+	if lowerQuery == "" || !strings.Contains(lowerName, lowerQuery) {
+		return name
+	}
+
+	var result strings.Builder
+	start := 0
+	for {
+		idx := strings.Index(strings.ToLower(name[start:]), lowerQuery)
+		if idx < 0 {
+			result.WriteString(name[start:])
+			break
+		}
+		absIdx := start + idx
+		result.WriteString(name[start:absIdx])
+		result.WriteString(HighlightStyle.Render(name[absIdx : absIdx+len(lowerQuery)]))
+		start = absIdx + len(lowerQuery)
+	}
+	return result.String()
 }
 
 // BuildFileTree creates a file tree from repository content
