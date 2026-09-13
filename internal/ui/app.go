@@ -18,6 +18,7 @@ import (
 	"github.com/agnivo988/Repo-lyzer/internal/config"
 	"github.com/agnivo988/Repo-lyzer/internal/contribution"
 	"github.com/agnivo988/Repo-lyzer/internal/github"
+	"github.com/agnivo988/Repo-lyzer/internal/gitpush"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -41,6 +42,8 @@ const (
 	stateCompareResult
 	stateCloneInput
 	stateCloning
+	statePushInput
+	statePushing
 	stateNotifications
 	stateMonitorDashboard
 )
@@ -82,6 +85,8 @@ type MainModel struct {
 	favorites        *FavoritesModel
 	cloneInput       CloneInputModel
 	cloning          CloningModel
+	pushInput        PushInputModel
+	pushing          PushingModel
 	notifications    NotificationsModel
 	monitorDashboard MonitorDashboardModel
 
@@ -138,6 +143,8 @@ func NewMainModel(cache *cache.Cache, config *config.AppSettings) MainModel {
 		favorites:      NewFavoritesModel(),
 		cloneInput:     NewCloneInputModel(),
 		cloning:        NewCloningModel(),
+		pushInput:      NewPushInputModel(),
+		pushing:        NewPushingModel(),
 		notifications:  NewNotificationsModel(),
 		dashboard:      NewDashboardModel(),
 		tree:           NewTreeModel(nil),
@@ -287,23 +294,21 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = stateHistory
 			case 4: // Clone Repository
 				m.state = stateCloneInput
-			case 5: // Notifications
+			case 5: // Push to GitHub
+				m.state = statePushInput
+			case 6: // Notifications
 				m.state = stateNotifications
-			case 6: // Monitoring
+			case 7: // Monitoring
 				m.state = stateMonitorDashboard
-			case 7: // Settings
+			case 8: // Settings
 				m.settingsOption = settingsOptionForSubmenu(m.menu.SelectedSubmenuOption)
 				m.settings.settingsOption = m.settingsOption
-				m.inTokenInput = false
-				m.tokenInput = ""
-				m.settings.inTokenInput = false
-				m.settings.tokenInput = ""
 				m.state = stateSettings
-			case 8: // Help
+			case 9: // Help
 				m.helpContent = helpContentForSubmenu(m.menu.SelectedSubmenuOption)
-				m.help.SetHelpContent(m.helpContent)
+				m.help.helpContent = m.helpContent
 				m.state = stateHelp
-			case 9: // Exit
+			case 10: // Exit
 				return m, tea.Quit
 			}
 			m.menu.Done = false
@@ -723,6 +728,41 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+	case statePushInput:
+		newPushInput, cmd := m.pushInput.Update(msg)
+		m.pushInput = newPushInput
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+
+		switch msg := msg.(type) {
+		case PushRepoMsg:
+			m.state = statePushing
+			m.pushing.SetRepoName(msg.RepoName)
+			cmds = append(cmds, m.pushRepo(msg.LocalPath, msg.RepoName), m.pushing.spinner.Tick)
+		case BackToMenuMsg:
+			m.state = stateMenu
+		}
+
+	case statePushing:
+		var cmd tea.Cmd
+		m.pushing, cmd = m.pushing.Update(msg)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+
+		if result, ok := msg.(pushResult); ok {
+			if result.err != nil {
+				m.pushInput.Err = result.err
+				m.err = result.err
+				m.state = statePushInput
+			} else {
+				m.err = fmt.Errorf("✓ Pushed successfully to: %s", m.pushInput.RepoName)
+				m.state = stateMenu
+				m.pushInput = NewPushInputModel()
+			}
+		}
+
 	case stateNotifications:
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
@@ -853,6 +893,10 @@ func (m MainModel) View() string {
 		return m.cloneInput.View(m.windowWidth, m.windowHeight)
 	case stateCloning:
 		return m.cloning.View(m.windowWidth, m.windowHeight)
+	case statePushInput:
+		return m.pushInput.View(m.windowWidth, m.windowHeight)
+	case statePushing:
+		return m.pushing.View(m.windowWidth, m.windowHeight)
 	case stateNotifications:
 		return m.notifications.View()
 	case stateMonitorDashboard:
@@ -1498,4 +1542,38 @@ func (m *MainModel) SetStateMonitorDashboard(owner, repo string, interval time.D
 	m.state = stateMonitorDashboard
 	m.monitorDashboard = NewMonitorDashboardModel(owner, repo, interval)
 	m.initialCmd = m.monitorDashboard.Init()
+}
+
+type pushResult struct {
+	err error
+}
+
+func (m MainModel) pushRepo(localPath, repoName string) tea.Cmd {
+	return func() tea.Msg {
+		parts := strings.Split(repoName, "/")
+		if len(parts) != 2 {
+			return pushResult{err: fmt.Errorf("invalid repository: must be in owner/repo format")}
+		}
+
+		// Check if local folder exists
+		if _, err := os.Stat(localPath); os.IsNotExist(err) {
+			return pushResult{err: fmt.Errorf("local folder does not exist: %s", localPath)}
+		}
+
+		settings, err := config.LoadSettings()
+		token := ""
+		if err == nil {
+			token = settings.GitHubToken
+		}
+
+		errPush := gitpush.PushRepo(context.Background(), gitpush.PushOptions{
+			LocalPath: localPath,
+			RepoOwner: parts[0],
+			RepoName:  parts[1],
+			CommitMsg: "Push via Repo-lyzer",
+			Token:     token,
+		})
+
+		return pushResult{err: errPush}
+	}
 }

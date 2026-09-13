@@ -13,7 +13,7 @@ func keyRune(r rune) tea.KeyMsg {
 
 func TestMenuModelCapturesSubmenuSelection(t *testing.T) {
 	menu := NewMenuModel()
-	menu.cursor = 7
+	menu.cursor = 8
 	menu.enterSubmenu()
 
 	model, _ := menu.Update(keyRune('4'))
@@ -22,8 +22,8 @@ func TestMenuModelCapturesSubmenuSelection(t *testing.T) {
 	if !updated.Done {
 		t.Fatal("expected submenu selection to complete menu choice")
 	}
-	if updated.SelectedOption != 7 {
-		t.Fatalf("SelectedOption = %d, want 7", updated.SelectedOption)
+	if updated.SelectedOption != 8 {
+		t.Fatalf("SelectedOption = %d, want 8", updated.SelectedOption)
 	}
 	if updated.SelectedSubmenuType != "settings" {
 		t.Fatalf("SelectedSubmenuType = %q, want settings", updated.SelectedSubmenuType)
@@ -36,7 +36,7 @@ func TestMenuModelCapturesSubmenuSelection(t *testing.T) {
 func TestMainModelRoutesSettingsSubmenu(t *testing.T) {
 	model := NewMainModel(nil, nil)
 
-	next, _ := model.Update(keyRune('8'))
+	next, _ := model.Update(keyRune('9'))
 	model = next.(MainModel)
 	next, _ = model.Update(keyRune('4'))
 	model = next.(MainModel)
@@ -68,7 +68,7 @@ func TestMainModelRoutesSettingsSubmenu(t *testing.T) {
 func TestMainModelRoutesHelpSubmenu(t *testing.T) {
 	model := NewMainModel(nil, nil)
 
-	next, _ := model.Update(keyRune('9'))
+	next, _ := model.Update(keyRune('?'))
 	model = next.(MainModel)
 	next, _ = model.Update(keyRune('2'))
 	model = next.(MainModel)
