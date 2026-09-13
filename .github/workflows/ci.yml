@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.24.2"
       - name: Cache Go modules
         uses: actions/cache@v5
         with:
@@ -28,6 +28,8 @@ jobs:
             ${{ runner.os }}-go-
       - name: Download dependencies
         run: go mod download
+      - name: Run go vet
+        run: go vet ./...
       - name: Run tests
         run: go test ./...
 
@@ -39,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.24.2"
       - name: Cache Go modules
         uses: actions/cache@v5
         with:
@@ -49,6 +51,8 @@ jobs:
             ${{ runner.os }}-go-
       - name: Download dependencies
         run: go mod download
+      - name: Run go vet
+        run: go vet ./...
       - name: Build
         run: go build -v ./...
 
@@ -63,7 +67,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.24.2"
       - name: Cache Go modules
         uses: actions/cache@v5
         with:
@@ -73,6 +77,8 @@ jobs:
             ${{ runner.os }}-go-
       - name: Download dependencies
         run: go mod download
+      - name: Run go vet
+        run: go vet ./...
       - name: Calculate next tag
         run: |
           latest_tag=$(git tag --sort=-version:refname | head -1)
