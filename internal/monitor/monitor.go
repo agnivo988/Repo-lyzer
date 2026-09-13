@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -26,6 +27,7 @@ type MonitorState struct {
 	LastPRCount          int       `json:"last_pr_count"`
 	LastContributorCount int       `json:"last_contributor_count"`
 	LastUpdated          time.Time `json:"last_updated"`
+	ETag                 string    `json:"etag"`
 }
 
 // Monitor manages real-time monitoring of a GitHub repository
@@ -163,8 +165,47 @@ func (m *Monitor) checkForUpdates() {
 	// Check for contributor changes
 	m.checkContributors()
 
+	// Check realtime events (Pulse & Activity Feed)
+	m.checkLiveEvents()
+
 	// Save state
 	m.saveState()
+}
+
+// checkLiveEvents fetches recent events safely using ETag
+func (m *Monitor) checkLiveEvents() {
+	events, newETag, err := m.client.GetRepositoryEvents(m.owner, m.repo, m.state.ETag)
+	if err != nil {
+		log.Printf("Failed to get live events: %v", err)
+		return
+	}
+
+	if newETag != "" && m.state.ETag == newETag {
+		return // No new events
+	}
+	m.state.ETag = newETag
+
+	pulse := CalculateLivePulse(events)
+	if pulse == PulseSpiking {
+		m.notifications <- Notification{
+			Type:      "pulse",
+			Title:     "High Activity Detected",
+			Message:   "Repository pulse is spiking with rapid events",
+			Timestamp: time.Now(),
+			Severity:  "warning",
+		}
+	}
+
+	realtimeFeeds := ParseRealtimeEvents(events)
+	for _, feed := range realtimeFeeds {
+		m.notifications <- Notification{
+			Type:      strings.ToLower(feed.Category),
+			Title:     "Live Event: " + feed.Category,
+			Message:   fmt.Sprintf("[%s] %s", feed.Actor, feed.Description),
+			Timestamp: time.Now(),
+			Severity:  "info",
+		}
+	}
 }
 
 // checkCommits monitors for new commits
