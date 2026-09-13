@@ -349,7 +349,7 @@ func parseRequirementsTxt(content []byte) ([]Dependency, string) {
 	// Group 1: Name (including dots and dashes, but excluding extras)
 	// Group 2: Version specifier
 	// Group 3: Optional markers (after ;)
-	versionPattern := regexp.MustCompile(`^([a-zA-Z0-9._\-]+)(?:\[[^\]]+\])?\s*([=<>!~]+[^;#\s]+)?(?:\s*;\s*([^#]+))?`)
+	versionPattern := regexp.MustCompile(`^([a-zA-Z0-9._\-]+)(?:\[[^\]]+\])?\s*([=<>!~]+\s*[^;#\s]+)?(?:\s*;\s*([^#]+))?`)
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
