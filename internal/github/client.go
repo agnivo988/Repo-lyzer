@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	
 	gocache "github.com/patrickmn/go-cache"
 	"golang.org/x/sync/singleflight"
 )
@@ -76,6 +75,13 @@ func (c *Client) HasToken() bool {
 // SetToken sets the GitHub token for authentication
 func (c *Client) SetToken(token string) {
 	c.token = token
+	c.cache.Flush()
+}
+
+// SetTokenBytes copies a token from a mutable buffer so callers can clear the
+// input buffer immediately after handing it to the client.
+func (c *Client) SetTokenBytes(token []byte) {
+	c.token = string(token)
 	c.cache.Flush()
 }
 

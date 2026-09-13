@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -184,11 +185,12 @@ var analyzeCmd = &cobra.Command{
 			// Check if it's a private repo error and no token is set
 			if strings.Contains(err.Error(), "repository not found") && !client.HasToken() {
 				fmt.Print("This appears to be a private repository. Please enter your GitHub access token: ")
-				scanner := bufio.NewScanner(os.Stdin)
-				if scanner.Scan() {
-					token := strings.TrimSpace(scanner.Text())
-					if token != "" {
-						client.SetToken(token)
+				rawToken, readErr := bufio.NewReader(os.Stdin).ReadBytes('\n')
+				if readErr == nil || len(rawToken) > 0 {
+					token := bytes.TrimSpace(rawToken)
+					if len(token) > 0 {
+						client.SetTokenBytes(token)
+						clear(rawToken)
 						// Retry fetching the repo with the token
 						overallProgress = progress.NewOverallProgress(steps)
 						overallProgress.StartStep("🔍 Fetching repository information")
@@ -198,9 +200,11 @@ var analyzeCmd = &cobra.Command{
 							return fmt.Errorf("failed to access repository even with token: %w", err)
 						}
 					} else {
+						clear(rawToken)
 						return fmt.Errorf("no token provided, cannot access private repository")
 					}
 				} else {
+					clear(rawToken)
 					return fmt.Errorf("failed to read token input")
 				}
 			} else {
