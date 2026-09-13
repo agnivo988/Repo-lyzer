@@ -167,14 +167,17 @@ var analyzeCmd = &cobra.Command{
 		client := github.NewClient()
 
 		// Create overall progress tracker for all analysis steps
-		// Estimated steps: repo info, languages, commits, file tree, health,
-		// contributors, bus factor, maturity = 8 steps
-		// If contribute flag is set, we add 1 step for fetching issues = 9 steps
-		steps := 8
+		// Base steps: repo info, languages, commits, file tree, health,
+		// contributors, bus factor, maturity, issues, prs = 10 steps
+		// If contribute flag is set, we add 1 step for additional processing = 11 steps
+		steps := 10
 		if contribute {
 			steps++
 		}
 		overallProgress := progress.NewOverallProgress(steps)
+		
+		// Declare issues slice upfront to avoid redeclaration in conditional blocks
+		var issues []github.Issue
 
 		// Fetch repository information
 		overallProgress.StartStep("🔍 Fetching repository information")
@@ -217,16 +220,6 @@ var analyzeCmd = &cobra.Command{
 			return fmt.Errorf("failed to get languages: %w", err)
 		}
 		overallProgress.CompleteStep("Languages fetched")
-
-		var issues []github.Issue
-		if contribute {
-			overallProgress.StartStep("🐛 Fetching open issues")
-			issues, err = client.GetIssues(owner, repo, "open")
-			if err != nil {
-				issues = []github.Issue{} // fallback
-			}
-			overallProgress.CompleteStep("Open issues fetched")
-		}
 
 		// Fetch commits from the last 365 days
 		overallProgress.StartStep("📝 Analyzing commit history (365d)")
@@ -321,6 +314,25 @@ var analyzeCmd = &cobra.Command{
 			)
 		overallProgress.CompleteStep("Maturity score calculated")
 
+		// Fetch issue activity to improve health computation
+		overallProgress.StartStep("🐛 Fetching issue activity")
+		issues, err = client.GetIssues(owner, repo, "open")
+		if err != nil {
+			issues = []github.Issue{} // fallback to empty if fetch fails
+		}
+		overallProgress.CompleteStep(fmt.Sprintf("Issue activity analyzed (%d issues)", len(issues)))
+
+		// Fetch pull requests to improve health computation
+		overallProgress.StartStep("🔀 Fetching pull requests")
+		prs, err := client.GetPullRequestsWithLimit(owner, repo, "all", 200)
+		if err != nil {
+			prs = []github.PullRequest{} // fallback to empty if fetch fails
+		}
+		overallProgress.CompleteStep(fmt.Sprintf("Pull requests analyzed (%d PRs)", len(prs)))
+
+		// Recompute a detailed repository health score using contributors/prs/issues
+		detailedScore := analyzer.CalculateHealthDetailed(repoInfo, commits, contributors, prs, issues)
+
 		// Track analysis duration
 		duration := time.Since(startTime)
 		savePath, _ := cmd.Flags().GetString("save")
@@ -360,7 +372,7 @@ var analyzeCmd = &cobra.Command{
 			}
 			return output.PrintCompactJSON(output.CompactConfig{
 				Repo:            repoInfo,
-				HealthScore:     score,
+				HealthScore:     detailedScore,
 				BusFactor:       busFactor,
 				BusRisk:         busRisk,
 				MaturityScore:   maturityScore,
@@ -391,6 +403,7 @@ var analyzeCmd = &cobra.Command{
 		// Fetch README content and calculate contribution score if contribute flag is enabled
 		var contribScore contribution.ContributionScore
 		if contribute {
+			overallProgress.StartStep("📊 Calculating contribution friendliness")
 			hasContributing := contribution.CheckContributingFile(fileTree)
 			readmeContent := ""
 			readmePath := contribution.FindReadmePath(fileTree)
@@ -404,13 +417,16 @@ var analyzeCmd = &cobra.Command{
 				}
 			}
 			contribScore = contribution.Calculate(hasContributing, readmeContent, issues, commits, contributors)
+			overallProgress.CompleteStep("Contribution friendliness calculated")
 		}
 
 		// Output the analysis results
 		output.PrintRepo(repoInfo)
 		output.PrintLanguages(langs)
 		output.PrintCommitActivity(activity, 14)
-		output.PrintHealth(score)
+		// show the improved detailed score when available
+		output.PrintHealth(detailedScore)
+		output.PrintContributorInsights(contributors)
 		if contribute {
 			output.PrintContributionScore(contribScore)
 		}
