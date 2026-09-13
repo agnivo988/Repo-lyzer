@@ -26,6 +26,8 @@ func BuildRecruiterSummary(
 	maturityLevel string,
 	busFactor int,
 	busRisk string,
+	openIssues int,
+	prMergeRate float64,
 ) RecruiterSummary {
 
 	activity := "Low"
@@ -33,6 +35,20 @@ func BuildRecruiterSummary(
 		activity = "High"
 	} else if commits > 100 {
 		activity = "Moderate"
+	}
+
+	issueHealth := "Critical"
+	if openIssues < 20 {
+		issueHealth = "Healthy"
+	} else if openIssues < 50 {
+		issueHealth = "Backlogged"
+	}
+
+	prHealth := "Stalled"
+	if prMergeRate > 60 {
+		prHealth = "Active"
+	} else if prMergeRate >= 30 {
+		prHealth = "Slow"
 	}
 
 	return RecruiterSummary{
@@ -45,6 +61,8 @@ func BuildRecruiterSummary(
 		MaturityLevel:   maturityLevel,
 		BusFactor:       busFactor,
 		BusRisk:         busRisk,
+		IssueHealth:     issueHealth,
+		PRHealth:        prHealth,
 		ActivityLevel:   activity,
 	}
 }

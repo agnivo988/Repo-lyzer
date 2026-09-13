@@ -21,9 +21,9 @@ func TestBuildCompareReport(t *testing.T) {
 				DefaultBranch: "main",
 				PushedAt:      time.Now().Add(-24 * time.Hour),
 			},
-			Commits: []github.Commit{{}, {}, {}},
+			Commits:      []github.Commit{{}, {}, {}},
 			Contributors: []github.Contributor{{}, {}},
-			Languages: map[string]int{"Go": 1000, "Shell": 100},
+			Languages:    map[string]int{"Go": 1000, "Shell": 100},
 		},
 		CompareInput{
 			Repo: &github.Repo{
@@ -36,9 +36,9 @@ func TestBuildCompareReport(t *testing.T) {
 				DefaultBranch: "main",
 				PushedAt:      time.Now().Add(-48 * time.Hour),
 			},
-			Commits: []github.Commit{{}, {}},
+			Commits:      []github.Commit{{}, {}},
 			Contributors: []github.Contributor{{}},
-			Languages: map[string]int{"TypeScript": 900, "CSS": 50},
+			Languages:    map[string]int{"TypeScript": 900, "CSS": 50},
 		},
 	)
 
@@ -58,16 +58,16 @@ func TestBuildCompareReport(t *testing.T) {
 func TestRenderCompareOutputs(t *testing.T) {
 	report := BuildCompareReport(
 		CompareInput{
-			Repo: &github.Repo{FullName: "owner/alpha", Stars: 10, Forks: 4, OpenIssues: 1, Language: "Go", DefaultBranch: "main"},
-			Commits: []github.Commit{{}},
+			Repo:         &github.Repo{FullName: "owner/alpha", Stars: 10, Forks: 4, OpenIssues: 1, Language: "Go", DefaultBranch: "main"},
+			Commits:      []github.Commit{{}},
 			Contributors: []github.Contributor{{}},
-			Languages: map[string]int{"Go": 1},
+			Languages:    map[string]int{"Go": 1},
 		},
 		CompareInput{
-			Repo: &github.Repo{FullName: "owner/beta", Stars: 20, Forks: 6, OpenIssues: 2, Language: "Rust", DefaultBranch: "main"},
-			Commits: []github.Commit{{}, {}},
+			Repo:         &github.Repo{FullName: "owner/beta", Stars: 20, Forks: 6, OpenIssues: 2, Language: "Rust", DefaultBranch: "main"},
+			Commits:      []github.Commit{{}, {}},
 			Contributors: []github.Contributor{{}, {}},
-			Languages: map[string]int{"Rust": 2},
+			Languages:    map[string]int{"Rust": 2},
 		},
 	)
 
