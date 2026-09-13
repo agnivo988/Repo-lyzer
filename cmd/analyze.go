@@ -340,6 +340,34 @@ var analyzeCmd = &cobra.Command{
 			})
 		}
 
+		if format == "pdf" {
+			if savePath == "" {
+				// Generate default filename
+				repoName := strings.ReplaceAll(repoInfo.FullName, "/", "-")
+				savePath = fmt.Sprintf("%s-report.pdf", repoName)
+			}
+			fmt.Printf("📄 Generating PDF report: %s\n", savePath)
+			err := output.GenerateAnalyzePDF(
+				repoInfo,
+				commits,
+				contributors,
+				langs,
+				score,
+				busFactor,
+				busRisk,
+				maturityScore,
+				maturityLevel,
+				savePath,
+				nil, // Use default config
+			)
+			if err != nil {
+				overallProgress.Finish()
+				return fmt.Errorf("failed to generate PDF: %w", err)
+			}
+			fmt.Printf("✅ PDF report saved to: %s\n", savePath)
+			return nil
+		}
+
 		if format != "" {
 			return fmt.Errorf("unsupported format: %s", format)
 		}
@@ -629,7 +657,7 @@ func init() {
 	analyzeCmd.Flags().String(
 		"format",
 		"",
-		"Output format: yaml",
+		"Output format: yaml, pdf",
 	)
 
 }
