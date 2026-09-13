@@ -194,3 +194,4 @@ go build -o repo-lyzer .
 
 ## License
 **MIT License © 2026 Agniva Mukherjee**. See [LICENSE](LICENSE) for details.
+# TODO: [gssoc 2026] [good first issue] add contributing.md and gssoc 2026 contributor guide (#342)
