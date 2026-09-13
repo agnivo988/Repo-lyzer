@@ -30,6 +30,7 @@ type MonthlyMetric struct {
 	IssuesClosed  int       `json:"issues_closed"`
 	PRsOpened     int       `json:"prs_opened"`
 	PRsMerged     int       `json:"prs_merged"`
+	PRVelocity    float64   `json:"pr_velocity"`
 	AvgCommitSize float64   `json:"avg_commit_size"`
 }
 
@@ -63,6 +64,7 @@ type TrendMetrics struct {
 	PRTrend       TrendIndicator `json:"pr_trend"`
 	PRMergeRate   float64        `json:"pr_merge_rate"`
 	PRTrendValues []int          `json:"pr_trend_values"`
+	PRVelocity    float64        `json:"pr_velocity"`
 
 	// Health Score Prediction
 	PredictedHealthScore int            `json:"predicted_health_score"`
@@ -72,6 +74,25 @@ type TrendMetrics struct {
 	// Overall Assessment
 	OverallTrend TrendIndicator `json:"overall_trend"`
 	Summary      string         `json:"summary"`
+}
+// CalculatePRVelocity computes how fast PRs are merged on average
+// CalculatePRVelocity computes the average time (in hours) it takes for PRs to be merged.
+// It excludes unmerged PRs or PRs where the merge time is before the creation time.
+func CalculatePRVelocity(prs []github.PullRequest) float64 {
+    var totalDuration time.Duration
+    var mergedCount int
+
+    for _, pr := range prs {
+        if pr.MergedAt != nil && pr.CreatedAt.Before(*pr.MergedAt) {
+            totalDuration += pr.MergedAt.Sub(pr.CreatedAt)
+            mergedCount++
+        }
+    }
+
+    if mergedCount == 0 {
+        return 0
+    }
+    return totalDuration.Hours() / float64(mergedCount)
 }
 
 // AnalyzeTrends performs comprehensive trend analysis on a repository
@@ -107,6 +128,7 @@ func AnalyzeTrends(
 		return metrics.MonthlyData[i].Month.Before(metrics.MonthlyData[j].Month)
 	})
 
+
 	// Analyze commit trends
 	metrics.CommitTrend, metrics.CommitChangeRate, metrics.AvgCommitsPerMonth = AnalyzeCommitFrequencyTrends(metrics.MonthlyData)
 	for _, m := range metrics.MonthlyData {
@@ -131,6 +153,19 @@ func AnalyzeTrends(
 		metrics.PRTrendValues = append(metrics.PRTrendValues, m.PRsMerged)
 	}
 
+	for i := range metrics.MonthlyData {
+    monthStart := metrics.MonthlyData[i].Month
+    monthEnd := monthStart.AddDate(0, 1, 0) // Adds one month
+
+    monthPRs := make([]github.PullRequest, 0)
+		for _, pr := range prs {
+			// Check if PR was created within this specific month
+			if !pr.CreatedAt.Before(monthStart) && pr.CreatedAt.Before(monthEnd) {
+				monthPRs = append(monthPRs, pr)
+			}
+		}
+		metrics.MonthlyData[i].PRVelocity = CalculatePRVelocity(monthPRs)
+	}
 	// Calculate current health score (simplified)
 	metrics.CurrentHealthScore = calculateCurrentHealthScore(commits, contributors, issues, prs)
 
