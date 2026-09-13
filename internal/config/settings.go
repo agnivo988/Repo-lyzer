@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zalando/go-keyring"
 	"github.com/robfig/cron/v3"
+	"github.com/zalando/go-keyring"
 )
 
 const (
