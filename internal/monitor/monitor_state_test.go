@@ -94,7 +94,7 @@ func TestMonitorState_LoadState_InvalidCachePayload(t *testing.T) {
 		t.Fatalf("NewCache() error = %v", err)
 	}
 
-	if err := c.Set("octocat/hello-world", "invalid-state"); err != nil {
+	if err := c.Set("monitor:octocat/hello-world", "invalid-state"); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
@@ -125,7 +125,7 @@ func TestMonitorState_LoadState_FillsMissingIdentity(t *testing.T) {
 		t.Fatalf("NewCache() error = %v", err)
 	}
 
-	if err := c.Set("octocat/hello-world", MonitorState{LastCommitSHA: "xyz"}); err != nil {
+	if err := c.Set("monitor:octocat/hello-world", MonitorState{LastCommitSHA: "xyz"}); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
