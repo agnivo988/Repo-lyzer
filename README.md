@@ -194,3 +194,4 @@ go build -o repo-lyzer .
 
 ## License
 **MIT License © 2026 Agniva Mukherjee**. See [LICENSE](LICENSE) for details.
+# TODO: auto label open issues and pr with gssoc:approved label (#252)
