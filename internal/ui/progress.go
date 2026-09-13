@@ -1,8 +1,9 @@
 package ui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
 	"time"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 // ProgressStage represents a step in the analysis process
@@ -80,17 +81,15 @@ var SatelliteFrames = []string{
 func NewProgressTracker() *ProgressTracker {
 	return &ProgressTracker{
 		stages: []ProgressStage{
-			{Name: "🔗 Fetching repository data", IsComplete: false, IsActive: true},
-			{Name: "🔗 Connecting to GitHub API", IsComplete: false, IsActive: false},
-			{Name: "📝 Analyzing commits", IsComplete: false, IsActive: false},
-			{Name: "📝 Processing commit history", IsComplete: false, IsActive: false},
-			{Name: "👥 Analyzing contributors", IsComplete: false, IsActive: false},
-			{Name: "👥 Calculating contributor metrics", IsComplete: false, IsActive: false},
-			{Name: "🗣️  Analyzing languages", IsComplete: false, IsActive: false},
-			{Name: "🗣️  Processing language statistics", IsComplete: false, IsActive: false},
-			{Name: "📊 Computing metrics", IsComplete: false, IsActive: false},
-			{Name: "📊 Generating final report", IsComplete: false, IsActive: false},
-			{Name: "✅ Analysis complete", IsComplete: false, IsActive: false},
+			{Name: "Repository Metadata", IsComplete: false, IsActive: true},
+			{Name: "Commits", IsComplete: false, IsActive: false},
+			{Name: "Contributors", IsComplete: false, IsActive: false},
+			{Name: "Languages", IsComplete: false, IsActive: false},
+			{Name: "Dependencies", IsComplete: false, IsActive: false},
+			{Name: "Security Scan", IsComplete: false, IsActive: false},
+			{Name: "Quality Analysis", IsComplete: false, IsActive: false},
+			{Name: "Issues & Pull Requests", IsComplete: false, IsActive: false},
+			{Name: "Final Report", IsComplete: false, IsActive: false},
 		},
 		current:   0,
 		startTime: time.Now(),

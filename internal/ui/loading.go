@@ -67,14 +67,24 @@ func (m LoadingModel) View(width, height int) string {
 		stages := m.progress.GetAllStages()
 		statusView += "\n\n"
 		for _, stage := range stages {
-			prefix := "⏳ "
+			prefix := "○ "
 			if stage.IsComplete {
-				prefix = "✅ "
+				prefix = "✓ "
 			} else if stage.IsActive {
-				prefix = "⚙️  "
+				prefix = "⏳ "
 			}
 			statusView += prefix + stage.Name + "\n"
 		}
+
+		// Calculate and show progress percentage and bar
+		completed, total := m.progress.GetProgress()
+		pct := 0
+		if total > 0 {
+			pct = (completed * 100) / total
+		}
+		progressBar := m.progress.GetProgressBar(30)
+		statusView += fmt.Sprintf("\n%s%d%%\n", progressBar, pct)
+		statusView += fmt.Sprintf("Progress: %d%%\n", pct)
 
 		// Add elapsed time
 		elapsed := m.progress.GetElapsedTime()
